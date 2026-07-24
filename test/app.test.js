@@ -61,9 +61,11 @@ test('frontend pages load extracted CSS and JavaScript assets', async () => {
   assert.equal(admin.status, 200);
   assert.match(admin.body, /href="\/assets\/admin\.css(?:\?v=[^"]+)?"/);
   assert.match(admin.body, /src="\/assets\/admin-main\.js(?:\?v=[^"]+)?"/);
+  assert.match(admin.body, /data-atab="learning-plans"/);
+  assert.match(admin.body, /src="\/assets\/admin-learning-plans\.js(?:\?v=[^"]+)?"/);
   assert.match(admin.body, /id="manageTeacherDialog"/);
   assert.doesNotMatch(admin.body, /<style>/);
-  const [css, script] = await Promise.all([request('/assets/admin.css'), request('/assets/admin-main.js')]);
+  const [css, script, learningPlanScript] = await Promise.all([request('/assets/admin.css'), request('/assets/admin-main.js'), request('/assets/admin-learning-plans.js')]);
   assert.equal(css.status, 200);
   assert.match(css.headers['content-type'], /text\/css/);
   assert.equal(script.status, 200);
@@ -72,8 +74,12 @@ test('frontend pages load extracted CSS and JavaScript assets', async () => {
   assert.match(script.body, /examOpenDateLabel/);
   assert.match(script.body, /examScheduleStatus/);
   assert.match(script.body, /data-manageteacher/);
+  assert.match(script.body, /adminLearningPlanBridge/);
   assert.match(script.body, /addEventListener\('click'/);
   assert.doesNotMatch(script.body, /onclick="openScoreVerificationIssues/);
+  assert.equal(learningPlanScript.status, 200);
+  assert.match(learningPlanScript.body, /addLearningUnitBtn/);
+  assert.match(learningPlanScript.body, /data-unit-field/);
 });
 
 test('exam roster embeds TH Sarabun font and waits for it before printing', async () => {
@@ -282,6 +288,30 @@ test('question analysis requires admin access and exports Excel and Word forms',
   assert.equal(wordForm.status, 200);
   assert.match(wordForm.headers['content-type'], /wordprocessingml/);
   assert.ok(wordForm.body.length > 1000);
+});
+
+test('admin can create, update, list, and delete a multi-unit learning plan', async () => {
+  const denied = await request('/api/admin/learning-plans');
+  assert.equal(denied.status, 401);
+  const headers = { 'x-admin-key': ADMIN_KEY };
+  const createdResponse = await request('/api/admin/learning-plans', { method: 'POST', headers, body: {
+    subjectName: 'การเขียนโปรแกรม', subjectCode: '20001', teacherName: 'อาจารย์ทดสอบ',
+    units: [{ unitNo: '1', unitTitle: 'พื้นฐาน' }, { unitNo: '2', unitTitle: 'เงื่อนไข' }]
+  } });
+  assert.equal(createdResponse.status, 201);
+  const created = JSON.parse(createdResponse.body);
+  assert.equal(created.units.length, 2);
+  const updatedResponse = await request('/api/admin/learning-plans/' + encodeURIComponent(created.id), { method: 'PUT', headers, body: { ...created, subjectName: 'การเขียนโปรแกรมเบื้องต้น' } });
+  assert.equal(updatedResponse.status, 200);
+  assert.equal(JSON.parse(updatedResponse.body).subjectName, 'การเขียนโปรแกรมเบื้องต้น');
+  const listResponse = await request('/api/admin/learning-plans', { headers });
+  assert.equal(JSON.parse(listResponse.body).some(plan => plan.id === created.id && plan.units.length === 2), true);
+  const wordResponse = await request('/api/admin/learning-plans/' + encodeURIComponent(created.id) + '.docx', { headers });
+  assert.equal(wordResponse.status, 200);
+  assert.match(wordResponse.headers['content-type'], /wordprocessingml/);
+  assert.ok(wordResponse.body.length > 1000);
+  const deletedResponse = await request('/api/admin/learning-plans/' + encodeURIComponent(created.id), { method: 'DELETE', headers });
+  assert.equal(deletedResponse.status, 200);
 });
 
 test('admin set creation rejects an incomplete payload without changing data', async () => {

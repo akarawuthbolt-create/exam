@@ -119,6 +119,14 @@ function showToast(msg){
   const t = document.createElement('div'); t.className='toast'; t.textContent=msg;
   document.body.appendChild(t); setTimeout(()=>t.remove(), 2800);
 }
+async function downloadAdminAsset(path, fallbackName){
+  const response=await fetch(path,{headers:{'x-admin-key':adminKey||''}});
+  if(response.status===401){showSessionExpiredDialog();throw new Error('หมดเวลาการเข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่อีกครั้ง');}
+  if(!response.ok){let message='ดาวน์โหลดไฟล์ไม่สำเร็จ';try{const body=await response.json();message=body.message||message;}catch(error){}throw new Error(message);}
+  const blob=await response.blob(),url=URL.createObjectURL(blob),link=document.createElement('a'),disposition=response.headers.get('content-disposition')||'',encodedName=disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
+  link.href=url;link.download=encodedName?decodeURIComponent(encodedName):fallbackName;document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);
+}
+window.adminLearningPlanBridge={apiFetch,escapeHtml,escapeAttr,showToast,downloadAdminAsset};
 function askChangeReason(action){
   const value=prompt(`กรุณาระบุเหตุผลในการ${action}\n(กดยกเลิกเพื่อไม่ดำเนินการ)`);
   if(value===null) return null;
@@ -278,6 +286,7 @@ function refreshCurrentPageData(){
   if(activeTab==='dashboard') return refreshDashboard();
   if(activeTab==='students') return refreshStudents();
   if(activeTab==='teachers') return refreshTeachers();
+  if(activeTab==='learning-plans' && typeof refreshLearningPlans==='function') return refreshLearningPlans();
   if(activeTab==='results') return refreshResults();
   if(activeTab==='score-emails') return refreshScoreEmails();
   if(activeTab==='operations') return refreshOperations();
@@ -289,7 +298,7 @@ document.querySelectorAll('.admin-tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.admin-tab-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
-    ['dashboard','sets','library','students','teachers','results','score-emails','operations','settings'].forEach(t=> document.getElementById('atab-'+t).classList.toggle('hidden', btn.dataset.atab!==t));
+    ['dashboard','sets','library','students','teachers','learning-plans','results','score-emails','operations','settings'].forEach(t=> document.getElementById('atab-'+t).classList.toggle('hidden', btn.dataset.atab!==t));
     if(btn.dataset.atab==='dashboard') refreshDashboard();
     if(btn.dataset.atab==='library') renderLibrarySetList();
     if(btn.dataset.atab==='operations'){ refreshOperations(); startOperationsStream(); } else stopOperationsStream();
@@ -297,6 +306,7 @@ document.querySelectorAll('.admin-tab-btn').forEach(btn=>{
     if(btn.dataset.atab==='score-emails') refreshScoreEmails();
     if(btn.dataset.atab==='students') refreshStudents();
     if(btn.dataset.atab==='teachers') refreshTeachers();
+    if(btn.dataset.atab==='learning-plans' && typeof refreshLearningPlans==='function') refreshLearningPlans();
   });
 });
 

@@ -45,6 +45,7 @@
     <button class="admin-tab-btn" data-atab="library">🗃️ คลังข้อสอบเก่า</button>
     <button class="admin-tab-btn" data-atab="students">รายชื่อนักเรียน</button>
     <button class="admin-tab-btn" data-atab="teachers">อาจารย์ผู้สอน</button>
+    <button class="admin-tab-btn" data-atab="learning-plans">📝 แผนการสอน</button>
     <button class="admin-tab-btn" data-atab="results">ผลสอบนักเรียน</button>
     <button class="admin-tab-btn" data-atab="score-emails">✉ ส่งรายงานคะแนน</button>
     <button class="admin-tab-btn" data-atab="operations">🩺 Operations</button>
@@ -145,6 +146,11 @@
           <button class="btn btn-primary btn-sm" id="addTeacherBtn">+ เพิ่มอาจารย์</button>
         </div>
         <div id="teachersWrap"><div class="loading-note">กำลังโหลด...</div></div>
+      </div>
+
+      <!-- ============ RESULTS TAB ============ -->
+      <div id="atab-learning-plans" class="hidden">
+        <div id="learningPlansWrap"><div class="loading-note">กำลังโหลดแผนการสอน...</div></div>
       </div>
 
       <!-- ============ RESULTS TAB ============ -->
@@ -260,6 +266,7 @@
   </div>
 </div>
 
-<script src="/assets/admin-main.js?v=20260723-5"></script>
+<script src="/assets/admin-main.js?v=20260724-1"></script>
+<script src="/assets/admin-learning-plans.js?v=20260724-1"></script>
 </body>
 </html>
