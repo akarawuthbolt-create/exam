@@ -7,7 +7,7 @@
 <script src="/assets/teacher-boot.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/teacher.css?v=20260722-4">
+<link rel="stylesheet" href="/assets/teacher.css?v=20260726-5">
 </head>
 <body>
 
@@ -150,7 +150,7 @@
 <!-- ================= EXAM SET WIZARD (full-page, mirrors the student exam-taking flow) ================= -->
 <dialog class="google-import-dialog" id="googleFormsSetDialog">
   <div class="google-import-dialog-inner">
-    <div class="google-import-dialog-head"><div><h3>🟢 นำเข้าข้อสอบจาก Google Forms</h3><p>นำเข้าเฉพาะข้อปรนัยที่มีเฉลยและตัวเลือกครบ 4 ตัวเลือก</p></div><button class="btn btn-ghost btn-sm" type="button" id="closeGoogleFormsSetDialog">✕</button></div>
+    <div class="google-import-dialog-head"><div><h3>🟢 นำเข้าข้อสอบจาก Google Forms</h3><p>จำแนกข้อปรนัยและอัตนัย ตัดเลขข้อซ้ำ และนำเข้ารูปประกอบโดยอัตโนมัติ</p></div><button class="btn btn-ghost btn-sm" type="button" id="closeGoogleFormsSetDialog">✕</button></div>
     <div class="google-import-step" id="googleFormsConnectStep"><h4>ขั้นที่ 1: เชื่อมต่อ Google</h4><p>ใช้บัญชี Google ที่เป็นเจ้าของ หรือมีสิทธิ์แก้ไข Google Forms ชุดนั้น</p><button class="btn btn-primary btn-sm" type="button" id="connectGoogleFormsSetBtn">เชื่อมต่อ Google</button></div>
     <div class="google-import-step hidden" id="googleFormsImportStep"><h4>ขั้นที่ 2: ตรวจสอบและนำเข้า</h4><p>วางลิงก์หน้าแก้ไขของฟอร์ม เช่น <b>.../forms/d/FORM_ID/edit</b></p><input id="googleFormsSetUrl" type="url" placeholder="วางลิงก์ Google Forms สำหรับแก้ไข"><div class="editor-actions"><button class="btn btn-ghost btn-sm" type="button" id="previewGoogleFormsSetBtn">ตรวจสอบแบบฟอร์ม</button><button class="btn btn-primary btn-sm" type="button" id="applyGoogleFormsSetBtn" disabled>นำเข้าและตั้งค่าชุดข้อสอบ</button></div><div class="mc-import-preview" id="googleFormsSetPreview"></div></div>
   </div>
@@ -167,6 +167,6 @@
   </div>
 </div>
 
-<script src="/assets/teacher-main.js?v=20260726-3"></script>
+<script src="/assets/teacher-main.js?v=20260726-4"></script>
 </body>
 </html>

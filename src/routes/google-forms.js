@@ -32,17 +32,55 @@ function connectionFor(req, role) {
   return ownerMatches(connection, req, role) ? connection : null;
 }
 
+async function fetchParsedForm(req, role) {
+  const connection = connectionFor(req, role);
+  if (!connection) throw Object.assign(new Error('กรุณาเชื่อมต่อ Google ก่อนนำเข้า'), { status: 401, code: 'google_connection_required' });
+  const formId = formIdFrom(req.body?.formUrl);
+  if (!formId) throw Object.assign(new Error('กรุณาใช้ลิงก์หน้าแก้ไข Google Forms (/forms/d/.../edit) ไม่ใช่ลิงก์ตอบแบบฟอร์ม (/forms/d/e/.../viewform)'), { status: 400, code: 'invalid_form_url' });
+  const response = await fetch(`https://forms.googleapis.com/v1/forms/${encodeURIComponent(formId)}`, { headers: { Authorization: `Bearer ${connection.accessToken}` } });
+  if (!response.ok) throw Object.assign(new Error(response.status === 403 ? 'บัญชี Google นี้ไม่มีสิทธิ์อ่านแบบฟอร์ม หรือแบบฟอร์มไม่ใช่ Quiz' : 'ไม่สามารถอ่าน Google Forms นี้ได้'), { status: response.status === 403 ? 403 : 400, code: 'google_form_fetch_failed' });
+  return { connection, parsed: parseGoogleForm(await response.json()) };
+}
+
 function previewForm(role) {
   return async (req, res) => {
-    const connection = connectionFor(req, role);
-    if (!connection) return res.status(401).json({ error: 'google_connection_required', message: 'กรุณาเชื่อมต่อ Google ก่อนนำเข้า' });
-    const formId = formIdFrom(req.body?.formUrl);
-    if (!formId) return res.status(400).json({ error: 'invalid_form_url', message: 'กรุณาใช้ลิงก์หน้าแก้ไข Google Forms (/forms/d/.../edit) ไม่ใช่ลิงก์ตอบแบบฟอร์ม (/forms/d/e/.../viewform)' });
     try {
-      const response = await fetch(`https://forms.googleapis.com/v1/forms/${encodeURIComponent(formId)}`, { headers: { Authorization: `Bearer ${connection.accessToken}` } });
-      if (!response.ok) return res.status(response.status === 403 ? 403 : 400).json({ error: 'google_form_fetch_failed', message: response.status === 403 ? 'บัญชี Google นี้ไม่มีสิทธิ์อ่านแบบฟอร์ม หรือแบบฟอร์มไม่ใช่ Quiz' : 'ไม่สามารถอ่าน Google Forms นี้ได้' });
-      res.json(parseGoogleForm(await response.json()));
-    } catch (_) { res.status(502).json({ error: 'google_form_fetch_failed', message: 'เชื่อมต่อ Google Forms ไม่สำเร็จ' }); }
+      res.json((await fetchParsedForm(req, role)).parsed);
+    } catch (error) { res.status(error.status || 502).json({ error: error.code || 'google_form_fetch_failed', message: error.status ? error.message : 'เชื่อมต่อ Google Forms ไม่สำเร็จ' }); }
+  };
+}
+
+function imageFileName(question, index, contentType) {
+  const extension = ({ 'image/jpeg': '.jpg', 'image/png': '.png', 'image/gif': '.gif', 'image/webp': '.webp' })[contentType] || '.png';
+  return `google-form-${question.sourceId || 'question'}-${index + 1}${extension}`;
+}
+
+function importForm(role, assetStorage) {
+  return async (req, res) => {
+    try {
+      const { connection, parsed } = await fetchParsedForm(req, role);
+      const warnings = [];
+      for (const question of parsed.questions) {
+        const attachments = [];
+        for (let index = 0; index < question.images.length; index += 1) {
+          try {
+            if (!assetStorage?.configured) throw new Error('ยังไม่ได้ตั้งค่า Supabase Storage');
+            const imageResponse = await fetch(question.images[index].contentUri, { headers: { Authorization: `Bearer ${connection.accessToken}` } });
+            if (!imageResponse.ok) throw new Error('ดาวน์โหลดรูปจาก Google ไม่สำเร็จ');
+            const contentType = String(imageResponse.headers.get('content-type') || '').split(';')[0].toLowerCase();
+            if (!contentType.startsWith('image/')) throw new Error('ไฟล์จาก Google ไม่ใช่รูปภาพ');
+            const contentLength = Number(imageResponse.headers.get('content-length'));
+            if (Number.isFinite(contentLength) && contentLength > assetStorage.maxBytes) throw new Error('รูปมีขนาดเกิน 5 MB');
+            const buffer = Buffer.from(await imageResponse.arrayBuffer());
+            if (buffer.length > assetStorage.maxBytes) throw new Error('รูปมีขนาดเกิน 5 MB');
+            attachments.push(await assetStorage.upload({ buffer, contentType, fileName: imageFileName(question, index, contentType), owner: role === 'admin' ? 'admin' : `teacher-${req.teacherId}` }));
+          } catch (error) { warnings.push(`รูปของ “${question.text}” ไม่ถูกนำเข้า: ${error.message}`); }
+        }
+        question.resources = { attachments };
+        delete question.images;
+      }
+      res.json({ ...parsed, warnings });
+    } catch (error) { res.status(error.status || 502).json({ error: error.code || 'google_form_import_failed', message: error.status ? error.message : 'นำเข้า Google Forms ไม่สำเร็จ' }); }
   };
 }
 
@@ -56,13 +94,15 @@ function connectionStatus(role) {
   };
 }
 
-function registerGoogleFormsRoutes(app, { requireAdmin, requireTeacher, googleFormsConfig }) {
+function registerGoogleFormsRoutes(app, { requireAdmin, requireTeacher, googleFormsConfig, assetStorage }) {
   const closeScript = res => `<script nonce="${res.locals.cspNonce}">window.close()</script>`;
   app.post('/api/admin/google-forms/start', requireAdmin, startAuth(googleFormsConfig, 'admin'));
   app.post('/api/admin/google-forms/preview', requireAdmin, previewForm('admin'));
+  app.post('/api/admin/google-forms/import', requireAdmin, importForm('admin', assetStorage));
   app.get('/api/admin/google-forms/status', requireAdmin, connectionStatus('admin'));
   app.post('/api/teacher/google-forms/start', requireTeacher, startAuth(googleFormsConfig, 'teacher'));
   app.post('/api/teacher/google-forms/preview', requireTeacher, previewForm('teacher'));
+  app.post('/api/teacher/google-forms/import', requireTeacher, importForm('teacher', assetStorage));
   app.get('/api/teacher/google-forms/status', requireTeacher, connectionStatus('teacher'));
   app.get('/api/google-forms/callback', async (req, res) => {
     const state = oauthStates.get(req.query.state);
