@@ -354,6 +354,7 @@ async function tryLogin(){
     document.getElementById('studentIdentityConfirmDetails').innerHTML = `<b>${escapeHtml(student.firstName)} ${escapeHtml(student.lastName)}</b><br>รหัสนักเรียน: ${escapeHtml(student.studentId)}<br>ห้อง: ${escapeHtml(student.classRoom||'-')}`;
     document.getElementById('identityPinVerifyFields').classList.toggle('hidden',!student.hasPin);
     document.getElementById('identityPinSetupFields').classList.toggle('hidden',student.hasPin);
+    document.getElementById('identityForgotPinBtn').classList.toggle('hidden',!student.hasPin);
     document.getElementById('studentIdentityWarning').textContent=student.hasPin?'ตรวจสอบชื่อ–นามสกุลให้ถูกต้อง แล้วกรอก PIN ของบัญชีนี้':'บัญชีนี้ยังไม่มี PIN กรุณาตรวจสอบชื่อ–นามสกุลให้ถูกต้องก่อนตั้ง PIN เพราะ PIN จะถูกผูกกับบัญชีนี้';
     document.getElementById('identityPinInput').value='';
     document.getElementById('identityPinSetupInput').value='';
@@ -463,6 +464,7 @@ document.getElementById('forgotPinBtn').addEventListener('click', ()=>{
   document.getElementById('pinVerifyLead').classList.toggle('hidden', recovering);
   document.getElementById('pinVerifyInput').classList.toggle('hidden', recovering);
   document.getElementById('pinVerifyConfirmBtn').classList.toggle('hidden', recovering);
+  document.getElementById('forgotPinConfirmBtn').classList.toggle('hidden', !recovering);
   document.getElementById('forgotPinBtn').textContent=recovering?'← กลับไปกรอก PIN':'ลืม PIN? ยืนยันตัวตนเพื่อตั้งใหม่';
   if(recovering) document.getElementById('forgotPinFirstName').focus();
 });

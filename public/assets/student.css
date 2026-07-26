@@ -189,9 +189,14 @@ html.restoring-session #startScreen{visibility:hidden;}html.restoring-session bo
 .student-identity-confirm-card .identity-warning{color:var(--red);font-weight:700;text-align:left;margin:0 0 12px;}
 .student-identity-confirm-card .name-input{margin:0 0 10px;text-align:center;font-size:17px;letter-spacing:.08em;}
 .student-identity-confirm-card .id-error{text-align:left;margin:0 0 10px;}
-.identity-forgot-pin{display:block;margin:-2px 0 12px auto;padding:2px 0;border:0;background:none;color:var(--blue);font-size:12.5px;text-decoration:underline;}
+.btn-identity-edit{background:#FFF7ED;border:1.5px solid #FDBA74;color:#9A3412;}
+.btn-identity-edit:hover{background:#FFEDD5;border-color:#FB923C;}
+.identity-forgot-pin{display:flex;width:100%;margin:10px 0 0;align-items:center;justify-content:center;background:rgba(100,116,139,.08);border:1.5px solid var(--line);color:var(--blue);font-size:13px;box-shadow:none;}
+.identity-forgot-pin:hover{background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.35);}
 .student-identity-confirm-card .modal-actions{justify-content:center;align-items:stretch;}
 .student-identity-confirm-card .modal-actions .btn{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;}
+#forgotPinForm + .start-actions{display:grid;grid-template-columns:minmax(110px,.45fr) minmax(0,1fr);align-items:stretch;}
+#forgotPinForm + .start-actions .btn{width:100%;display:flex;align-items:center;justify-content:center;}
 .modal-check{font-size:44px;color:var(--green);margin:14px 0;}
 .modal-actions{display:flex;gap:10px;}
 

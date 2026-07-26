@@ -75,7 +75,6 @@
     <p class="identity-warning" id="studentIdentityWarning">กรุณาตรวจสอบชื่อ–นามสกุลให้ถูกต้องก่อนดำเนินการ</p>
     <div id="identityPinVerifyFields">
       <input type="password" class="name-input" id="identityPinInput" placeholder="กรอก PIN" inputmode="numeric" maxlength="6" autocomplete="off">
-      <button class="identity-forgot-pin" id="identityForgotPinBtn" type="button">ลืม PIN? ยืนยันตัวตนเพื่อตั้งใหม่</button>
     </div>
     <div id="identityPinSetupFields" class="hidden">
       <input type="password" class="name-input" id="identityPinSetupInput" placeholder="ตั้ง PIN ตัวเลข 4-6 หลัก" inputmode="numeric" maxlength="6" autocomplete="off">
@@ -83,9 +82,10 @@
     </div>
     <div class="id-error" id="studentIdentityConfirmError"></div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" id="studentIdentityRejectBtn" type="button">ไม่ใช่ แก้รหัสนักเรียน</button>
+      <button class="btn btn-identity-edit" id="studentIdentityRejectBtn" type="button">แก้ไขรหัสนักเรียน</button>
       <button class="btn btn-primary" id="studentIdentityAcceptBtn" type="button">ยืนยันและเข้าสู่ระบบ →</button>
     </div>
+    <button class="btn identity-forgot-pin" id="identityForgotPinBtn" type="button">ลืม PIN? ยืนยันตัวตนเพื่อตั้งใหม่</button>
   </div>
 </div>
 
@@ -122,11 +122,11 @@
       <input type="text" class="name-input" id="forgotPinLastName" placeholder="นามสกุล">
       <input type="password" class="name-input" id="forgotPinNew" placeholder="ตั้ง PIN ใหม่ (4-6 หลัก)" inputmode="numeric" maxlength="6">
       <input type="password" class="name-input" id="forgotPinConfirm" placeholder="ยืนยัน PIN ใหม่" inputmode="numeric" maxlength="6">
-      <button class="btn btn-primary" id="forgotPinConfirmBtn" type="button" style="width:100%;margin-bottom:14px;">ยืนยันและตั้ง PIN ใหม่</button>
     </div>
     <div class="start-actions">
       <button class="btn btn-ghost" id="pinVerifyBackBtn">← กลับ</button>
       <button class="btn btn-primary" id="pinVerifyConfirmBtn">ยืนยัน →</button>
+      <button class="btn btn-primary hidden" id="forgotPinConfirmBtn" type="button">ยืนยันและตั้ง PIN ใหม่</button>
     </div>
   </div>
 </div>
@@ -259,6 +259,6 @@
   </div>
 </div>
 
-<script src="/assets/student-main.js?v=20260726-4"></script>
+<script src="/assets/student-main.js?v=20260726-5"></script>
 </body>
 </html>
