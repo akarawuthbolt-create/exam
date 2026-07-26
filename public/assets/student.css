@@ -195,8 +195,6 @@ html.restoring-session #startScreen{visibility:hidden;}html.restoring-session bo
 .identity-forgot-pin:hover{background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.35);}
 .student-identity-confirm-card .modal-actions{justify-content:center;align-items:stretch;}
 .student-identity-confirm-card .modal-actions .btn{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;}
-#forgotPinForm + .start-actions{display:grid;grid-template-columns:minmax(110px,.45fr) minmax(0,1fr);align-items:stretch;}
-#forgotPinForm + .start-actions .btn{width:100%;display:flex;align-items:center;justify-content:center;}
 .modal-check{font-size:44px;color:var(--green);margin:14px 0;}
 .modal-actions{display:flex;gap:10px;}
 
