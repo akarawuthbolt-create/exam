@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { registerTeacherClassRoutes } = require('../src/routes/teacher-classes');
 
-function rosterHandler(database) {
+function rosterHandler(database, path = '/api/teacher/exam-roster') {
   const routes = new Map();
   const app = { get(path, ...handlers) { routes.set(path, handlers.at(-1)); } };
   registerTeacherClassRoutes(app, {
@@ -10,7 +10,7 @@ function rosterHandler(database) {
     requireTeacher: (_req, _res, next) => next(),
     getExamSchedule: set => set.examSchedules[0]
   });
-  return routes.get('/api/teacher/exam-roster');
+  return routes.get(path);
 }
 
 function responseCapture() {
@@ -63,4 +63,18 @@ test('teacher exam roster appends individually assigned students after the room 
   assert.deepEqual(res.body.students.map(student => student.number), [1, 2, 3]);
   assert.equal(res.body.students[2].additionalAccess, true);
   assert.equal(res.body.students[0].additionalAccess, false);
+});
+
+test('absence summary marks missing students only after the exam has ended', () => {
+  const db = {
+    sets: [{ key: 'set-1', teacherId: 'teacher-1', assignedClasses: ['CC.1/4'], examSchedules: [{ classes: ['CC.1/4'], availableUntil: '2020-01-01T00:00:00.000Z', studentIds: ['99'] }] }],
+    students: [{ studentId: '3', firstName: 'Sent', lastName: 'Student', classRoom: 'CC.1/4' }, { studentId: '4', firstName: 'Absent', lastName: 'Student', classRoom: 'CC.1/4' }, { studentId: '99', firstName: 'Extra', lastName: 'Student', classRoom: 'OTHER' }],
+    results: [{ studentId: '3', questionKey: 'set-1', attemptType: 'normal' }], drafts: []
+  };
+  const res = responseCapture();
+  rosterHandler(db, '/api/teacher/exam-absence-summary')({ query: { setKey: 'set-1', classRooms: 'CC.1/4' }, teacherId: 'teacher-1' }, res);
+  assert.equal(res.body.total, 3);
+  assert.equal(res.body.counts.submitted, 1);
+  assert.equal(res.body.counts.absent, 2);
+  assert.equal(res.body.students.find(student => student.studentId === '99').additionalAccess, true);
 });

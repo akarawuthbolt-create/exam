@@ -80,6 +80,7 @@ async function apiGetAuditLogs(setKey){ return apiFetch('/api/teacher/audit-logs
 async function apiGetClasses(period){ return apiFetch('/api/teacher/classes'+(period?('?period='+encodeURIComponent(period)):''), { auth:true }); }
 async function apiGetStudents(){ return apiFetch('/api/teacher/students', { auth:true }); }
 async function apiGetExamRoster(setKey,classRoom){ return apiFetch('/api/teacher/exam-roster?setKey='+encodeURIComponent(setKey)+'&classRoom='+encodeURIComponent(classRoom), { auth:true }); }
+async function apiGetAbsenceSummary(setKey,classRooms){ return apiFetch('/api/teacher/exam-absence-summary?setKey='+encodeURIComponent(setKey)+'&classRooms='+encodeURIComponent(classRooms.join(',')), { auth:true }); }
 async function apiGetExamTypes(){ return apiFetch('/api/exam-types'); }
 async function apiSetPublished(id, published){ return apiFetch('/api/teacher/results/'+encodeURIComponent(id), { method:'PATCH', body:{published}, auth:true }); }
 async function apiUpdateDfdScores(id, dfdLevelScores, reason){ return apiFetch('/api/teacher/results/'+encodeURIComponent(id), { method:'PATCH', body:{dfdLevelScores,reason}, auth:true }); }
@@ -1714,6 +1715,13 @@ document.getElementById('printRosterBtn').addEventListener('click',async()=>{
   const options={examRoom:document.getElementById('rosterExamRoomInput').value.trim(),examLink:document.getElementById('rosterExamLinkInput').value.trim()};
   try{const data=await Promise.all(selectedRosterClasses.map(classRoom=>apiGetExamRoster(setKey,classRoom)));popup.document.open();popup.document.write(buildRosterPrintHtml(data,options));popup.document.close();const fontsReady=popup.document.fonts?.ready||Promise.resolve();await fontsReady;const printNow=()=>{if(popup.closed)return;popup.focus();popup.print();};popup.document.querySelector('.print-tools button')?.addEventListener('click',printNow);setTimeout(printNow,150);}
   catch(error){popup.close();showToast(error.message);}
+});
+document.getElementById('absenceSummaryBtn').addEventListener('click',async()=>{
+  const setKey=document.getElementById('rosterSetSelect').value,wrap=document.getElementById('absenceSummaryWrap');
+  if(!setKey||!selectedRosterClasses.length){showToast('กรุณาเลือกชุดข้อสอบและเพิ่มห้องอย่างน้อย 1 ห้อง');return;}
+  wrap.innerHTML='<div class="loading-note">กำลังสรุปรายชื่อ...</div>';wrap.classList.remove('hidden');
+  try{const data=await apiGetAbsenceSummary(setKey,selectedRosterClasses),labels={submitted:'ส่งแล้ว',in_progress:'กำลังสอบ',absent:'ขาดสอบ',pending:'ยังไม่ถึงเวลาสรุป'},order=['absent','in_progress','pending','submitted'];wrap.innerHTML=`<div class="absence-head"><div><h3>สรุปผู้ขาดสอบ</h3><p>${escapeHtml(data.title)} · ${data.total} คน</p></div><button type="button" class="btn btn-ghost btn-sm" id="closeAbsenceSummary">✕ ปิด</button></div><div class="absence-stats"><div><b>${data.total}</b><span>ผู้มีสิทธิ์</span></div><div class="ok"><b>${data.counts.submitted}</b><span>ส่งแล้ว</span></div><div class="live"><b>${data.counts.in_progress}</b><span>กำลังสอบ</span></div><div class="danger"><b>${data.counts.absent}</b><span>ขาดสอบ</span></div></div><div class="absence-list">${order.flatMap(status=>data.students.filter(student=>student.status===status).map(student=>`<div class="absence-row status-${status}"><span class="absence-status">${labels[status]}</span><b>${escapeHtml(student.studentId)}</b><span>${escapeHtml(`${student.firstName} ${student.lastName}`)}</span><em>${escapeHtml(student.classRoom)}${student.additionalAccess?' · สิทธิ์รายคน':''}</em></div>`)).join('')}</div>`;document.getElementById('closeAbsenceSummary').addEventListener('click',()=>wrap.classList.add('hidden'));}
+  catch(error){wrap.innerHTML='';wrap.classList.add('hidden');showToast(error.message);}
 });
 
 })();

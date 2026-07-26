@@ -1,6 +1,13 @@
 const { programForClassRoom, levelForClassRoom } = require('../class-programs');
 
 function registerTeacherClassRoutes(app, { readDB, requireTeacher, getExamSchedule }) {
+  const rosterStudents = (db, schedule, classRoom) => {
+    const regular = db.students.filter(student => student.classRoom === classRoom).sort((a, b) => String(a.studentId || '').localeCompare(String(b.studentId || ''), 'th', { numeric: true }));
+    const regularIds = new Set(regular.map(student => student.studentId));
+    const additionalIds = new Set(Array.isArray(schedule?.studentIds) ? schedule.studentIds : []);
+    const additional = db.students.filter(student => additionalIds.has(student.studentId) && !regularIds.has(student.studentId)).sort((a, b) => String(a.studentId || '').localeCompare(String(b.studentId || ''), 'th', { numeric: true }));
+    return [...regular, ...additional].map(student => ({ ...student, additionalAccess: additionalIds.has(student.studentId) && !regularIds.has(student.studentId) }));
+  };
   app.get('/api/teacher/classes', requireTeacher, (req, res) => {
     const period=String(req.query.period||''); const classes = [...new Set(readDB().students.filter(student=>!period||(period==='unset'?!student.examPeriod:student.examPeriod===period)).map(student => student.classRoom))].sort();
     res.json(classes);
@@ -30,22 +37,14 @@ function registerTeacherClassRoutes(app, { readDB, requireTeacher, getExamSchedu
     }
 
     const schedule = typeof getExamSchedule === 'function' ? getExamSchedule(set, classRoom) : null;
-    const regularStudents = db.students
-      .filter(student => student.classRoom === classRoom)
-      .sort((a, b) => String(a.studentId || '').localeCompare(String(b.studentId || ''), 'th', { numeric: true }));
-    const regularIds = new Set(regularStudents.map(student => student.studentId));
-    const additionalIds = new Set(Array.isArray(schedule?.studentIds) ? schedule.studentIds : []);
-    const additionalStudents = db.students
-      .filter(student => additionalIds.has(student.studentId) && !regularIds.has(student.studentId))
-      .sort((a, b) => String(a.studentId || '').localeCompare(String(b.studentId || ''), 'th', { numeric: true }));
-    const students = [...regularStudents, ...additionalStudents]
+    const students = rosterStudents(db, schedule, classRoom)
       .map((student, index) => ({
         number: index + 1,
         studentId: student.studentId,
         firstName: student.firstName,
         lastName: student.lastName,
         examPeriod: student.examPeriod || '',
-        additionalAccess: additionalIds.has(student.studentId) && !regularIds.has(student.studentId)
+        additionalAccess: student.additionalAccess
       }));
     const forwardedProto = String(req.get?.('x-forwarded-proto') || '').split(',')[0].trim();
     const protocol = forwardedProto || req.protocol || 'http';
@@ -70,6 +69,28 @@ function registerTeacherClassRoutes(app, { readDB, requireTeacher, getExamSchedu
       },
       students
     });
+  });
+
+  app.get('/api/teacher/exam-absence-summary', requireTeacher, (req, res) => {
+    const setKey = String(req.query.setKey || '').trim();
+    const classRooms = String(req.query.classRooms || '').split(',').map(value => value.trim()).filter(Boolean);
+    const db = readDB(); const set = db.sets.find(item => item.key === setKey && item.teacherId === req.teacherId);
+    if (!set || !classRooms.length) return res.status(400).json({ error: 'validation_error', message: 'กรุณาเลือกชุดข้อสอบและห้องเรียน' });
+    if (classRooms.some(room => Array.isArray(set.assignedClasses) && set.assignedClasses.length && !set.assignedClasses.includes(room))) return res.status(403).json({ error: 'forbidden' });
+    const submittedIds = new Set(db.results.filter(row => row.questionKey === set.key && row.attemptType !== 'resit').map(row => row.studentId));
+    const activeIds = new Set((db.drafts || []).filter(draft => draft.questionKey === set.key && new Date(draft.lockUntil || 0).getTime() > Date.now()).map(draft => draft.studentId));
+    const seen = new Set(); const students = [];
+    classRooms.forEach(classRoom => {
+      const schedule = typeof getExamSchedule === 'function' ? getExamSchedule(set, classRoom) : null;
+      const ended = !!schedule?.availableUntil && Date.now() > new Date(schedule.availableUntil).getTime();
+      rosterStudents(db, schedule, classRoom).forEach(student => {
+        if (seen.has(student.studentId)) return; seen.add(student.studentId);
+        const status = submittedIds.has(student.studentId) ? 'submitted' : activeIds.has(student.studentId) ? 'in_progress' : ended ? 'absent' : 'pending';
+        students.push({ studentId: student.studentId, firstName: student.firstName, lastName: student.lastName, classRoom: student.classRoom, rosterRoom: classRoom, additionalAccess: student.additionalAccess, status });
+      });
+    });
+    const counts = Object.fromEntries(['submitted','in_progress','absent','pending'].map(status => [status, students.filter(student => student.status === status).length]));
+    res.json({ setKey, title: set.courseName || set.title || '', total: students.length, counts, students });
   });
 }
 

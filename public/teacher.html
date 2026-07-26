@@ -7,7 +7,7 @@
 <script src="/assets/teacher-boot.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/teacher.css?v=20260726-8">
+<link rel="stylesheet" href="/assets/teacher.css?v=20260726-9">
 </head>
 <body>
 
@@ -95,7 +95,8 @@
             <div class="field"><label for="rosterExamRoomInput">ห้องสอบ</label><input id="rosterExamRoomInput" type="text" placeholder="เช่น COM.4"></div>
             <div class="field"><label for="rosterExamLinkInput">ลิงก์สอบ</label><input id="rosterExamLinkInput" type="url" placeholder="https://example.com/"></div>
           </div>
-          <div class="editor-actions" style="justify-content:flex-start;"><button class="btn btn-primary" id="printRosterBtn" type="button" disabled>🖨️ เปิดตัวอย่างและพิมพ์</button></div>
+          <div class="editor-actions" style="justify-content:flex-start;"><button class="btn btn-primary" id="printRosterBtn" type="button" disabled>🖨️ เปิดตัวอย่างและพิมพ์</button><button class="btn btn-ghost" id="absenceSummaryBtn" type="button">📋 สรุปผู้ขาดสอบ</button></div>
+          <div class="absence-summary hidden" id="absenceSummaryWrap"></div>
         </div>
       </div>
 
@@ -167,6 +168,6 @@
   </div>
 </div>
 
-<script src="/assets/teacher-main.js?v=20260726-8"></script>
+<script src="/assets/teacher-main.js?v=20260726-9"></script>
 </body>
 </html>
