@@ -37,6 +37,12 @@ test('public exam types endpoint remains available', async () => {
   assert.deepEqual(JSON.parse(response.body), ['กลางภาค', 'ปลายภาค', 'บล็อคคอร์ส']);
   assert.equal(response.headers['x-content-type-options'], 'nosniff');
   assert.equal(response.headers['x-frame-options'], 'DENY');
+  assert.equal(response.headers['strict-transport-security'], 'max-age=31536000');
+  assert.match(response.headers['content-security-policy'], /default-src 'self'/);
+  assert.match(response.headers['content-security-policy'], /script-src 'self' 'nonce-[^']+' https:\/\/cdnjs\.cloudflare\.com/);
+  assert.match(response.headers['content-security-policy'], /frame-ancestors 'none'/);
+  assert.match(response.headers['permissions-policy'], /camera=\(\)/);
+  assert.equal(response.headers['x-powered-by'], undefined);
 });
 
 test('health and readiness endpoints report application state', async () => {
@@ -54,6 +60,14 @@ test('health and readiness endpoints report application state', async () => {
   assert.equal(readyBody.database.status, 'connected');
   assert.equal(typeof readyBody.database.latencyMs, 'number');
   assert.equal(readyBody.sessions.status, 'connected');
+});
+
+test('Google Forms callback inline script is authorized by the request CSP nonce', async () => {
+  const response = await request('/api/google-forms/callback');
+  assert.equal(response.status, 400);
+  const nonce = response.headers['content-security-policy'].match(/'nonce-([^']+)'/)?.[1];
+  assert.ok(nonce);
+  assert.match(response.body, new RegExp(`<script nonce="${nonce.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}">`));
 });
 
 test('frontend pages load extracted CSS and JavaScript assets', async () => {

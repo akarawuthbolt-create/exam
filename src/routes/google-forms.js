@@ -57,6 +57,7 @@ function connectionStatus(role) {
 }
 
 function registerGoogleFormsRoutes(app, { requireAdmin, requireTeacher, googleFormsConfig }) {
+  const closeScript = res => `<script nonce="${res.locals.cspNonce}">window.close()</script>`;
   app.post('/api/admin/google-forms/start', requireAdmin, startAuth(googleFormsConfig, 'admin'));
   app.post('/api/admin/google-forms/preview', requireAdmin, previewForm('admin'));
   app.get('/api/admin/google-forms/status', requireAdmin, connectionStatus('admin'));
@@ -66,7 +67,7 @@ function registerGoogleFormsRoutes(app, { requireAdmin, requireTeacher, googleFo
   app.get('/api/google-forms/callback', async (req, res) => {
     const state = oauthStates.get(req.query.state);
     oauthStates.delete(req.query.state);
-    if (!state || state.expiresAt <= Date.now() || req.query.error || !req.query.code || !configured(googleFormsConfig)) return res.status(400).send('<script>window.close()</script>เชื่อมต่อ Google ไม่สำเร็จ กรุณาลองใหม่');
+    if (!state || state.expiresAt <= Date.now() || req.query.error || !req.query.code || !configured(googleFormsConfig)) return res.status(400).send(`${closeScript(res)}เชื่อมต่อ Google ไม่สำเร็จ กรุณาลองใหม่`);
     try {
       const body = new URLSearchParams({ code: req.query.code, client_id: googleFormsConfig.clientId, client_secret: googleFormsConfig.clientSecret, redirect_uri: googleFormsConfig.redirectUri, grant_type: 'authorization_code' });
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
@@ -76,8 +77,8 @@ function registerGoogleFormsRoutes(app, { requireAdmin, requireTeacher, googleFo
       connections.set(connectionId, { role: state.role, ownerId: state.ownerId, accessToken: payload.access_token, expiresAt: Date.now() + CONNECTION_TTL_MS });
       completedConnections.set(req.query.state, { role: state.role, ownerId: state.ownerId, connectionId, expiresAt: Date.now() + OAUTH_STATE_TTL_MS });
       const safeToken = JSON.stringify(connectionId);
-      res.type('html').send(`<!doctype html><title>เชื่อมต่อแล้ว</title><script>window.opener&&window.opener.postMessage({type:'google-forms-connected',connectionId:${safeToken}},window.location.origin);window.close()</script>เชื่อมต่อ Google สำเร็จ สามารถปิดหน้านี้ได้`);
-    } catch (_) { res.status(502).send('<script>window.close()</script>เชื่อมต่อ Google ไม่สำเร็จ กรุณาลองใหม่'); }
+      res.type('html').send(`<!doctype html><title>เชื่อมต่อแล้ว</title><script nonce="${res.locals.cspNonce}">window.opener&&window.opener.postMessage({type:'google-forms-connected',connectionId:${safeToken}},window.location.origin);window.close()</script>เชื่อมต่อ Google สำเร็จ สามารถปิดหน้านี้ได้`);
+    } catch (_) { res.status(502).send(`${closeScript(res)}เชื่อมต่อ Google ไม่สำเร็จ กรุณาลองใหม่`); }
   });
 }
 
