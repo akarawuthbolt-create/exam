@@ -351,7 +351,7 @@ async function tryLogin(){
     document.getElementById('identityPinVerifyFields').classList.toggle('hidden',!student.hasPin);
     document.getElementById('identityPinSetupFields').classList.toggle('hidden',student.hasPin);
     document.getElementById('identityForgotPinBtn').classList.add('hidden');
-    document.getElementById('studentIdentityWarning').textContent=student.hasPin?'ตรวจสอบชื่อ–นามสกุลให้ถูกต้อง แล้วกรอก PIN ของบัญชีนี้':'บัญชีนี้ยังไม่มี PIN กรุณาตรวจสอบชื่อ–นามสกุลให้ถูกต้องก่อนตั้ง PIN เพราะ PIN จะถูกผูกกับบัญชีนี้';
+    document.getElementById('studentIdentityWarning').textContent=student.hasPin?'ตรวจสอบชื่อ–นามสกุลให้ถูกต้อง แล้วกรอก PIN ของบัญชีนี้':'ตรวจสอบชื่อให้ถูกต้องก่อนตั้ง PIN';
     document.getElementById('identityPinInput').value='';
     document.getElementById('identityPinSetupInput').value='';
     document.getElementById('identityPinSetupConfirmInput').value='';
