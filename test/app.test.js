@@ -92,7 +92,7 @@ test('frontend pages load extracted CSS and JavaScript assets', async () => {
   assert.equal(student.status, 200);
   assert.match(student.body, /id="selectScoreWrap"/);
   assert.match(student.body, /id="studentIdentityConfirmModal"/);
-  assert.match(student.body, /id="identityPinRecoveryFields"/);
+  assert.match(student.body, /id="pinRecoveryScreen"/);
   assert.doesNotMatch(student.body, /id="pinSetupScreen"/);
   assert.doesNotMatch(student.body, /id="pinVerifyScreen"/);
   const [css, script, learningPlanScript] = await Promise.all([request('/assets/admin.css'), request('/assets/admin-main.js'), request('/assets/admin-learning-plans.js')]);
@@ -136,7 +136,7 @@ test('student exam selection shows a preparing state before countdown', async ()
   assert.match(page.body, /กำลังเตรียมข้อสอบ/);
   assert.match(script.body, /setExamPreparing\(true\)/);
   assert.match(script.body, /if\(examPreparing\) return/);
-  assert.match(script.body, /identityPinRecoveryFields/);
+  assert.match(script.body, /pinRecoveryScreen/);
   assert.doesNotMatch(script.body, /pinSetupScreen|pinVerifyScreen/);
   assert.match(styles.body, /\.exam-preparing-spinner/);
 });
