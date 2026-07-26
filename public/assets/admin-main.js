@@ -554,7 +554,7 @@ function renderSetList(){
       const total = computeSetTotal(s);
       const examOpenDate=examOpenDateLabel(s);
       const examStatus=examScheduleStatus(s);
-      const originalEnds=(s.examSchedules||[]).filter(item=>!item.absenceOnly).map(item=>normalizedExamTimestamp(item.availableUntil)).filter(Number.isFinite),finalEnd=originalEnds.length?Math.max(...originalEnds):NaN,examFinished=Number.isFinite(finalEnd)&&finalEnd<Date.now(),actionsExpired=examFinished&&(Date.now()-finalEnd)>3*86400000;
+      const originalEnds=(s.examSchedules||[]).filter(item=>!item.absenceOnly).map(item=>normalizedExamTimestamp(item.availableUntil)).filter(Number.isFinite),finalEnd=originalEnds.length?Math.max(...originalEnds):NaN,examFinished=Number.isFinite(finalEnd)&&finalEnd<Date.now(),examNextDay=Number.isFinite(finalEnd)?new Date(finalEnd):null; if(examNextDay)examNextDay.setHours(24,0,0,0); const actionsExpired=!!examNextDay&&Date.now()>=examNextDay.getTime();
       return `<div class="set-card exam-status-${examStatus.key}">
         <div class="set-badge-row"><span class="badge-pill">${escapeHtml(s.examType||'-')}</span>${examOpenDate?`<span class="badge-pill exam-date-pill" title="วันที่เปิดข้อสอบ">วันที่สอบ ${escapeHtml(examOpenDate)}</span>`:''}<span class="badge-pill exam-status-pill status-${examStatus.key}">${escapeHtml(examStatus.label)}</span></div>
         <span class="badge-pill" style="margin-left:5px;background:${s.academicYear?'#e0f2fe':'#f1f5f9'};color:${s.academicYear?'#0369a1':'#64748b'};">${escapeHtml(s.academicYear&&s.semesterLabel?`${s.academicYear} / ${s.semesterLabel}`:'ยังไม่กำหนดเทอม')}</span>
@@ -578,7 +578,7 @@ function renderSetList(){
         <span class="course-group-title">📚 ${escapeHtml(course)}</span>
         <span class="course-group-count">${sets.length} ชุดข้อสอบ</span>
       </div>
-      <div class="set-list course-group-body">${cardsHtml}</div>
+      <div class="set-list course-group-body collapsed">${cardsHtml}</div>
     </div>`;
   }).join('');
   wrap.querySelectorAll('[data-quick-open]').forEach(b=>b.addEventListener('click', ()=>toggleQuickOpen(b.dataset.quickOpen,b.dataset.open==='1',b)));
