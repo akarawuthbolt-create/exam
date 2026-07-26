@@ -2,12 +2,21 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const JSZip = require('jszip');
 const { analysisStatus, buildQuestionAnalysisDocx, buildSummary, classYears, difficultyAnalysisLine, discriminationAnalysisLine, itemValues, replaceVisibleText, visibleText } = require('../src/question-analysis-docx');
+const { buildQuestionAnalysis } = require('../src/question-analysis');
 
 test('Word placeholder replacement preserves whitespace text-node attributes', () => {
   const xml = '<w:r><w:t>อยู่ในเกณฑ์</w:t></w:r><w:r><w:t xml:space="preserve"> </w:t></w:r><w:r><w:t>{{result}}</w:t></w:r>';
   const replaced = replaceVisibleText(xml, 'เกณฑ์ ', 'เกณฑ์');
   assert.match(replaced, /<w:t xml:space="preserve"><\/w:t>/);
   assert.doesNotMatch(replaced, /<w:txml:/);
+});
+
+test('question analysis restores academic period from submitted results', () => {
+  const set = { key: 'set-1', title: 'วิชาทดสอบ', sections: { mc: { questions: [] } } };
+  const analysis = buildQuestionAnalysis(set, [{ questionKey: 'set-1', academicYear: '2569', semester: '1', semesterLabel: 'ภาคเรียนที่ 1', submittedAt: '2026-07-01T00:00:00.000Z' }]);
+  assert.equal(analysis.academicYear, '2569');
+  assert.equal(analysis.semester, '1');
+  assert.equal(analysis.semesterLabel, 'ภาคเรียนที่ 1');
 });
 
 test('Word question analysis translates difficulty and discrimination at every boundary', () => {

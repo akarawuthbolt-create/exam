@@ -55,7 +55,8 @@ function buildQuestionAnalysis(set, results) {
   }
   const assignedClasses = Array.isArray(set?.assignedClasses) ? set.assignedClasses : [];
   const programs = [...new Set(assignedClasses.map(programForClassRoom).filter(Boolean))];
-  return { setKey: set?.key || '', title: set?.title || '', courseName: set?.courseName || set?.title || '', courseCode: set?.courseCode || '', educationLevel: set?.educationLevel || '', assignedClasses, programs, teacherDepartment: set?.subjectTeacherDepartment || '', semester: set?.semester || '', semesterLabel: set?.semesterLabel || '', academicYear: set?.academicYear || '', teacherName: set?.subjectTeacherName || '', respondents: responseScores.length, questionCount: items.length, reliability, items };
+  const periodResult = [...results].sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0)).find(row => row.academicYear || row.semester || row.semesterLabel) || {};
+  return { setKey: set?.key || '', title: set?.title || '', courseName: set?.courseName || set?.title || '', courseCode: set?.courseCode || '', educationLevel: set?.educationLevel || '', assignedClasses, programs, teacherDepartment: set?.subjectTeacherDepartment || '', semester: set?.semester || periodResult.semester || '', semesterLabel: set?.semesterLabel || periodResult.semesterLabel || '', academicYear: set?.academicYear || periodResult.academicYear || '', teacherName: set?.subjectTeacherName || '', respondents: responseScores.length, questionCount: items.length, reliability, items };
 }
 
 async function buildQuestionAnalysisWorkbook(analysis) {
