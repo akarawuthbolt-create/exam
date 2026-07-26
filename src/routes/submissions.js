@@ -43,14 +43,14 @@ function registerSubmissionRoutes(app, { readDB, mutateDB, newId, gradeMC, grade
     const rawScore = round2(mc + matching + written.total);
     const visibleScoreMax = (set.sections.mc.questions || []).reduce((sum, question) => sum + Number(question.points || 0), 0) + (set.sections.matching.left || []).length * Number(set.sections.matching.pointsEach || 0) + visibleWrittenQuestions.reduce((sum, question) => sum + Number(question.maxPoints || 0), 0);
     const overallScore20 = rawScore;
-    const integrityEvents = Array.isArray(payload.integrityEvents) ? payload.integrityEvents.filter(event => ['tab_switch','fullscreen_exit','right_click','copy','reload'].includes(event?.type) && !Number.isNaN(Date.parse(event.at))).slice(-50) : [];
+    const integrityEvents = Array.isArray(payload.integrityEvents) ? payload.integrityEvents.filter(event => ['tab_switch','fullscreen_exit','right_click','copy','reload','session_recovered'].includes(event?.type) && !Number.isNaN(Date.parse(event.at))).slice(-50) : [];
     const record = {
       id: newId('result'), studentId: student.studentId, studentName: `${student.firstName} ${student.lastName}`, classRoom: student.classRoom || '',
       questionKey: payload.questionKey, questionTitle: set.title, examType: set.examType || '', subjectTeacherName: set.subjectTeacherName || '', subjectTeacherEmail: set.subjectTeacherEmail || '',
       academicYear: set.academicYear || null, semester: set.semester || null, semesterLabel: set.semesterLabel || null,
       attemptKey: resultAttemptKey(student.studentId, payload.questionKey, resit?.id),
       overallScore20, sectionScores: { mc, matching, written: written.total }, attemptType: resit ? 'resit' : 'normal', resitAccessId: resit?.id || null, sourceResultId: resit?.sourceResultId || null, resitScoreMax: resit?.scoreMax || null,
-      tabSwitches: payload.tabSwitches || 0, fullscreenExitAttempts: payload.fullscreenExitAttempts || 0, reloadCount: payload.reloadCount || 0, rightClickAttempts: payload.rightClickAttempts || 0, copyAttempts: payload.copyAttempts || 0,
+      tabSwitches: payload.tabSwitches || 0, fullscreenExitAttempts: payload.fullscreenExitAttempts || 0, reloadCount: payload.reloadCount || 0, rightClickAttempts: payload.rightClickAttempts || 0, copyAttempts: payload.copyAttempts || 0, sessionRecoveries: payload.sessionRecoveries || 0,
       integrityEvents, published: false, detail: { answers, writtenPerQuestion: written.perQuestion, rawScore, visibleScoreMax, gradingSnapshot: buildGradingSnapshot(set, student.classRoom) }, submittedAt: new Date().toISOString()
     };
     if (resit) record.convertedScore = resitScore(record.overallScore20, resit.scoreMax);

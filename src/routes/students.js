@@ -6,11 +6,15 @@ const { nextDraftRevision } = require('../draft-revision');
 function findRecoverableExamDraft(db, payload, now = Date.now()) {
   const studentId = String(payload?.studentId || '').trim(), questionKey = String(payload?.questionKey || '').trim(), deviceId = String(payload?.deviceId || '');
   if (!studentId || !questionKey || !/^[a-z0-9_-]{12,80}$/i.test(deviceId)) return null;
+  const examEndAt = value => {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) && numeric > 0 ? numeric : Date.parse(value);
+  };
   return (db.drafts || []).find(draft => draft.studentId === studentId && draft.questionKey === questionKey && draft.deviceId === deviceId &&
-    String(draft.resitAccessId || '') === String(payload?.resitAccessId || '') && Number.isFinite(Date.parse(draft.examEndTime)) && Date.parse(draft.examEndTime) + 15 * 60 * 1000 >= now) || null;
+    String(draft.resitAccessId || '') === String(payload?.resitAccessId || '') && Number.isFinite(examEndAt(draft.examEndTime)) && examEndAt(draft.examEndTime) + 15 * 60 * 1000 >= now) || null;
 }
 
-function registerStudentRoutes(app, { readDB, writeDB, mutateDB, mutateExamDraft, requireAdmin, requireStudent, hashPassword, verifyPassword, createStudentSession }) {
+function registerStudentRoutes(app, { readDB, writeDB, mutateDB, mutateExamDraft, requireAdmin, requireStudent, hashPassword, verifyPassword, createStudentSession, sessionStore }) {
   const findStudent = (students, studentId) => students.find(student => student.studentId === studentId.trim());
   const publicStudent = student => ({ studentId: student.studentId, firstName: student.firstName, lastName: student.lastName, classRoom: student.classRoom, examPeriod: student.examPeriod || '' });
   const pinRecoveryFailures = new Map();
@@ -40,13 +44,18 @@ function registerStudentRoutes(app, { readDB, writeDB, mutateDB, mutateExamDraft
   app.get('/api/students/:studentId', (req, res) => {
     const student = findStudent(readDB().students, req.params.studentId);
     if (!student) return res.status(404).json({ error: 'not_found', message: 'ไม่พบรหัสนักเรียนนี้ในระบบ' });
-    res.json({ studentId: student.studentId, hasPin: Boolean(student.pinHash) });
+    res.json({ ...publicStudent(student), hasPin: Boolean(student.pinHash) });
   });
 
   app.get('/api/student/session', requireStudent, (req, res) => {
     const student = findStudent(readDB().students, req.studentId);
     if (!student) return res.status(401).json({ error: 'unauthorized' });
     res.json({ student: publicStudent(student) });
+  });
+
+  app.delete('/api/student/session', requireStudent, async (req, res) => {
+    await sessionStore.remove('student', req.get('x-student-token'));
+    res.json({ ok: true });
   });
 
   const draftId = (questionKey, resitAccessId) => `${questionKey}::${resitAccessId || 'normal'}`;

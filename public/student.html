@@ -7,7 +7,7 @@
 <script src="/assets/student-boot.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/student.css?v=20260722-2">
+<link rel="stylesheet" href="/assets/student.css?v=20260726-2">
 </head>
 <body>
 
@@ -67,11 +67,25 @@
   </div>
 </div>
 
+<div id="studentIdentityConfirmModal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="studentIdentityConfirmTitle">
+  <div class="modal-card student-identity-confirm-card">
+    <span class="eyebrow">ตรวจสอบก่อนดำเนินการ</span>
+    <h2 id="studentIdentityConfirmTitle">นี่คือบัญชีของคุณใช่หรือไม่?</h2>
+    <div class="identity-box" id="studentIdentityConfirmDetails"></div>
+    <p class="identity-warning">กรุณาตรวจสอบชื่อ–นามสกุลให้ถูกต้อง โดยเฉพาะก่อนตั้ง PIN ครั้งแรก เพราะ PIN จะถูกผูกกับบัญชีนี้</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="studentIdentityRejectBtn" type="button">ไม่ใช่ แก้รหัสนักเรียน</button>
+      <button class="btn btn-primary" id="studentIdentityAcceptBtn" type="button">ใช่ บัญชีของฉัน →</button>
+    </div>
+  </div>
+</div>
+
 <!-- ================= PIN SETUP ================= -->
 <div id="pinSetupScreen" class="screen-wrap hidden">
   <div class="card">
     <span class="eyebrow">ตั้งค่า PIN</span>
     <h1>ตั้งรหัส PIN สำหรับเข้าสอบ</h1>
+    <div class="identity-box" id="pinSetupIdentity"></div>
     <p class="lead">กรุณาตั้ง PIN ตัวเลข 4-6 หลัก และเก็บไว้ให้ดี หากลืมต้องติดต่อผู้ดูแลระบบเพื่อรีเซ็ต</p>
     <input type="password" class="name-input" id="pinSetupInput" placeholder="ตั้ง PIN (4-6 หลัก)" inputmode="numeric" maxlength="6">
     <input type="password" class="name-input" id="pinSetupConfirmInput" placeholder="ยืนยัน PIN" inputmode="numeric" maxlength="6">
@@ -88,6 +102,7 @@
   <div class="card">
     <span class="eyebrow">ยืนยันตัวตน</span>
     <h1>กรอก PIN เพื่อเข้าสอบ</h1>
+    <div class="identity-box" id="pinVerifyIdentity"></div>
     <p class="lead" id="pinVerifyLead">กรอก PIN ที่คุณตั้งไว้</p>
     <input type="password" class="name-input" id="pinVerifyInput" placeholder="PIN" inputmode="numeric" maxlength="6">
     <p id="forgotPinBtn" role="button" tabindex="0" style="text-align:right;text-decoration:underline;cursor:pointer;font-size:12.5px;color:var(--blue);margin:6px 0 10px;">ลืม PIN? ยืนยันตัวตนเพื่อตั้งใหม่</p>
@@ -130,6 +145,7 @@
     <h1 id="selectHeading" style="margin-bottom:6px;">รายวิชาที่คุณมีสิทธิสอบ</h1>
     <div class="identity-box" id="identityBox"></div>
     <div id="qgridWrap"><div class="loading-note">กำลังโหลดรายวิชา...</div></div>
+    <div id="selectScoreWrap"></div>
     <div class="start-actions" style="margin-top:20px;">
       <button class="btn btn-ghost" id="backToLoginBtn">← ออกจากระบบ</button>
       <button class="btn btn-primary" id="confirmQBtn" disabled>เริ่มทำข้อสอบ →</button>
@@ -234,6 +250,6 @@
   </div>
 </div>
 
-<script src="/assets/student-main.js?v=20260722-2"></script>
+<script src="/assets/student-main.js?v=20260726-3"></script>
 </body>
 </html>

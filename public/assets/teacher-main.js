@@ -1518,7 +1518,7 @@ function renderDfdReview(rec){
   return renderIntegrityReview(rec) + `<div class="detail-block"><b>🧩 ตรวจงาน Data Flow Diagram</b><br>คะแนนรวมปัจจุบัน <b>${rec.overallScore20}/20</b> (Level 0–2 รวม 300 คะแนน แล้วแปลงเป็น 20 คะแนน)</div><div class="dfd-review-grid">${[0,1,2].map(level=>{const data=levels.find(item=>Number(item.level)===level);const shapes=data?.shapes?.length||0,flows=data?.connections?.length||0;return `<section class="dfd-review-card"><h4>Level ${level}</h4><div class="dfd-review-meta">สัญลักษณ์ ${shapes} · เส้นข้อมูล ${flows}</div>${svgFor(data)}<div class="editor-actions"><label>คะแนน /100 <input class="dfd-score-input" data-dfd-score-level="${level}" type="number" min="0" max="100" step="0.5" value="${Number(scores[level])||0}"></label></div></section>`;}).join('')}</div><div class="editor-actions"><button class="btn btn-primary btn-sm" data-save-dfd-score>บันทึกคะแนนที่ปรับ</button></div>`;
 }
 function renderIntegrityReview(rec){
-  const events=Array.isArray(rec.integrityEvents)?rec.integrityEvents:[];
+  const events=(Array.isArray(rec.integrityEvents)?rec.integrityEvents:[]).filter(event=>event.type!=='session_recovered');
   const labels={tab_switch:'สลับแท็บ/หน้าจอ',fullscreen_exit:'ออกจากโหมดเต็มจอ',right_click:'พยายามคลิกขวา',copy:'พยายามคัดลอก',reload:'โหลดหน้าใหม่'};
   const counts=`สลับแท็บ ${rec.tabSwitches||0} · ออกจากเต็มจอ ${rec.fullscreenExitAttempts||0} · คลิกขวา ${rec.rightClickAttempts||0} · คัดลอก ${rec.copyAttempts||0} · โหลดหน้าใหม่ ${rec.reloadCount||0}`;
   const alert=(rec.tabSwitches||0)+(rec.fullscreenExitAttempts||0)+(rec.rightClickAttempts||0)+(rec.copyAttempts||0)+(rec.reloadCount||0)>0;

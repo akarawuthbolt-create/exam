@@ -62,6 +62,15 @@ test('health and readiness endpoints report application state', async () => {
   assert.equal(readyBody.sessions.status, 'connected');
 });
 
+test('student logout revokes the current session', async () => {
+  const headers = await studentHeaders();
+  const logout = await request('/api/student/session', { method: 'DELETE', headers });
+  assert.equal(logout.status, 200);
+  assert.deepEqual(JSON.parse(logout.body), { ok: true });
+  const afterLogout = await request('/api/student/session', { headers });
+  assert.equal(afterLogout.status, 401);
+});
+
 test('Google Forms callback inline script is authorized by the request CSP nonce', async () => {
   const response = await request('/api/google-forms/callback');
   assert.equal(response.status, 400);
@@ -79,6 +88,11 @@ test('frontend pages load extracted CSS and JavaScript assets', async () => {
   assert.match(admin.body, /src="\/assets\/admin-learning-plans\.js(?:\?v=[^"]+)?"/);
   assert.match(admin.body, /id="manageTeacherDialog"/);
   assert.doesNotMatch(admin.body, /<style>/);
+  const student = await request('/student');
+  assert.equal(student.status, 200);
+  assert.match(student.body, /id="selectScoreWrap"/);
+  assert.match(student.body, /id="studentIdentityConfirmModal"/);
+  assert.match(student.body, /id="pinSetupIdentity"/);
   const [css, script, learningPlanScript] = await Promise.all([request('/assets/admin.css'), request('/assets/admin-main.js'), request('/assets/admin-learning-plans.js')]);
   assert.equal(css.status, 200);
   assert.match(css.headers['content-type'], /text\/css/);
@@ -302,6 +316,19 @@ test('question analysis requires admin access and exports Excel and Word forms',
   assert.equal(wordForm.status, 200);
   assert.match(wordForm.headers['content-type'], /wordprocessingml/);
   assert.ok(wordForm.body.length > 1000);
+});
+
+test('student lookup returns identity details for confirmation before PIN entry', async () => {
+  await app.ready;
+  const student = readDB().students[0];
+  const response = await request('/api/students/' + encodeURIComponent(student.studentId));
+  assert.equal(response.status, 200);
+  const body = JSON.parse(response.body);
+  assert.equal(body.studentId, student.studentId);
+  assert.equal(body.firstName, student.firstName);
+  assert.equal(body.lastName, student.lastName);
+  assert.equal(body.classRoom, student.classRoom);
+  assert.equal(typeof body.hasPin, 'boolean');
 });
 
 test('admin can create, update, list, and delete a multi-unit learning plan', async () => {

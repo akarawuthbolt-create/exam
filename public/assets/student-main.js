@@ -46,6 +46,7 @@ async function apiLookupStudent(id){ return apiFetch('/api/students/'+encodeURIC
 async function apiSetPin(studentId, pin){ return apiFetch('/api/students/'+encodeURIComponent(studentId)+'/set-pin', { method:'POST', body:{pin} }); }
 async function apiVerifyPin(studentId, pin){ return apiFetch('/api/students/'+encodeURIComponent(studentId)+'/verify-pin', { method:'POST', body:{pin} }); }
 async function apiRecoverPin(studentId, firstName, lastName, pin){ return apiFetch('/api/students/'+encodeURIComponent(studentId)+'/recover-pin', { method:'POST', body:{firstName,lastName,pin} }); }
+async function apiLogoutStudent(){ return apiFetch('/api/student/session', { method:'DELETE' }); }
 async function apiGetEligibleSets(){ return apiFetch('/api/sets'); }
 async function apiSubmitResult(record){ return apiFetch('/api/results', { method:'POST', body:record }); }
 async function apiGetMyResults(studentId){ return apiFetch('/api/students/'+encodeURIComponent(studentId)+'/results'); }
@@ -56,7 +57,7 @@ const EXAM_DEVICE_ID=(()=>{let id=sessionStorage.getItem('examDeviceId');if(!id)
 async function apiClaimExamDevice(key,resitAccessId){ return apiFetch('/api/exam-drafts/'+encodeURIComponent(key)+'/claim',{method:'POST',body:{resitAccessId,deviceId:EXAM_DEVICE_ID}}); }
 async function recoverExamStudentSession(){
   const response=await fetch('/api/student/session/recover-exam',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentId:app.studentId,questionKey:app.questionKey,resitAccessId:app.resitAccessId||null,deviceId:EXAM_DEVICE_ID})});
-  if(!response.ok)return false;const result=await response.json();app.studentToken=result.token;sessionStorage.setItem('examStudentToken',result.token);return true;
+  if(!response.ok)return false;const result=await response.json();app.studentToken=result.token;sessionStorage.setItem('examStudentToken',result.token);state.sessionRecoveries=(Number(state.sessionRecoveries)||0)+1;recordIntegrityEvent('session_recovered');saveSession();return true;
 }
 
 const SECTION_KEYS = ['mc','matching','written'];
@@ -73,7 +74,7 @@ let app = {
   timeLeft: 60*60, examEndTime: null, globalTimerHandle: null,
   examEnded: false, examInProgress: false, reloadCount: 0
 };
-let state = { tabSwitches: 0, tabWarningAcknowledged: 0, fullscreenExitAttempts: 0, rightClickAttempts: 0, copyAttempts: 0, integrityEvents: [] };
+let state = { tabSwitches: 0, tabWarningAcknowledged: 0, fullscreenExitAttempts: 0, rightClickAttempts: 0, copyAttempts: 0, sessionRecoveries: 0, integrityEvents: [] };
 let draftAnswers = { mc:{}, matching:{}, written:{} };
 let ELIGIBLE_SETS = [];
 function setStudentSession(result){
@@ -124,7 +125,7 @@ function saveSession(){
     submittedSections: app.submittedSections, mcState: app.mcState,
     examEndTime: app.examEndTime, examEnded: app.examEnded,
     reloadCount: app.reloadCount, tabSwitches: state.tabSwitches, tabWarningAcknowledged: state.tabWarningAcknowledged,
-    fullscreenExitAttempts: state.fullscreenExitAttempts, rightClickAttempts: state.rightClickAttempts, copyAttempts: state.copyAttempts,
+    fullscreenExitAttempts: state.fullscreenExitAttempts, rightClickAttempts: state.rightClickAttempts, copyAttempts: state.copyAttempts, sessionRecoveries: state.sessionRecoveries||0,
     integrityEvents: state.integrityEvents,
     draftAnswers: draftAnswers, eligibleSets: ELIGIBLE_SETS, draftRevision:app.draftRevision||0
   };
@@ -141,7 +142,7 @@ function queueServerSave(payload){
 async function flushServerSave(){
   if(_serverSaveInFlight || !_pendingServerPayload || app.examEnded) return;
   const payload=_pendingServerPayload; _pendingServerPayload=null; _serverSaveInFlight=true;
-  const draft={questionKey:payload.questionKey,resitAccessId:app.resitAccessId||null,deviceId:EXAM_DEVICE_ID,revision:app.draftRevision||0,section:payload.section,lateCode:payload.lateCode,submittedSections:payload.submittedSections,mcState:payload.mcState,examEndTime:payload.examEndTime,reloadCount:payload.reloadCount,tabSwitches:payload.tabSwitches,tabWarningAcknowledged:payload.tabWarningAcknowledged,fullscreenExitAttempts:payload.fullscreenExitAttempts,rightClickAttempts:payload.rightClickAttempts,copyAttempts:payload.copyAttempts,integrityEvents:payload.integrityEvents,draftAnswers:payload.draftAnswers};
+  const draft={questionKey:payload.questionKey,resitAccessId:app.resitAccessId||null,deviceId:EXAM_DEVICE_ID,revision:app.draftRevision||0,section:payload.section,lateCode:payload.lateCode,submittedSections:payload.submittedSections,mcState:payload.mcState,examEndTime:payload.examEndTime,reloadCount:payload.reloadCount,tabSwitches:payload.tabSwitches,tabWarningAcknowledged:payload.tabWarningAcknowledged,fullscreenExitAttempts:payload.fullscreenExitAttempts,rightClickAttempts:payload.rightClickAttempts,copyAttempts:payload.copyAttempts,sessionRecoveries:payload.sessionRecoveries||0,integrityEvents:payload.integrityEvents,draftAnswers:payload.draftAnswers};
   try{
     let saved;
     try{saved=await apiSaveExamDraft(payload.questionKey,draft);}
@@ -287,7 +288,23 @@ document.getElementById('goLoginBtn').addEventListener('click', ()=>{
   document.getElementById('studentIdInput').focus();
 });
 document.getElementById('backToStartBtn').addEventListener('click', ()=>{ hideAllTopScreens(); startScreen.classList.remove('hidden'); });
-document.getElementById('backToLoginBtn').addEventListener('click', ()=>{ hideAllTopScreens(); loginScreen.classList.remove('hidden'); });
+document.getElementById('backToLoginBtn').addEventListener('click', async ()=>{
+  const token = app.studentToken;
+  try{ if(token) await apiLogoutStudent(); }catch(e){}
+  sessionStorage.removeItem('examStudentToken');
+  clearSessionData();
+  app = {studentId:null,studentName:'',classRoom:'',studentToken:'',questionKey:null,section:null,lateCode:null,draftRevision:0,submittedSections:{mc:false,matching:false,written:false},mcState:null,timeLeft:60*60,examEndTime:null,globalTimerHandle:null,examEnded:false,examInProgress:false,reloadCount:0};
+  state = {tabSwitches:0,tabWarningAcknowledged:0,fullscreenExitAttempts:0,rightClickAttempts:0,copyAttempts:0,sessionRecoveries:0,integrityEvents:[]};
+  draftAnswers = {mc:{},matching:{},written:{}};
+  ELIGIBLE_SETS=[]; ELIGIBLE_SETS_BY_KEY={}; COMPLETED_KEYS=new Set(); pickedKey=null; lateCodeVerified={};
+  document.getElementById('studentIdInput').value='';
+  document.getElementById('pinVerifyInput').value='';
+  document.getElementById('pinSetupInput').value='';
+  document.getElementById('pinSetupConfirmInput').value='';
+  document.getElementById('confirmQBtn').disabled=true;
+  history.replaceState({},'',location.pathname);
+  hideAllTopScreens(); startScreen.classList.remove('hidden');
+});
 
 document.getElementById('goCheckScoreBtn').addEventListener('click', ()=>{
   hideAllTopScreens(); checkScoreScreen.classList.remove('hidden');
@@ -306,19 +323,21 @@ async function doCheckScore(){
     const results = await apiGetMyResults(val);
     errBox.style.display='none';
     const wrap = document.getElementById('scoreListWrap');
-    if(!results.length){ wrap.innerHTML = '<div class="empty-note">ยังไม่พบประวัติการสอบของรหัสนี้</div>'; }
-    else{
-      wrap.innerHTML = `<table class="score-table"><thead><tr><th>รายวิชา</th><th>ประเภท</th><th>วันที่สอบ</th><th>สถานะ</th><th>คะแนน (/20)</th></tr></thead><tbody>` +
-        results.map(r=>`<tr>
-          <td>${escapeHtml(r.questionTitle)}${r.attemptType==='resit'?'<br><span class="status-pill pending">สอบซ่อม</span>':''}</td>
-          <td>${escapeHtml(r.examType||'-')}</td>
-          <td>${new Date(r.submittedAt).toLocaleDateString('th-TH')}</td>
-          <td><span class="status-pill ${r.published?'pub':'pending'}">${r.published?'ประกาศแล้ว':'รอประกาศผล'}</span></td>
-          <td><b>${r.published ? (r.attemptType==='resit' ? `${r.overallScore20} → ${r.convertedScore}/${r.resitScoreMax}` : r.overallScore20) : '—'}</b></td>
-        </tr>`).join('') + `</tbody></table>`;
-    }
+    wrap.innerHTML = scoreResultsHtml(results);
   }catch(e){ errBox.textContent = e.message; errBox.style.display='block'; }
   btn.disabled = false; btn.textContent = 'ตรวจสอบ →';
+}
+
+function scoreResultsHtml(results){
+  if(!results.length) return '<div class="empty-note">ยังไม่พบประวัติการสอบ</div>';
+  return `<div style="overflow-x:auto;"><table class="score-table"><thead><tr><th>รายวิชา</th><th>ประเภท</th><th>วันที่สอบ</th><th>สถานะ</th><th>คะแนน</th></tr></thead><tbody>` +
+    results.map(r=>`<tr>
+      <td>${escapeHtml(r.questionTitle)}${r.attemptType==='resit'?'<br><span class="status-pill pending">สอบซ่อม</span>':''}</td>
+      <td>${escapeHtml(r.examType||'-')}</td>
+      <td>${new Date(r.submittedAt).toLocaleDateString('th-TH')}</td>
+      <td><span class="status-pill ${r.published?'pub':'pending'}">${r.published?'ประกาศแล้ว':'รอประกาศผล'}</span></td>
+      <td><b>${r.published ? (r.attemptType==='resit' ? `${r.overallScore20} → ${r.convertedScore}/${r.resitScoreMax}` : `${r.overallScore20}/20`) : '—'}</b></td>
+    </tr>`).join('') + `</tbody></table></div>`;
 }
 document.getElementById('doCheckScoreBtn').addEventListener('click', doCheckScore);
 document.getElementById('checkIdInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') doCheckScore(); });
@@ -331,19 +350,38 @@ async function tryLogin(){
   btn.disabled = true; btn.textContent = 'กำลังตรวจสอบ...';
   try{
     const student = await apiLookupStudent(val);
-    app.studentId = student.studentId;
-    hideAllTopScreens();
-    const screen = student.hasPin ? pinVerifyScreen : pinSetupScreen;
-    screen.classList.remove('hidden');
-    const input = document.getElementById(student.hasPin ? 'pinVerifyInput' : 'pinSetupInput');
-    input.value = '';
-    document.getElementById(student.hasPin ? 'pinVerifyError' : 'pinSetupError').style.display = 'none';
-    input.focus();
+    pendingLoginStudent = student;
+    document.getElementById('studentIdentityConfirmDetails').innerHTML = `<b>${escapeHtml(student.firstName)} ${escapeHtml(student.lastName)}</b><br>รหัสนักเรียน: ${escapeHtml(student.studentId)}<br>ห้อง: ${escapeHtml(student.classRoom||'-')}`;
+    document.getElementById('studentIdentityConfirmModal').classList.remove('hidden');
+    document.getElementById('studentIdentityAcceptBtn').focus();
   }catch(e){ errBox.textContent = e.message; errBox.style.display='block'; }
   btn.disabled = false; btn.textContent = 'ตรวจสอบสิทธิ์ →';
 }
 document.getElementById('checkIdBtn').addEventListener('click', tryLogin);
 document.getElementById('studentIdInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryLogin(); });
+
+let pendingLoginStudent = null;
+document.getElementById('studentIdentityRejectBtn').addEventListener('click', ()=>{
+  pendingLoginStudent=null;
+  document.getElementById('studentIdentityConfirmModal').classList.add('hidden');
+  const input=document.getElementById('studentIdInput'); input.focus(); input.select();
+});
+document.getElementById('studentIdentityAcceptBtn').addEventListener('click', ()=>{
+  const student=pendingLoginStudent;
+  if(!student)return;
+  pendingLoginStudent=null;
+  document.getElementById('studentIdentityConfirmModal').classList.add('hidden');
+  app.studentId=student.studentId;
+  const identity=`<b>${escapeHtml(student.firstName)} ${escapeHtml(student.lastName)}</b><br>รหัส ${escapeHtml(student.studentId)} &nbsp;|&nbsp; ห้อง ${escapeHtml(student.classRoom||'-')}`;
+  document.getElementById(student.hasPin?'pinVerifyIdentity':'pinSetupIdentity').innerHTML=identity;
+  hideAllTopScreens();
+  const screen=student.hasPin?pinVerifyScreen:pinSetupScreen;
+  screen.classList.remove('hidden');
+  const input=document.getElementById(student.hasPin?'pinVerifyInput':'pinSetupInput');
+  input.value='';
+  document.getElementById(student.hasPin?'pinVerifyError':'pinSetupError').style.display='none';
+  input.focus();
+});
 
 async function proceedToSelectScreen(){
   hideAllTopScreens(); selectScreen.classList.remove('hidden');
@@ -407,13 +445,18 @@ let pickedKey = null;
 let COMPLETED_KEYS = new Set();
 async function refreshSelectScreen(){
   document.getElementById('qgridWrap').innerHTML = '<div class="loading-note">กำลังโหลดรายวิชา...</div>';
+  document.getElementById('selectScoreWrap').innerHTML = '<div class="loading-note">กำลังโหลดผลสอบ...</div>';
   try{ ELIGIBLE_SETS = await apiGetEligibleSets(); }
   catch(e){ document.getElementById('qgridWrap').innerHTML = '<div class="empty-note">'+escapeHtml(e.message)+'</div>'; return; }
   ELIGIBLE_SETS_BY_KEY = {}; ELIGIBLE_SETS.forEach(s=>ELIGIBLE_SETS_BY_KEY[s.key]=s);
   try{
     const mine = await apiGetMyResults(app.studentId);
     COMPLETED_KEYS = new Set(mine.filter(r=>r.attemptType!=='resit').map(r=>r.questionKey));
-  }catch(e){ COMPLETED_KEYS = new Set(); }
+    document.getElementById('selectScoreWrap').innerHTML = `<div class="panel" style="margin-top:22px;"><h2 style="margin-bottom:4px;">ผลสอบของฉัน</h2><p class="lead" style="margin:0 0 10px;">คะแนนจะแสดงเมื่ออาจารย์ประกาศผลแล้ว</p>${scoreResultsHtml(mine)}</div>`;
+  }catch(e){
+    COMPLETED_KEYS = new Set();
+    document.getElementById('selectScoreWrap').innerHTML = `<div class="empty-note">โหลดผลสอบไม่สำเร็จ: ${escapeHtml(e.message)}</div>`;
+  }
   renderQGrid();
 }
 let lateCodeVerified = {}; // {questionKey: code} once verified this session
@@ -489,7 +532,7 @@ function applyServerDraft(draft){
   if(!draft?.examEndTime || new Date(draft.examEndTime).getTime()<=Date.now()) return false;
   app.section=draft.section||null; app.lateCode=draft.lateCode||null; app.submittedSections=draft.submittedSections||{mc:false,matching:false,written:false};
   app.mcState=draft.mcState||null; app.examEndTime=draft.examEndTime; app.timeLeft=Math.max(0,Math.round((new Date(draft.examEndTime).getTime()-Date.now())/1000));
-  app.reloadCount=(Number(draft.reloadCount)||0)+1; state={tabSwitches:Number(draft.tabSwitches)||0,tabWarningAcknowledged:Number(draft.tabWarningAcknowledged)||0,fullscreenExitAttempts:Number(draft.fullscreenExitAttempts)||0,rightClickAttempts:Number(draft.rightClickAttempts)||0,copyAttempts:Number(draft.copyAttempts)||0,integrityEvents:Array.isArray(draft.integrityEvents)?draft.integrityEvents:[]};
+  app.reloadCount=(Number(draft.reloadCount)||0)+1; state={tabSwitches:Number(draft.tabSwitches)||0,tabWarningAcknowledged:Number(draft.tabWarningAcknowledged)||0,fullscreenExitAttempts:Number(draft.fullscreenExitAttempts)||0,rightClickAttempts:Number(draft.rightClickAttempts)||0,copyAttempts:Number(draft.copyAttempts)||0,sessionRecoveries:Number(draft.sessionRecoveries)||0,integrityEvents:Array.isArray(draft.integrityEvents)?draft.integrityEvents:[]};
   app.draftRevision=Number(draft.revision)||0; draftAnswers=draft.draftAnswers||{mc:{},matching:{},written:{}}; return true;
 }
 let examPreparing=false;
@@ -864,7 +907,7 @@ async function submitFinalAnswers(autoSubmit){
     studentId: app.studentId, studentName: app.studentName, classRoom: app.classRoom,
     questionKey: app.questionKey, resitAccessId: app.resitAccessId || null, deviceId: EXAM_DEVICE_ID, autoSubmit: !!autoSubmit, lateCode: app.lateCode || null,
     tabSwitches: state.tabSwitches, reloadCount: app.reloadCount,
-    fullscreenExitAttempts: state.fullscreenExitAttempts, rightClickAttempts: state.rightClickAttempts, copyAttempts: state.copyAttempts,
+    fullscreenExitAttempts: state.fullscreenExitAttempts, rightClickAttempts: state.rightClickAttempts, copyAttempts: state.copyAttempts, sessionRecoveries: state.sessionRecoveries||0,
     integrityEvents: state.integrityEvents,
     answers: { mc: draftAnswers.mc, matching: draftAnswers.matching, written: draftAnswers.written }
   };
@@ -874,7 +917,11 @@ async function submitFinalAnswers(autoSubmit){
     try{ return await apiSubmitResult(record); }
     catch(e){
       lastErr = e;
-      if(e.payload?.error==='unauthorized'&&await recoverExamStudentSession()) continue;
+      if(e.payload?.error==='unauthorized'&&await recoverExamStudentSession()){
+        record.sessionRecoveries=state.sessionRecoveries||0;
+        record.integrityEvents=state.integrityEvents;
+        continue;
+      }
       // "already submitted" is not something a retry will fix — stop immediately
       if(e.payload && e.payload.error==='already_submitted') break;
       if(attempt<MAX_TRIES) await new Promise(r=>setTimeout(r, e.retryAfterMs || 800));
@@ -925,7 +972,7 @@ async function finalizeExam(reason){
   clearSessionData();
   // Once this subject's exam has ended, the anti-cheat counters for it are done being tracked —
   // clear them immediately so they never carry over into a different subject or a shared device.
-  state = { tabSwitches: 0, tabWarningAcknowledged: 0, fullscreenExitAttempts: 0, rightClickAttempts: 0, copyAttempts: 0, integrityEvents: [] };
+  state = { tabSwitches: 0, tabWarningAcknowledged: 0, fullscreenExitAttempts: 0, rightClickAttempts: 0, copyAttempts: 0, sessionRecoveries: 0, integrityEvents: [] };
   examScreen.classList.add('hidden');
   setSubmissionBusy(false);
   setFloatingThemeButtonVisible(true);
@@ -954,7 +1001,7 @@ document.getElementById('restartAllBtn').addEventListener('click', ()=>{
   finalSubmissionInProgress=false;
   clearSessionData();
   app = {studentId:app.studentId, studentName:app.studentName, classRoom:app.classRoom, studentToken:app.studentToken, questionKey:null, section:null, lateCode:null, draftRevision:0, submittedSections:{mc:false,matching:false,written:false}, mcState:null, timeLeft:60*60, examEndTime:null, globalTimerHandle:null, examEnded:false, examInProgress:false, reloadCount:0};
-  state = {tabSwitches:0, tabWarningAcknowledged:0, fullscreenExitAttempts:0, rightClickAttempts:0, copyAttempts:0, integrityEvents:[]};
+  state = {tabSwitches:0, tabWarningAcknowledged:0, fullscreenExitAttempts:0, rightClickAttempts:0, copyAttempts:0, sessionRecoveries:0, integrityEvents:[]};
   draftAnswers = {mc:{}, matching:{}, written:{}};
   proceedToSelectScreen();
 });
@@ -980,6 +1027,7 @@ function attemptResumeSession(){
   state.fullscreenExitAttempts = saved.fullscreenExitAttempts || 0;
   state.rightClickAttempts = saved.rightClickAttempts || 0;
   state.copyAttempts = saved.copyAttempts || 0;
+  state.sessionRecoveries = saved.sessionRecoveries || 0;
   state.integrityEvents = Array.isArray(saved.integrityEvents) ? saved.integrityEvents : [];
   recordIntegrityEvent('reload');
   draftAnswers = saved.draftAnswers || {mc:{}, matching:{}, written:{}};
