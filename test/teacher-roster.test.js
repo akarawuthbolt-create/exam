@@ -47,3 +47,20 @@ test('teacher exam roster cannot read another teacher exam', () => {
   rosterHandler({ sets: [{ key: 'set-1', teacherId: 'teacher-2' }], students: [] })({ query: { setKey: 'set-1', classRoom: 'ปวช.1/4' }, teacherId: 'teacher-1', get: () => '' }, res);
   assert.equal(res.statusCode, 404);
 });
+
+test('teacher exam roster appends individually assigned students after the room roster', () => {
+  const db = {
+    sets: [{ key: 'set-1', teacherId: 'teacher-1', assignedClasses: ['CC.1/4'], examSchedules: [{ classes: ['CC.1/4'], studentIds: ['99', '3'] }] }],
+    students: [
+      { studentId: '20', firstName: 'Room', lastName: 'Two', classRoom: 'CC.1/4' },
+      { studentId: '3', firstName: 'Room', lastName: 'One', classRoom: 'CC.1/4' },
+      { studentId: '99', firstName: 'Extra', lastName: 'Student', classRoom: 'CC.2/4' }
+    ]
+  };
+  const res = responseCapture();
+  rosterHandler(db)({ query: { setKey: 'set-1', classRoom: 'CC.1/4' }, teacherId: 'teacher-1', protocol: 'https', get: () => '' }, res);
+  assert.deepEqual(res.body.students.map(student => student.studentId), ['3', '20', '99']);
+  assert.deepEqual(res.body.students.map(student => student.number), [1, 2, 3]);
+  assert.equal(res.body.students[2].additionalAccess, true);
+  assert.equal(res.body.students[0].additionalAccess, false);
+});

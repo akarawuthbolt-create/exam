@@ -29,17 +29,24 @@ function registerTeacherClassRoutes(app, { readDB, requireTeacher, getExamSchedu
       return res.status(403).json({ error: 'forbidden', message: 'ห้องนี้ไม่ได้รับมอบหมายให้ทำข้อสอบชุดนี้' });
     }
 
-    const students = db.students
+    const schedule = typeof getExamSchedule === 'function' ? getExamSchedule(set, classRoom) : null;
+    const regularStudents = db.students
       .filter(student => student.classRoom === classRoom)
-      .sort((a, b) => String(a.studentId || '').localeCompare(String(b.studentId || ''), 'th', { numeric: true }))
+      .sort((a, b) => String(a.studentId || '').localeCompare(String(b.studentId || ''), 'th', { numeric: true }));
+    const regularIds = new Set(regularStudents.map(student => student.studentId));
+    const additionalIds = new Set(Array.isArray(schedule?.studentIds) ? schedule.studentIds : []);
+    const additionalStudents = db.students
+      .filter(student => additionalIds.has(student.studentId) && !regularIds.has(student.studentId))
+      .sort((a, b) => String(a.studentId || '').localeCompare(String(b.studentId || ''), 'th', { numeric: true }));
+    const students = [...regularStudents, ...additionalStudents]
       .map((student, index) => ({
         number: index + 1,
         studentId: student.studentId,
         firstName: student.firstName,
         lastName: student.lastName,
-        examPeriod: student.examPeriod || ''
+        examPeriod: student.examPeriod || '',
+        additionalAccess: additionalIds.has(student.studentId) && !regularIds.has(student.studentId)
       }));
-    const schedule = typeof getExamSchedule === 'function' ? getExamSchedule(set, classRoom) : null;
     const forwardedProto = String(req.get?.('x-forwarded-proto') || '').split(',')[0].trim();
     const protocol = forwardedProto || req.protocol || 'http';
     const host = req.get?.('host') || 'localhost';
