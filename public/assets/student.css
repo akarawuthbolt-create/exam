@@ -183,7 +183,7 @@ html.restoring-session #startScreen{visibility:hidden;}html.restoring-session bo
 .modal-card{background:var(--surface);border-radius:18px;padding:30px;max-width:420px;width:92%;box-shadow:0 30px 60px -20px rgba(0,0,0,.4);}
 .modal-card h3{font-size:16px;margin:0 0 4px;}
 .modal-card p{color:var(--sub);font-size:13.5px;line-height:1.7;}
-.student-identity-confirm-card{max-width:500px;text-align:center;border:2px solid var(--blue);}
+.student-identity-confirm-card{max-width:620px;width:calc(100% - 32px);padding:36px 40px;text-align:center;border:2px solid var(--blue);}
 .student-identity-confirm-card h2{font-size:21px;margin:10px 0 16px;}
 .student-identity-confirm-card .identity-box{text-align:left;font-size:16px;margin-bottom:12px;}
 .student-identity-confirm-card .identity-warning{color:var(--red);font-weight:700;text-align:left;margin:0 0 12px;}
@@ -197,7 +197,7 @@ html.restoring-session #startScreen{visibility:hidden;}html.restoring-session bo
 .student-identity-confirm-card .modal-actions .btn{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;}
 .pin-recovery-actions{display:grid;grid-template-columns:minmax(110px,.45fr) minmax(0,1fr);align-items:stretch;}
 .pin-recovery-actions .btn{width:100%;display:flex;align-items:center;justify-content:center;}
-@media(max-width:520px){.student-identity-confirm-card .modal-actions{gap:8px;}.student-identity-confirm-card .modal-actions .btn{font-size:13px;padding-left:8px;padding-right:8px;}}
+@media(max-width:520px){.student-identity-confirm-card{width:calc(100% - 24px);padding:26px 20px;}.student-identity-confirm-card .modal-actions{gap:8px;}.student-identity-confirm-card .modal-actions .btn{font-size:13px;padding-left:8px;padding-right:8px;}}
 .modal-check{font-size:44px;color:var(--green);margin:14px 0;}
 .modal-actions{display:flex;gap:10px;}
 
