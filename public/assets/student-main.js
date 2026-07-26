@@ -352,8 +352,16 @@ async function tryLogin(){
     const student = await apiLookupStudent(val);
     pendingLoginStudent = student;
     document.getElementById('studentIdentityConfirmDetails').innerHTML = `<b>${escapeHtml(student.firstName)} ${escapeHtml(student.lastName)}</b><br>รหัสนักเรียน: ${escapeHtml(student.studentId)}<br>ห้อง: ${escapeHtml(student.classRoom||'-')}`;
+    document.getElementById('identityPinVerifyFields').classList.toggle('hidden',!student.hasPin);
+    document.getElementById('identityPinSetupFields').classList.toggle('hidden',student.hasPin);
+    document.getElementById('studentIdentityWarning').textContent=student.hasPin?'ตรวจสอบชื่อ–นามสกุลให้ถูกต้อง แล้วกรอก PIN ของบัญชีนี้':'บัญชีนี้ยังไม่มี PIN กรุณาตรวจสอบชื่อ–นามสกุลให้ถูกต้องก่อนตั้ง PIN เพราะ PIN จะถูกผูกกับบัญชีนี้';
+    document.getElementById('identityPinInput').value='';
+    document.getElementById('identityPinSetupInput').value='';
+    document.getElementById('identityPinSetupConfirmInput').value='';
+    document.getElementById('studentIdentityConfirmError').style.display='none';
+    document.getElementById('studentIdentityAcceptBtn').textContent=student.hasPin?'ยืนยันและเข้าสู่ระบบ →':'ตั้ง PIN และเข้าสู่ระบบ →';
     document.getElementById('studentIdentityConfirmModal').classList.remove('hidden');
-    document.getElementById('studentIdentityAcceptBtn').focus();
+    setTimeout(()=>document.getElementById(student.hasPin?'identityPinInput':'identityPinSetupInput').focus(),0);
   }catch(e){ errBox.textContent = e.message; errBox.style.display='block'; }
   btn.disabled = false; btn.textContent = 'ตรวจสอบสิทธิ์ →';
 }
@@ -361,26 +369,59 @@ document.getElementById('checkIdBtn').addEventListener('click', tryLogin);
 document.getElementById('studentIdInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryLogin(); });
 
 let pendingLoginStudent = null;
+function clearIdentityPinInputs(){
+  document.getElementById('identityPinInput').value='';
+  document.getElementById('identityPinSetupInput').value='';
+  document.getElementById('identityPinSetupConfirmInput').value='';
+}
 document.getElementById('studentIdentityRejectBtn').addEventListener('click', ()=>{
   pendingLoginStudent=null;
+  clearIdentityPinInputs();
   document.getElementById('studentIdentityConfirmModal').classList.add('hidden');
   const input=document.getElementById('studentIdInput'); input.focus(); input.select();
 });
-document.getElementById('studentIdentityAcceptBtn').addEventListener('click', ()=>{
+document.getElementById('studentIdentityAcceptBtn').addEventListener('click', async ()=>{
+  const student=pendingLoginStudent;
+  if(!student)return;
+  const error=document.getElementById('studentIdentityConfirmError');
+  const button=document.getElementById('studentIdentityAcceptBtn');
+  let request;
+  if(student.hasPin){
+    const pin=document.getElementById('identityPinInput').value.trim();
+    if(!pin){error.textContent='กรุณากรอก PIN';error.style.display='block';return;}
+    request=()=>apiVerifyPin(student.studentId,pin);
+  }else{
+    const pin=document.getElementById('identityPinSetupInput').value.trim();
+    const confirmPin=document.getElementById('identityPinSetupConfirmInput').value.trim();
+    if(!/^\d{4,6}$/.test(pin)){error.textContent='PIN ต้องเป็นตัวเลข 4-6 หลัก';error.style.display='block';return;}
+    if(pin!==confirmPin){error.textContent='PIN ทั้งสองช่องไม่ตรงกัน';error.style.display='block';return;}
+    request=()=>apiSetPin(student.studentId,pin);
+  }
+  button.disabled=true;button.textContent='กำลังยืนยัน...';
+  try{
+    const result=await request();
+    if(result.ok===false){error.textContent=result.locked?'PIN ถูกล็อก กรุณากด “ลืม PIN” เพื่อตั้งใหม่':`PIN ไม่ถูกต้อง (เหลือ ${result.remainingAttempts} ครั้ง)`;error.style.display='block';return;}
+    setStudentSession(result);
+    pendingLoginStudent=null;
+    clearIdentityPinInputs();
+    error.style.display='none';
+    document.getElementById('studentIdentityConfirmModal').classList.add('hidden');
+    await proceedToSelectScreen();
+  }catch(e){error.textContent=e.message;error.style.display='block';}
+  finally{button.disabled=false;button.textContent=student.hasPin?'ยืนยันและเข้าสู่ระบบ →':'ตั้ง PIN และเข้าสู่ระบบ →';}
+});
+document.getElementById('identityPinInput').addEventListener('keydown',event=>{if(event.key==='Enter')document.getElementById('studentIdentityAcceptBtn').click();});
+document.getElementById('identityPinSetupConfirmInput').addEventListener('keydown',event=>{if(event.key==='Enter')document.getElementById('studentIdentityAcceptBtn').click();});
+document.getElementById('identityForgotPinBtn').addEventListener('click',()=>{
   const student=pendingLoginStudent;
   if(!student)return;
   pendingLoginStudent=null;
+  clearIdentityPinInputs();
   document.getElementById('studentIdentityConfirmModal').classList.add('hidden');
   app.studentId=student.studentId;
-  const identity=`<b>${escapeHtml(student.firstName)} ${escapeHtml(student.lastName)}</b><br>รหัส ${escapeHtml(student.studentId)} &nbsp;|&nbsp; ห้อง ${escapeHtml(student.classRoom||'-')}`;
-  document.getElementById(student.hasPin?'pinVerifyIdentity':'pinSetupIdentity').innerHTML=identity;
-  hideAllTopScreens();
-  const screen=student.hasPin?pinVerifyScreen:pinSetupScreen;
-  screen.classList.remove('hidden');
-  const input=document.getElementById(student.hasPin?'pinVerifyInput':'pinSetupInput');
-  input.value='';
-  document.getElementById(student.hasPin?'pinVerifyError':'pinSetupError').style.display='none';
-  input.focus();
+  document.getElementById('pinVerifyIdentity').innerHTML=`<b>${escapeHtml(student.firstName)} ${escapeHtml(student.lastName)}</b><br>รหัส ${escapeHtml(student.studentId)} &nbsp;|&nbsp; ห้อง ${escapeHtml(student.classRoom||'-')}`;
+  hideAllTopScreens();pinVerifyScreen.classList.remove('hidden');
+  const form=document.getElementById('forgotPinForm');if(form.classList.contains('hidden'))document.getElementById('forgotPinBtn').click();
 });
 
 async function proceedToSelectScreen(){

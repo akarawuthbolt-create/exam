@@ -72,10 +72,19 @@
     <span class="eyebrow">ตรวจสอบก่อนดำเนินการ</span>
     <h2 id="studentIdentityConfirmTitle">นี่คือบัญชีของคุณใช่หรือไม่?</h2>
     <div class="identity-box" id="studentIdentityConfirmDetails"></div>
-    <p class="identity-warning">กรุณาตรวจสอบชื่อ–นามสกุลให้ถูกต้อง โดยเฉพาะก่อนตั้ง PIN ครั้งแรก เพราะ PIN จะถูกผูกกับบัญชีนี้</p>
+    <p class="identity-warning" id="studentIdentityWarning">กรุณาตรวจสอบชื่อ–นามสกุลให้ถูกต้องก่อนดำเนินการ</p>
+    <div id="identityPinVerifyFields">
+      <input type="password" class="name-input" id="identityPinInput" placeholder="กรอก PIN" inputmode="numeric" maxlength="6" autocomplete="off">
+      <button class="identity-forgot-pin" id="identityForgotPinBtn" type="button">ลืม PIN? ยืนยันตัวตนเพื่อตั้งใหม่</button>
+    </div>
+    <div id="identityPinSetupFields" class="hidden">
+      <input type="password" class="name-input" id="identityPinSetupInput" placeholder="ตั้ง PIN ตัวเลข 4-6 หลัก" inputmode="numeric" maxlength="6" autocomplete="off">
+      <input type="password" class="name-input" id="identityPinSetupConfirmInput" placeholder="ยืนยัน PIN อีกครั้ง" inputmode="numeric" maxlength="6" autocomplete="off">
+    </div>
+    <div class="id-error" id="studentIdentityConfirmError"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="studentIdentityRejectBtn" type="button">ไม่ใช่ แก้รหัสนักเรียน</button>
-      <button class="btn btn-primary" id="studentIdentityAcceptBtn" type="button">ใช่ บัญชีของฉัน →</button>
+      <button class="btn btn-primary" id="studentIdentityAcceptBtn" type="button">ยืนยันและเข้าสู่ระบบ →</button>
     </div>
   </div>
 </div>
@@ -250,6 +259,6 @@
   </div>
 </div>
 
-<script src="/assets/student-main.js?v=20260726-3"></script>
+<script src="/assets/student-main.js?v=20260726-4"></script>
 </body>
 </html>

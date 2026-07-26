@@ -186,7 +186,12 @@ html.restoring-session #startScreen{visibility:hidden;}html.restoring-session bo
 .student-identity-confirm-card{max-width:500px;text-align:center;border:2px solid var(--blue);}
 .student-identity-confirm-card h2{font-size:21px;margin:10px 0 16px;}
 .student-identity-confirm-card .identity-box{text-align:left;font-size:16px;margin-bottom:12px;}
-.student-identity-confirm-card .identity-warning{color:var(--red);font-weight:700;text-align:left;margin:0 0 18px;}
+.student-identity-confirm-card .identity-warning{color:var(--red);font-weight:700;text-align:left;margin:0 0 12px;}
+.student-identity-confirm-card .name-input{margin:0 0 10px;text-align:center;font-size:17px;letter-spacing:.08em;}
+.student-identity-confirm-card .id-error{text-align:left;margin:0 0 10px;}
+.identity-forgot-pin{display:block;margin:-2px 0 12px auto;padding:2px 0;border:0;background:none;color:var(--blue);font-size:12.5px;text-decoration:underline;}
+.student-identity-confirm-card .modal-actions{justify-content:center;align-items:stretch;}
+.student-identity-confirm-card .modal-actions .btn{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;}
 .modal-check{font-size:44px;color:var(--green);margin:14px 0;}
 .modal-actions{display:flex;gap:10px;}
 
