@@ -1823,6 +1823,13 @@ function resultScoreColumns(records,key){
   const snapshots=records.map(record=>record.detail?.gradingSnapshot).filter(Boolean);
   return {mc:dfd||!!set?.sections?.mc?.questions?.length||snapshots.some(item=>item.mc?.questions?.length),matching:dfd||!!set?.sections?.matching?.left?.length||snapshots.some(item=>item.matching?.left?.length),written:dfd||!!set?.sections?.written?.questions?.length||snapshots.some(item=>item.written?.questions?.length)};
 }
+function resultScoreMax(records,key){
+  const visibleMax=records.map(record=>Number(record.detail?.visibleScoreMax)).find(score=>Number.isFinite(score)&&score>0);
+  if(Number.isFinite(visibleMax)) return Math.round(visibleMax*100)/100;
+  if(records.some(record=>record.detail?.type==='dfd')) return 20;
+  const set=ADMIN_SETS.find(item=>item.key===key),setMax=set?computeSetTotal(set):0;
+  return setMax>0?setMax:20;
+}
 function renderResultGroups(records){
   const groups=new Map();
   records.forEach(record=>{
@@ -1830,10 +1837,10 @@ function renderResultGroups(records){
     if(!groups.has(key)) groups.set(key,{key,title:record.questionTitle||'ไม่ระบุรายวิชา',records:[]});
     groups.get(key).records.push(record);
   });
-  return [...groups.values()].map(group=>{const publishedCount=group.records.filter(record=>record.published).length,allPublished=publishedCount===group.records.length,columns=resultScoreColumns(group.records,group.key);return `<div class="course-group result-subject-group">
+  return [...groups.values()].map(group=>{const publishedCount=group.records.filter(record=>record.published).length,allPublished=publishedCount===group.records.length,columns=resultScoreColumns(group.records,group.key),scoreMax=resultScoreMax(group.records,group.key);return `<div class="course-group result-subject-group">
     <div class="course-group-head" data-toggleresultgroup="1"><span class="course-group-title">📚 ${escapeHtml(group.title)}</span><span class="course-group-count">${group.records.length} คน · ประกาศแล้ว ${publishedCount} คน · กดเพื่อดูผลสอบ</span><span class="course-group-actions"><button class="btn btn-ghost btn-sm publish-set-btn" type="button" data-publish-set="${escapeAttr(group.key)}" data-title="${escapeAttr(group.title)}" ${allPublished?'disabled':''}>${allPublished?'✅ ประกาศผลแล้ว':'📣 ประกาศผล'}</button><button class="btn btn-analysis btn-sm" type="button" data-question-analysis="${escapeAttr(group.key)}">📊 วิเคราะห์ข้อสอบ</button>${GRADEBOOK_SET_KEYS.has(group.key)?`<button class="btn btn-primary btn-sm" type="button" data-export-gradebook="${escapeAttr(group.key)}">📊 Excel รวมคะแนน</button>`:''}</span></div>
     <div class="course-group-body collapsed" style="overflow-x:auto;"><table class="result-table"><thead><tr>
-      <th>วันเวลา</th><th>รหัส</th><th>ชื่อนักเรียน</th><th>ห้อง</th><th>ประเภท</th><th>รายวิชา</th><th>อาจารย์</th>${columns.mc?'<th>ปรนัย</th>':''}${columns.matching?'<th>จับคู่</th>':''}${columns.written?'<th>อัตนัย</th>':''}<th>รวม/20</th><th>คลิกขวา</th><th>คัดลอก</th><th>สลับแท็บ</th><th></th>
+      <th>วันเวลา</th><th>รหัส</th><th>ชื่อนักเรียน</th><th>ห้อง</th><th>ประเภท</th><th>รายวิชา</th><th>อาจารย์</th>${columns.mc?'<th>ปรนัย</th>':''}${columns.matching?'<th>จับคู่</th>':''}${columns.written?'<th>อัตนัย</th>':''}<th>รวม/${scoreMax}</th><th>คลิกขวา</th><th>คัดลอก</th><th>สลับแท็บ</th><th></th>
     </tr></thead><tbody>${group.records.map(r=>`<tr data-row-id="${r.id}">
       <td>${new Date(r.submittedAt).toLocaleString('th-TH')}</td><td>${escapeHtml(r.studentId)}</td><td>${escapeHtml(r.studentName)}</td><td>${escapeHtml(r.classRoom)}</td><td>${escapeHtml(r.examType||'-')}</td><td>${escapeHtml(r.questionTitle)}</td><td>${escapeHtml(r.subjectTeacherName||'-')}</td>${columns.mc?`<td>${r.sectionScores.mc}</td>`:''}${columns.matching?`<td>${r.sectionScores.matching}</td>`:''}${columns.written?`<td>${r.sectionScores.written}</td>`:''}<td><b>${r.overallScore20}</b></td><td>${r.rightClickAttempts||0}</td><td>${r.copyAttempts||0}</td><td>${r.tabSwitches||0}</td>
       <td><div class="result-row-actions"><button class="btn btn-ghost btn-sm" data-viewdetail="${r.id}">ดูรายละเอียด</button><button class="btn btn-danger btn-sm" data-delres="${r.id}">ลบ</button></div></td>

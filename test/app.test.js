@@ -127,6 +127,19 @@ test('exam roster embeds TH Sarabun font and waits for it before printing', asyn
   assert.match(script.body, /document\.fonts&&document\.fonts\.ready/);
 });
 
+test('result tables label totals with each exam actual maximum score', async () => {
+  const [adminScript, teacherScript] = await Promise.all([
+    request('/assets/admin-main.js'),
+    request('/assets/teacher-main.js')
+  ]);
+  for (const response of [adminScript, teacherScript]) {
+    assert.equal(response.status, 200);
+    assert.match(response.body, /function resultScoreMax\(/);
+    assert.match(response.body, /<th>รวม\/\$\{scoreMax\}<\/th>/);
+    assert.doesNotMatch(response.body, /<th>รวม\/20<\/th>/);
+  }
+});
+
 test('student exam selection shows a preparing state before countdown', async () => {
   const [page, script, styles] = await Promise.all([
     request('/'),
