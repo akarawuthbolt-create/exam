@@ -11,7 +11,7 @@ function normalizeSetSchedule(set) {
 
 function registerTeacherSetRoutes(app, { readDB, writeDB, requireTeacher, examTypes, newId, applyAcademicPeriod }) {
   const owned = (db, key, teacherId) => db.sets.find(set => set.key === key && set.teacherId === teacherId);
-  app.get('/api/teacher/sets', requireTeacher, (req, res) => res.json(readDB().sets.filter(set => set.teacherId === req.teacherId)));
+  app.get('/api/teacher/sets', requireTeacher, (req, res) => res.json(readDB().sets.filter(set => set.teacherId === req.teacherId && !set.permanentlyDeletedAt)));
   app.get('/api/teacher/sets/:key/readiness', requireTeacher, (req, res) => { const set = owned(readDB(), req.params.key, req.teacherId); if (!set) return res.status(404).json({ error: 'not_found' }); res.json(checkExamReadiness(set)); });
   app.post('/api/teacher/sets', requireTeacher, async (req, res) => {
     const body = req.body; const errors = validateExamSetPayload(body);
@@ -73,12 +73,11 @@ function registerTeacherSetRoutes(app, { readDB, writeDB, requireTeacher, examTy
     const db = readDB(); const index = db.sets.findIndex(item => item.key === req.params.key && item.teacherId === req.teacherId);
     if (index < 0) return res.status(404).json({ error: 'not_found' });
     if (!db.sets[index].deletedAt) return res.status(409).json({ error: 'not_in_trash', message: 'ต้องย้ายชุดข้อสอบไปถังขยะก่อนลบถาวร' });
-    const resultCount = db.results.filter(item => item.questionKey === req.params.key).length;
     const draftCount = db.drafts.filter(item => item.questionKey === req.params.key).length;
-    db.sets.splice(index, 1);
-    db.results = db.results.filter(item => item.questionKey !== req.params.key);
+    db.sets[index].permanentlyDeletedAt = new Date().toISOString();
+    db.sets[index].updatedAt = db.sets[index].permanentlyDeletedAt;
     db.drafts = db.drafts.filter(item => item.questionKey !== req.params.key);
-    await writeDB(db); res.json({ ok: true, permanent: true, deletedResults: resultCount, deletedDrafts: draftCount });
+    await writeDB(db); res.json({ ok: true, permanent: true, preservedResults: db.results.filter(item => item.questionKey === req.params.key).length, deletedDrafts: draftCount });
   });
 }
 module.exports = { registerTeacherSetRoutes };

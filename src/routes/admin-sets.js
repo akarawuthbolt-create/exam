@@ -5,7 +5,7 @@ const { normalizeExamDateTime } = require('../grading');
 const normalizeSchedules = schedules => (Array.isArray(schedules) ? schedules : []).map(schedule => ({ ...schedule, studentIds: [...new Set((Array.isArray(schedule?.studentIds) ? schedule.studentIds : []).map(value => String(value).trim()).filter(Boolean))], availableFrom: normalizeExamDateTime(schedule?.availableFrom) || '', availableUntil: normalizeExamDateTime(schedule?.availableUntil) || '' }));
 
 function registerAdminSetRoutes(app, { readDB, writeDB, requireAdmin, examTypes, newId, applyAcademicPeriod }) {
-  app.get('/api/admin/sets', requireAdmin, (req, res) => res.json(readDB().sets));
+  app.get('/api/admin/sets', requireAdmin, (req, res) => res.json(readDB().sets.filter(set => !set.permanentlyDeletedAt)));
   app.get('/api/admin/sets/:key/readiness', requireAdmin, (req, res) => { const set = readDB().sets.find(item => item.key === req.params.key); if (!set) return res.status(404).json({ error: 'not_found' }); res.json(checkExamReadiness(set)); });
 
   app.post('/api/sets', requireAdmin, async (req, res) => {
@@ -79,12 +79,11 @@ function registerAdminSetRoutes(app, { readDB, writeDB, requireAdmin, examTypes,
     const db = readDB(); const index = db.sets.findIndex(item => item.key === req.params.key);
     if (index < 0) return res.status(404).json({ error: 'not_found' });
     if (!db.sets[index].deletedAt) return res.status(409).json({ error: 'not_in_trash', message: 'ต้องย้ายชุดข้อสอบไปถังขยะก่อนลบถาวร' });
-    const resultCount = db.results.filter(item => item.questionKey === req.params.key).length;
     const draftCount = db.drafts.filter(item => item.questionKey === req.params.key).length;
-    db.sets.splice(index, 1);
-    db.results = db.results.filter(item => item.questionKey !== req.params.key);
+    db.sets[index].permanentlyDeletedAt = new Date().toISOString();
+    db.sets[index].updatedAt = db.sets[index].permanentlyDeletedAt;
     db.drafts = db.drafts.filter(item => item.questionKey !== req.params.key);
-    await writeDB(db); res.json({ ok: true, permanent: true, deletedResults: resultCount, deletedDrafts: draftCount });
+    await writeDB(db); res.json({ ok: true, permanent: true, preservedResults: db.results.filter(item => item.questionKey === req.params.key).length, deletedDrafts: draftCount });
   });
 }
 module.exports = { registerAdminSetRoutes };
