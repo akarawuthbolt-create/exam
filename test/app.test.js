@@ -84,7 +84,9 @@ test('frontend pages load extracted CSS and JavaScript assets', async () => {
   assert.equal(admin.status, 200);
   assert.match(admin.body, /href="\/assets\/admin\.css(?:\?v=[^"]+)?"/);
   assert.match(admin.body, /src="\/assets\/admin-main\.js(?:\?v=[^"]+)?"/);
-  assert.match(admin.body, /data-atab="learning-plans"/);
+  assert.match(admin.body, /data-settings-target="learning-plans"/);
+  assert.match(admin.body, /data-settings-target="score-emails"/);
+  assert.doesNotMatch(admin.body, /class="admin-tab-btn" data-atab="(?:learning-plans|score-emails)"/);
   assert.match(admin.body, /src="\/assets\/admin-learning-plans\.js(?:\?v=[^"]+)?"/);
   assert.match(admin.body, /id="manageTeacherDialog"/);
   assert.doesNotMatch(admin.body, /<style>/);

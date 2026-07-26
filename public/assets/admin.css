@@ -175,6 +175,7 @@ html[data-theme="dark"] .mini-card,html[data-theme="dark"] .editor-box,html[data
 .settings-menu-card{margin:0;text-align:left;min-height:168px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:18px;cursor:pointer;transition:transform .16s ease,box-shadow .16s ease;border:1px solid var(--line);}
 .settings-menu-card:hover{transform:translateY(-2px);box-shadow:0 13px 28px rgba(15,23,42,.09);border-color:#BFDBFE;}
 .settings-menu-card h3{margin:0 0 5px;}.settings-menu-card .panel-sub{margin:0;line-height:1.65;}
+.settings-pending-card{background:linear-gradient(145deg,var(--surface),rgba(245,158,11,.055));border-style:dashed}.settings-pending-badge{display:inline-flex;margin-bottom:10px;padding:4px 9px;border-radius:999px;background:#FEF3C7;color:#92400E;font-size:10.5px;font-weight:700}.settings-feature-back{margin-bottom:12px}html[data-theme="dark"] .settings-pending-badge{background:rgba(146,64,14,.3);color:#FDE68A}
 .exam-access-card{border-color:#fecaca;background:linear-gradient(145deg,var(--surface),rgba(239,68,68,.05));}.exam-access-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;flex-wrap:wrap;}
 .publish-set-btn:not(:disabled){background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.24);color:var(--blue);}.publish-set-btn:not(:disabled):hover{background:rgba(37,99,235,.14);}
 .result-row-actions{display:flex;align-items:center;gap:6px;white-space:nowrap}.result-row-actions .btn{margin:0;}

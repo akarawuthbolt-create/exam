@@ -281,8 +281,10 @@ async function restoreAdminSession(){
 }
 restoreAdminSession();
 
+let currentAdminTab = document.querySelector('.admin-tab-btn.active')?.dataset.atab || 'sets';
+
 function refreshCurrentPageData(){
-  const activeTab = document.querySelector('.admin-tab-btn.active')?.dataset.atab;
+  const activeTab = currentAdminTab;
   if(activeTab==='dashboard') return refreshDashboard();
   if(activeTab==='students') return refreshStudents();
   if(activeTab==='teachers') return refreshTeachers();
@@ -294,20 +296,26 @@ function refreshCurrentPageData(){
 }
 
 /* ============ TABS ============ */
-document.querySelectorAll('.admin-tab-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
+function openAdminTab(tab, options={}){
+    currentAdminTab=tab;
     document.querySelectorAll('.admin-tab-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    ['dashboard','sets','library','students','teachers','learning-plans','results','score-emails','operations','settings'].forEach(t=> document.getElementById('atab-'+t).classList.toggle('hidden', btn.dataset.atab!==t));
-    if(btn.dataset.atab==='dashboard') refreshDashboard();
-    if(btn.dataset.atab==='library') renderLibrarySetList();
-    if(btn.dataset.atab==='operations'){ refreshOperations(); startOperationsStream(); } else stopOperationsStream();
-    if(btn.dataset.atab==='results') refreshResults();
-    if(btn.dataset.atab==='score-emails') refreshScoreEmails();
-    if(btn.dataset.atab==='students') refreshStudents();
-    if(btn.dataset.atab==='teachers') refreshTeachers();
-    if(btn.dataset.atab==='learning-plans' && typeof refreshLearningPlans==='function') refreshLearningPlans();
-  });
+    const activeButton=document.querySelector(`.admin-tab-btn[data-atab="${options.keepSettingsActive?'settings':tab}"]`);
+    activeButton?.classList.add('active');
+    ['dashboard','sets','library','students','teachers','learning-plans','results','score-emails','operations','settings'].forEach(t=> document.getElementById('atab-'+t).classList.toggle('hidden', tab!==t));
+    if(tab==='dashboard') refreshDashboard();
+    if(tab==='library') renderLibrarySetList();
+    if(tab==='operations'){ refreshOperations(); startOperationsStream(); } else stopOperationsStream();
+    if(tab==='results') refreshResults();
+    if(tab==='score-emails') refreshScoreEmails();
+    if(tab==='students') refreshStudents();
+    if(tab==='teachers') refreshTeachers();
+    if(tab==='learning-plans' && typeof refreshLearningPlans==='function') refreshLearningPlans();
+}
+document.querySelectorAll('.admin-tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>openAdminTab(btn.dataset.atab));
+});
+document.querySelectorAll('[data-settings-target]').forEach(btn=>{
+  btn.addEventListener('click',()=>openAdminTab(btn.dataset.settingsTarget,{keepSettingsActive:true}));
 });
 
 async function initAdmin(){
