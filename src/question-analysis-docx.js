@@ -41,7 +41,10 @@ function xmlEscape(value) {
 }
 
 function textNodes(xml) {
-  return [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map(match => ({ content: match[1], start: match.index + match[0].indexOf(match[1]), end: match.index + match[0].indexOf(match[1]) + match[1].length }));
+  return [...xml.matchAll(/<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>/g)].map(match => {
+    const start = match.index + match[0].indexOf('>') + 1;
+    return { content: match[1], start, end: start + match[1].length };
+  });
 }
 
 function visibleText(xml) {

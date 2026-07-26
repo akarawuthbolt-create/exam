@@ -1,7 +1,14 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const JSZip = require('jszip');
-const { analysisStatus, buildQuestionAnalysisDocx, buildSummary, classYears, difficultyAnalysisLine, discriminationAnalysisLine, itemValues, visibleText } = require('../src/question-analysis-docx');
+const { analysisStatus, buildQuestionAnalysisDocx, buildSummary, classYears, difficultyAnalysisLine, discriminationAnalysisLine, itemValues, replaceVisibleText, visibleText } = require('../src/question-analysis-docx');
+
+test('Word placeholder replacement preserves whitespace text-node attributes', () => {
+  const xml = '<w:r><w:t>อยู่ในเกณฑ์</w:t></w:r><w:r><w:t xml:space="preserve"> </w:t></w:r><w:r><w:t>{{result}}</w:t></w:r>';
+  const replaced = replaceVisibleText(xml, 'เกณฑ์ ', 'เกณฑ์');
+  assert.match(replaced, /<w:t xml:space="preserve"><\/w:t>/);
+  assert.doesNotMatch(replaced, /<w:txml:/);
+});
 
 test('Word question analysis translates difficulty and discrimination at every boundary', () => {
   assert.deepEqual([.19, .2, .39, .4, .59, .6, .8, .81].map(difficultyAnalysisLine), [
