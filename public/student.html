@@ -7,7 +7,7 @@
 <script src="/assets/student-boot.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/student.css?v=20260726-3">
+<link rel="stylesheet" href="/assets/student.css?v=20260726-4">
 </head>
 <body>
 
@@ -81,9 +81,9 @@
       <input type="password" class="name-input" id="identityPinSetupConfirmInput" placeholder="ยืนยัน PIN อีกครั้ง" inputmode="numeric" maxlength="6" autocomplete="off">
     </div>
     <div class="id-error" id="studentIdentityConfirmError"></div>
-    <div class="modal-actions">
+    <div class="modal-actions identity-primary-actions" id="studentIdentityActions">
       <button class="btn btn-identity-edit" id="studentIdentityRejectBtn" type="button">แก้ไขรหัสนักเรียน</button>
-      <button class="btn btn-primary" id="studentIdentityAcceptBtn" type="button">ยืนยันและเข้าสู่ระบบ →</button>
+      <button class="btn btn-primary hidden" id="studentIdentityAcceptBtn" type="button">ยืนยันและเข้าสู่ระบบ →</button>
     </div>
     <button class="btn identity-forgot-pin" id="identityForgotPinBtn" type="button">ลืม PIN? ยืนยันตัวตนเพื่อตั้งใหม่</button>
   </div>
@@ -236,6 +236,6 @@
   </div>
 </div>
 
-<script src="/assets/student-main.js?v=20260726-8"></script>
+<script src="/assets/student-main.js?v=20260726-9"></script>
 </body>
 </html>

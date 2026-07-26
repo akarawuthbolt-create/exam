@@ -350,13 +350,14 @@ async function tryLogin(){
     document.getElementById('studentIdentityConfirmDetails').innerHTML = `<b>${escapeHtml(student.firstName)} ${escapeHtml(student.lastName)}</b><br>รหัสนักเรียน: ${escapeHtml(student.studentId)}<br>ห้อง: ${escapeHtml(student.classRoom||'-')}`;
     document.getElementById('identityPinVerifyFields').classList.toggle('hidden',!student.hasPin);
     document.getElementById('identityPinSetupFields').classList.toggle('hidden',student.hasPin);
-    document.getElementById('identityForgotPinBtn').classList.toggle('hidden',!student.hasPin);
+    document.getElementById('identityForgotPinBtn').classList.add('hidden');
     document.getElementById('studentIdentityWarning').textContent=student.hasPin?'ตรวจสอบชื่อ–นามสกุลให้ถูกต้อง แล้วกรอก PIN ของบัญชีนี้':'บัญชีนี้ยังไม่มี PIN กรุณาตรวจสอบชื่อ–นามสกุลให้ถูกต้องก่อนตั้ง PIN เพราะ PIN จะถูกผูกกับบัญชีนี้';
     document.getElementById('identityPinInput').value='';
     document.getElementById('identityPinSetupInput').value='';
     document.getElementById('identityPinSetupConfirmInput').value='';
     document.getElementById('studentIdentityConfirmError').style.display='none';
     document.getElementById('studentIdentityAcceptBtn').textContent=student.hasPin?'ยืนยันและเข้าสู่ระบบ →':'ตั้ง PIN และเข้าสู่ระบบ →';
+    updateIdentityActionVisibility();
     document.getElementById('studentIdentityConfirmModal').classList.remove('hidden');
     setTimeout(()=>document.getElementById(student.hasPin?'identityPinInput':'identityPinSetupInput').focus(),0);
   }catch(e){ errBox.textContent = e.message; errBox.style.display='block'; }
@@ -367,6 +368,14 @@ document.getElementById('studentIdInput').addEventListener('keydown', (e)=>{ if(
 
 let pendingLoginStudent = null;
 let pendingRecoveryStudent = null;
+function updateIdentityActionVisibility(){
+  const student=pendingLoginStudent;
+  const ready=Boolean(student&&(student.hasPin
+    ? document.getElementById('identityPinInput').value.trim()
+    : document.getElementById('identityPinSetupInput').value.trim()&&document.getElementById('identityPinSetupConfirmInput').value.trim()));
+  document.getElementById('studentIdentityAcceptBtn').classList.toggle('hidden',!ready);
+  document.getElementById('studentIdentityActions').classList.toggle('single-action',!ready);
+}
 function clearIdentityPinInputs(){
   document.getElementById('identityPinInput').value='';
   document.getElementById('identityPinSetupInput').value='';
@@ -398,7 +407,7 @@ document.getElementById('studentIdentityAcceptBtn').addEventListener('click', as
   button.disabled=true;button.textContent='กำลังยืนยัน...';
   try{
     const result=await request();
-    if(result.ok===false){error.textContent=result.locked?'PIN ถูกล็อก กรุณากด “ลืม PIN” เพื่อตั้งใหม่':`PIN ไม่ถูกต้อง (เหลือ ${result.remainingAttempts} ครั้ง)`;error.style.display='block';return;}
+    if(result.ok===false){error.textContent=result.locked?'PIN ถูกล็อก กรุณากด “ลืม PIN” เพื่อตั้งใหม่':`PIN ไม่ถูกต้อง (เหลือ ${result.remainingAttempts} ครั้ง)`;error.style.display='block';document.getElementById('identityForgotPinBtn').classList.remove('hidden');return;}
     setStudentSession(result);
     pendingLoginStudent=null;
     clearIdentityPinInputs();
@@ -410,6 +419,9 @@ document.getElementById('studentIdentityAcceptBtn').addEventListener('click', as
 });
 document.getElementById('identityPinInput').addEventListener('keydown',event=>{if(event.key==='Enter')document.getElementById('studentIdentityAcceptBtn').click();});
 document.getElementById('identityPinSetupConfirmInput').addEventListener('keydown',event=>{if(event.key==='Enter')document.getElementById('studentIdentityAcceptBtn').click();});
+document.getElementById('identityPinInput').addEventListener('input',updateIdentityActionVisibility);
+document.getElementById('identityPinSetupInput').addEventListener('input',updateIdentityActionVisibility);
+document.getElementById('identityPinSetupConfirmInput').addEventListener('input',updateIdentityActionVisibility);
 document.getElementById('identityForgotPinBtn').addEventListener('click',()=>{
   const student=pendingLoginStudent;
   if(!student)return;

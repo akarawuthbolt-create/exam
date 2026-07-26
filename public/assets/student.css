@@ -195,6 +195,9 @@ html.restoring-session #startScreen{visibility:hidden;}html.restoring-session bo
 .identity-forgot-pin:hover{background:rgba(37,99,235,.04);}
 .student-identity-confirm-card .modal-actions{justify-content:center;align-items:stretch;}
 .student-identity-confirm-card .modal-actions .btn{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;}
+.identity-primary-actions.single-action #studentIdentityRejectBtn{flex-basis:100%;}
+.identity-primary-actions #studentIdentityAcceptBtn{animation:identityActionIn .18s ease-out;}
+@keyframes identityActionIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 .pin-recovery-actions{display:grid;grid-template-columns:minmax(110px,.45fr) minmax(0,1fr);align-items:stretch;}
 .pin-recovery-actions .btn{width:100%;display:flex;align-items:center;justify-content:center;}
 @media(max-width:520px){.student-identity-confirm-card{width:calc(100% - 24px);padding:26px 20px;}.student-identity-confirm-card .modal-actions{gap:8px;}.student-identity-confirm-card .modal-actions .btn{font-size:13px;padding-left:8px;padding-right:8px;}}
