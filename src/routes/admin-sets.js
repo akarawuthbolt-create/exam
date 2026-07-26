@@ -74,5 +74,17 @@ function registerAdminSetRoutes(app, { readDB, writeDB, requireAdmin, examTypes,
     set.archived = true; set.quickOpen = false; set.quickOpenedAt = null; set.archivedAt = now; set.deletedAt = now; set.deletedBy = 'admin'; set.updatedAt = now;
     await writeDB(db); res.json({ ok: true, recoverable: true });
   });
+
+  app.delete('/api/sets/:key/permanent', requireAdmin, async (req, res) => {
+    const db = readDB(); const index = db.sets.findIndex(item => item.key === req.params.key);
+    if (index < 0) return res.status(404).json({ error: 'not_found' });
+    if (!db.sets[index].deletedAt) return res.status(409).json({ error: 'not_in_trash', message: 'ต้องย้ายชุดข้อสอบไปถังขยะก่อนลบถาวร' });
+    const resultCount = db.results.filter(item => item.questionKey === req.params.key).length;
+    const draftCount = db.drafts.filter(item => item.questionKey === req.params.key).length;
+    db.sets.splice(index, 1);
+    db.results = db.results.filter(item => item.questionKey !== req.params.key);
+    db.drafts = db.drafts.filter(item => item.questionKey !== req.params.key);
+    await writeDB(db); res.json({ ok: true, permanent: true, deletedResults: resultCount, deletedDrafts: draftCount });
+  });
 }
 module.exports = { registerAdminSetRoutes };

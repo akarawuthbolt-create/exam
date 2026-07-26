@@ -72,6 +72,7 @@ async function apiDuplicateSetCall(key){ return apiFetch('/api/sets/'+encodeURIC
 async function apiArchiveSetCall(key){ return apiFetch('/api/sets/'+encodeURIComponent(key)+'/archive', { method:'POST', admin:true }); }
 async function apiRestoreSetCall(key){ return apiFetch('/api/sets/'+encodeURIComponent(key)+'/restore', { method:'POST', admin:true }); }
 async function apiDeleteSetCall(key){ return apiFetch('/api/sets/'+encodeURIComponent(key), { method:'DELETE', admin:true }); }
+async function apiPermanentlyDeleteSet(key){ return apiFetch('/api/sets/'+encodeURIComponent(key)+'/permanent', { method:'DELETE', admin:true }); }
 async function apiGetResults(setKey, examType, academicYear, semester){
   const qs = [];
   if(setKey) qs.push('setKey='+encodeURIComponent(setKey));
@@ -556,8 +557,7 @@ function renderSetList(){
       const examStatus=examScheduleStatus(s);
       const originalEnds=(s.examSchedules||[]).filter(item=>!item.absenceOnly).map(item=>normalizedExamTimestamp(item.availableUntil)).filter(Number.isFinite),finalEnd=originalEnds.length?Math.max(...originalEnds):NaN,examFinished=Number.isFinite(finalEnd)&&finalEnd<Date.now(),examNextDay=Number.isFinite(finalEnd)?new Date(finalEnd):null; if(examNextDay)examNextDay.setHours(24,0,0,0); const actionsExpired=!!examNextDay&&Date.now()>=examNextDay.getTime();
       return `<div class="set-card exam-status-${examStatus.key}">
-        <div class="set-badge-row"><span class="badge-pill">${escapeHtml(s.examType||'-')}</span>${examOpenDate?`<span class="badge-pill exam-date-pill" title="วันที่เปิดข้อสอบ">วันที่สอบ ${escapeHtml(examOpenDate)}</span>`:''}<span class="badge-pill exam-status-pill status-${examStatus.key}">${escapeHtml(examStatus.label)}</span></div>
-        <span class="badge-pill" style="margin-left:5px;background:${s.academicYear?'#e0f2fe':'#f1f5f9'};color:${s.academicYear?'#0369a1':'#64748b'};">${escapeHtml(s.academicYear&&s.semesterLabel?`${s.academicYear} / ${s.semesterLabel}`:'ยังไม่กำหนดเทอม')}</span>
+        <div class="set-badge-row"><span class="badge-pill">${escapeHtml(s.examType||'-')}</span>${examOpenDate?`<span class="badge-pill exam-date-pill" title="วันที่เปิดข้อสอบ">วันที่สอบ ${escapeHtml(examOpenDate)}</span>`:''}<span class="badge-pill exam-status-pill status-${examStatus.key}">${escapeHtml(examStatus.label)}</span><span class="badge-pill academic-period-pill">${escapeHtml(s.academicYear&&s.semesterLabel?`${s.academicYear} / ${s.semesterLabel}`:'ยังไม่กำหนดเทอม')}</span></div>
         <h3>${escapeHtml(s.title)}</h3>
         <p>${escapeHtml(s.desc||'')}</p>
         <p style="color:var(--blue);">🏫 ${escapeHtml(classesText)}</p>
@@ -634,11 +634,13 @@ function renderLibrarySetList(){
   const trashed=ADMIN_SETS.filter(set=>set.deletedAt);
   if(!archived.length && !trashed.length){ wrap.innerHTML='<div class="empty-note">ยังไม่มีข้อสอบในคลังหรือถังขยะ</div>'; return; }
   const archiveHtml=archived.length?`<div class="set-list">${archived.map(s=>`<div class="set-card"><span class="badge-pill">${escapeHtml(s.examType||'-')}</span><span class="badge-pill" style="margin-left:5px;">${escapeHtml(s.academicYear&&s.semesterLabel?`${s.academicYear} / ${s.semesterLabel}`:'ข้อสอบเก่า')}</span><h3>${escapeHtml(s.title)}</h3><p>${escapeHtml(s.courseName||'')}</p><p style="color:var(--sub);">เก็บเข้าคลังเมื่อ ${s.archivedAt?new Date(s.archivedAt).toLocaleDateString('th-TH'): '-'}</p><div class="set-actions"><button class="btn btn-primary btn-sm" data-library-dup="${s.key}">ทำสำเนาใช้ใหม่</button><button class="btn btn-ghost btn-sm" data-restore="${s.key}">นำกลับรายการหลัก</button></div></div>`).join('')}</div>`:'<div class="empty-note">ยังไม่มีข้อสอบในคลัง</div>';
-  const trashHtml=trashed.length?`<div style="margin-top:28px;"><h3>🗑️ ถังขยะชุดข้อสอบ</h3><p class="panel-sub">กู้คืนได้ทุกเมื่อ ข้อสอบในถังขยะจะไม่แสดงให้นักเรียนเห็น</p><div class="set-list">${trashed.map(s=>`<div class="set-card"><span class="badge-pill" style="background:#fee2e2;color:#b91c1c;">ถังขยะ</span><h3>${escapeHtml(s.title)}</h3><p>${escapeHtml(s.courseName||'')}</p><p style="color:var(--sub);">ลบเมื่อ ${new Date(s.deletedAt).toLocaleString('th-TH')}</p><div class="set-actions"><button class="btn btn-primary btn-sm" data-restore="${s.key}">↩ กู้คืนชุดข้อสอบ</button></div></div>`).join('')}</div></div>`:'';
+  const trashHtml=trashed.length?`<div style="margin-top:28px;"><h3>ถังขยะชุดข้อสอบ</h3><p class="panel-sub">กู้คืนได้หรือลบถาวร ข้อมูลที่ลบถาวรจะนำกลับมาไม่ได้</p><div class="set-list">${trashed.map(s=>`<div class="set-card"><span class="badge-pill" style="background:#fee2e2;color:#b91c1c;">ถังขยะ</span><h3>${escapeHtml(s.title)}</h3><p>${escapeHtml(s.courseName||'')}</p><p style="color:var(--sub);">ลบเมื่อ ${new Date(s.deletedAt).toLocaleString('th-TH')}</p><div class="set-actions"><button class="btn btn-primary btn-sm" data-restore="${s.key}">กู้คืนชุดข้อสอบ</button><button class="btn btn-danger btn-sm" data-permanent-delete="${s.key}">ลบถาวร</button></div></div>`).join('')}</div></div>`:'';
   wrap.innerHTML=archiveHtml+trashHtml;
   wrap.querySelectorAll('[data-library-dup]').forEach(b=>b.addEventListener('click',()=>duplicateSet(b.dataset.libraryDup)));
   wrap.querySelectorAll('[data-restore]').forEach(b=>b.addEventListener('click',()=>restoreSet(b.dataset.restore)));
+  wrap.querySelectorAll('[data-permanent-delete]').forEach(b=>b.addEventListener('click',()=>permanentlyDeleteSet(b.dataset.permanentDelete)));
 }
+async function permanentlyDeleteSet(key){const set=ADMIN_SETS.find(item=>item.key===key);if(!confirm(`ลบข้อสอบ “${set?.title||''}” ถาวรหรือไม่?\n\nผลสอบและคำตอบที่เกี่ยวข้องจะถูกลบและกู้คืนไม่ได้`))return;try{await apiPermanentlyDeleteSet(key);ADMIN_SETS=await apiGetAdminSets();renderSetList();renderLibrarySetList();populateSetFilterOptions();showToast('ลบชุดข้อสอบถาวรแล้ว');}catch(error){showToast(error.message);}}
 function computeSetTotal(s){
   let t = 0;
   t += (s.sections.mc.questions||[]).reduce((a,q)=>a+(Number(q.points)||0),0);
