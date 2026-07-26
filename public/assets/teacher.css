@@ -171,6 +171,7 @@ html[data-theme="dark"] .mini-card,html[data-theme="dark"] .editor-box,html[data
 .course-group-title{font-family:'Prompt',sans-serif;font-weight:600;font-size:14.5px;}
 .course-group-count{font-size:12px;color:var(--sub);}
 .course-group-body.collapsed{display:none;}
+.set-card{border-width:1px;border-radius:10px;padding:17px 18px;gap:7px;box-shadow:none}.set-card h3{font-size:16px;line-height:1.45}.set-card .badge-pill{border-radius:6px;padding:4px 8px;font-size:11.5px}.set-card.exam-status-finished{opacity:1;background:var(--surface)}.set-actions-clear{align-items:center;padding-top:13px;border-top:1px solid var(--line);gap:8px!important}.set-actions-clear .btn{min-height:36px;padding:7px 12px;font-size:12.5px}.set-actions-clear .set-delete-action{margin-left:auto;background:transparent;color:var(--red);box-shadow:none}@media(max-width:640px){.set-actions-clear .btn{flex:1 1 calc(50% - 8px)}.set-actions-clear .set-delete-action{margin-left:0}}
 .teacher-row-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
 .teacher-row-info{font-size:13.5px;}
 .teacher-row-info b{font-family:'Prompt',sans-serif;}

@@ -264,7 +264,7 @@ function renderSetList(){
       const examStatus=examScheduleStatus(s);
       const originalEnds=(s.examSchedules||[]).filter(item=>!item.absenceOnly).map(item=>normalizedExamTimestamp(item.availableUntil)).filter(Number.isFinite),finalEnd=originalEnds.length?Math.max(...originalEnds):NaN,examFinished=Number.isFinite(finalEnd)&&finalEnd<Date.now(),actionsExpired=examFinished&&(Date.now()-finalEnd)>3*86400000;
       return `<div class="set-card exam-status-${examStatus.key}">
-        <div class="set-badge-row"><span class="badge-pill">${escapeHtml(s.examType||'-')}</span>${examOpenDate?`<span class="badge-pill exam-date-pill" title="วันที่เปิดข้อสอบ">📅 ${escapeHtml(examOpenDate)}</span>`:''}<span class="badge-pill exam-status-pill status-${examStatus.key}">${examStatus.icon} ${escapeHtml(examStatus.label)}</span></div>
+        <div class="set-badge-row"><span class="badge-pill">${escapeHtml(s.examType||'-')}</span>${examOpenDate?`<span class="badge-pill exam-date-pill" title="วันที่เปิดข้อสอบ">วันที่สอบ ${escapeHtml(examOpenDate)}</span>`:''}<span class="badge-pill exam-status-pill status-${examStatus.key}">${escapeHtml(examStatus.label)}</span></div>
         <span class="badge-pill" style="margin-left:5px;background:${s.academicYear?'#e0f2fe':'#f1f5f9'};color:${s.academicYear?'#0369a1':'#64748b'};">${escapeHtml(s.academicYear&&s.semesterLabel?`${s.academicYear} / ${s.semesterLabel}`:'ยังไม่กำหนดเทอม')}</span>
         <h3>${escapeHtml(s.title)}</h3>
         <p>${escapeHtml(s.desc||'')}</p>
@@ -272,21 +272,21 @@ function renderSetList(){
         ${s.subjectTeacherName ? `<p>👤 อาจารย์: ${escapeHtml(s.subjectTeacherName)}</p>` : ''}
         <p style="color:${total===20?'var(--green)':'var(--blue)'};">🎯 คะแนนเต็มรวม: ${total} คะแนน · ${total===20?'ข้อสอบปกติ':'บล็อกคอร์ส — แบ่งลงกลางภาค/ปลายภาค'}</p>
         <p style="color:var(--sub);font-size:11.5px;">${s.publishMode==='auto'?'⚡ ประกาศคะแนนอัตโนมัติ':'🔒 ต้องตรวจก่อนประกาศ'}${s.shuffleQuestions?' · 🔀 สุ่มโจทย์':''}${s.shuffleChoices?' · 🔀 สุ่มตัวเลือก':''}</p>
-        <div class="set-actions">
-          ${!actionsExpired?`<button class="btn ${s.quickOpen?'btn-danger':'btn-primary'} btn-sm" data-quick-open="${s.key}" data-open="${s.quickOpen?'0':'1'}">${s.quickOpen?'⏹ ยกเลิกเปิดด่วน':'⚡ เปิดข้อสอบด่วน'}</button><button class="btn btn-ghost btn-sm" data-edit="${s.key}">แก้ไข</button>`:''}
-          ${examFinished?`<button class="btn btn-primary btn-sm" data-open-absentees="${s.key}">👤 เปิดให้ผู้ขาดสอบ</button>`:''}
-          <button class="btn btn-ghost btn-sm" data-exam-pdf="${s.key}">📄 PDF ต้นฉบับ</button>
-          <button class="btn btn-ghost btn-sm" data-archive="${s.key}">เก็บเข้าคลัง</button>
-          ${!actionsExpired?`<button class="btn btn-danger btn-sm" data-del="${s.key}">🗑️ ย้ายไปถังขยะ</button>`:''}
+        <div class="set-actions set-actions-clear">
+          ${!actionsExpired?`<button class="btn ${s.quickOpen?'btn-danger':examFinished?'btn-ghost':'btn-primary'} btn-sm" data-quick-open="${s.key}" data-open="${s.quickOpen?'0':'1'}">${s.quickOpen?'ยกเลิกการเปิดทันที':'เปิดข้อสอบทันที'}</button><button class="btn btn-ghost btn-sm" data-edit="${s.key}">แก้ไขข้อสอบ</button>`:''}
+          ${examFinished?`<button class="btn btn-primary btn-sm" data-open-absentees="${s.key}">เปิดสอบเฉพาะผู้ขาดสอบ</button>`:''}
+          <button class="btn btn-ghost btn-sm" data-exam-pdf="${s.key}">ดาวน์โหลดข้อสอบ PDF</button>
+          <button class="btn btn-ghost btn-sm" data-archive="${s.key}">เก็บข้อสอบเข้าคลัง</button>
+          ${!actionsExpired?`<button class="btn btn-danger btn-sm set-delete-action" data-del="${s.key}">ย้ายไปถังขยะ</button>`:''}
         </div>
       </div>`;
     }).join('');
     return `<div class="course-group">
       <div class="course-group-head" data-togglegroup="1">
         <span class="course-group-title">📚 ${escapeHtml(course)}</span>
-        <span class="course-group-count">${sets.length} ชุด · กดเพื่อดู</span>
+        <span class="course-group-count">${sets.length} ชุดข้อสอบ</span>
       </div>
-      <div class="set-list course-group-body collapsed">${cardsHtml}</div>
+      <div class="set-list course-group-body">${cardsHtml}</div>
     </div>`;
   }).join('');
   wrap.querySelectorAll('[data-quick-open]').forEach(b=>b.addEventListener('click', ()=>toggleQuickOpen(b.dataset.quickOpen,b.dataset.open==='1',b)));
