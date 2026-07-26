@@ -1712,7 +1712,7 @@ document.getElementById('printRosterBtn').addEventListener('click',async()=>{
   const popup=window.open('','_blank'); if(!popup){showToast('เบราว์เซอร์บล็อกหน้าต่างตัวอย่าง กรุณาอนุญาต pop-up');return;}
   popup.document.write('<p style="font-family:sans-serif;padding:24px">กำลังจัดทำใบรายชื่อ...</p>');
   const options={examRoom:document.getElementById('rosterExamRoomInput').value.trim(),examLink:document.getElementById('rosterExamLinkInput').value.trim()};
-  try{const data=await Promise.all(selectedRosterClasses.map(classRoom=>apiGetExamRoster(setKey,classRoom)));popup.document.open();popup.document.write(buildRosterPrintHtml(data,options));popup.document.close();}
+  try{const data=await Promise.all(selectedRosterClasses.map(classRoom=>apiGetExamRoster(setKey,classRoom)));popup.document.open();popup.document.write(buildRosterPrintHtml(data,options));popup.document.close();const fontsReady=popup.document.fonts?.ready||Promise.resolve();await fontsReady;const printNow=()=>{if(popup.closed)return;popup.focus();popup.print();};popup.document.querySelector('.print-tools button')?.addEventListener('click',printNow);setTimeout(printNow,150);}
   catch(error){popup.close();showToast(error.message);}
 });
 
