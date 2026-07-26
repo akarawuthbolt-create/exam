@@ -37,6 +37,14 @@ function registerAdminSetRoutes(app, { readDB, writeDB, requireAdmin, examTypes,
     await writeDB(db);
     res.json({ ok: true, quickOpen: set.quickOpen, quickOpenedAt: set.quickOpenedAt });
   });
+  app.post('/api/sets/:key/open-absentees', requireAdmin, async (req, res) => {
+    const db=readDB(),set=db.sets.find(item=>item.key===req.params.key);if(!set)return res.status(404).json({error:'not_found'});
+    const schedules=(set.examSchedules||[]).filter(item=>!item.absenceOnly),ends=schedules.map(item=>item.availableUntil?new Date(item.availableUntil).getTime():NaN).filter(Number.isFinite);
+    if(!ends.length||ends.length!==schedules.length||Math.max(...ends)>=Date.now())return res.status(409).json({error:'exam_not_finished',message:'เปิดให้ผู้ขาดสอบได้หลังหมดเวลาสอบทุกรอบแล้ว'});
+    const eligible=new Set();schedules.forEach(schedule=>{db.students.filter(student=>(schedule.classes||[]).includes(student.classRoom)||(schedule.studentIds||[]).includes(student.studentId)).forEach(student=>eligible.add(student.studentId));});
+    db.results.filter(result=>result.questionKey===set.key&&result.attemptType!=='resit').forEach(result=>eligible.delete(result.studentId));
+    const hours=Math.min(72,Math.max(1,Number(req.body?.hours)||24)),now=new Date(),until=new Date(now.getTime()+hours*3600000);set.examSchedules=(set.examSchedules||[]).filter(item=>!item.absenceOnly);set.examSchedules.push({name:'รอบผู้ขาดสอบ',classes:['__ABSENCE_ONLY__'],studentIds:[...eligible],availableFrom:now.toISOString(),availableUntil:until.toISOString(),lateAccessCode:'',absenceOnly:true});set.updatedAt=now.toISOString();await writeDB(db);res.json({ok:true,count:eligible.size,availableUntil:until.toISOString()});
+  });
 
   app.post('/api/sets/:key/duplicate', requireAdmin, async (req, res) => {
     const db = readDB(); const original = db.sets.find(set => set.key === req.params.key);

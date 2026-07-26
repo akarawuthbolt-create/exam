@@ -67,6 +67,7 @@ async function apiGoogleFormsStatus(requestId){ return apiFetch('/api/admin/goog
 async function apiCreateSet(set){ return apiFetch('/api/sets', { method:'POST', body:set, admin:true }); }
 async function apiUpdateSet(key, set){ return apiFetch('/api/sets/'+encodeURIComponent(key), { method:'PUT', body:set, admin:true }); }
 async function apiQuickOpenSet(key, open){ return apiFetch('/api/sets/'+encodeURIComponent(key)+'/quick-open', { method:'POST', body:{open}, admin:true }); }
+async function apiOpenAbsentees(key,hours){ return apiFetch('/api/sets/'+encodeURIComponent(key)+'/open-absentees', { method:'POST', body:{hours}, admin:true }); }
 async function apiDuplicateSetCall(key){ return apiFetch('/api/sets/'+encodeURIComponent(key)+'/duplicate', { method:'POST', admin:true }); }
 async function apiArchiveSetCall(key){ return apiFetch('/api/sets/'+encodeURIComponent(key)+'/archive', { method:'POST', admin:true }); }
 async function apiRestoreSetCall(key){ return apiFetch('/api/sets/'+encodeURIComponent(key)+'/restore', { method:'POST', admin:true }); }
@@ -553,6 +554,7 @@ function renderSetList(){
       const total = computeSetTotal(s);
       const examOpenDate=examOpenDateLabel(s);
       const examStatus=examScheduleStatus(s);
+      const originalEnds=(s.examSchedules||[]).filter(item=>!item.absenceOnly).map(item=>normalizedExamTimestamp(item.availableUntil)).filter(Number.isFinite),finalEnd=originalEnds.length?Math.max(...originalEnds):NaN,examFinished=Number.isFinite(finalEnd)&&finalEnd<Date.now(),actionsExpired=examFinished&&(Date.now()-finalEnd)>3*86400000;
       return `<div class="set-card exam-status-${examStatus.key}">
         <div class="set-badge-row"><span class="badge-pill">${escapeHtml(s.examType||'-')}</span>${examOpenDate?`<span class="badge-pill exam-date-pill" title="วันที่เปิดข้อสอบ">📅 ${escapeHtml(examOpenDate)}</span>`:''}<span class="badge-pill exam-status-pill status-${examStatus.key}">${examStatus.icon} ${escapeHtml(examStatus.label)}</span></div>
         <span class="badge-pill" style="margin-left:5px;background:${s.academicYear?'#e0f2fe':'#f1f5f9'};color:${s.academicYear?'#0369a1':'#64748b'};">${escapeHtml(s.academicYear&&s.semesterLabel?`${s.academicYear} / ${s.semesterLabel}`:'ยังไม่กำหนดเทอม')}</span>
@@ -563,11 +565,11 @@ function renderSetList(){
         <p style="color:${total===20?'var(--green)':'var(--blue)'};">🎯 คะแนนเต็มรวม: ${total} คะแนน · ${total===20?'ข้อสอบปกติ':'บล็อกคอร์ส — แบ่งลงกลางภาค/ปลายภาค'}</p>
         <p style="color:var(--sub);font-size:11.5px;">${s.publishMode==='auto'?'⚡ ประกาศคะแนนอัตโนมัติ':'🔒 ต้องตรวจก่อนประกาศ'}${s.shuffleQuestions?' · 🔀 สุ่มโจทย์':''}${s.shuffleChoices?' · 🔀 สุ่มตัวเลือก':''}</p>
         <div class="set-actions">
-          <button class="btn ${s.quickOpen?'btn-danger':'btn-primary'} btn-sm" data-quick-open="${s.key}" data-open="${s.quickOpen?'0':'1'}">${s.quickOpen?'⏹ ยกเลิกเปิดด่วน':'⚡ เปิดข้อสอบด่วน'}</button>
-          <button class="btn btn-ghost btn-sm" data-edit="${s.key}">แก้ไข</button>
+          ${!actionsExpired?`<button class="btn ${s.quickOpen?'btn-danger':'btn-primary'} btn-sm" data-quick-open="${s.key}" data-open="${s.quickOpen?'0':'1'}">${s.quickOpen?'⏹ ยกเลิกเปิดด่วน':'⚡ เปิดข้อสอบด่วน'}</button><button class="btn btn-ghost btn-sm" data-edit="${s.key}">แก้ไข</button>`:''}
+          ${examFinished?`<button class="btn btn-primary btn-sm" data-open-absentees="${s.key}">👤 เปิดให้ผู้ขาดสอบ</button>`:''}
           <button class="btn btn-ghost btn-sm" data-exam-pdf="${s.key}">📄 PDF ต้นฉบับ</button>
           <button class="btn btn-ghost btn-sm" data-archive="${s.key}">เก็บเข้าคลัง</button>
-          <button class="btn btn-danger btn-sm" data-del="${s.key}">🗑️ ย้ายไปถังขยะ</button>
+          ${!actionsExpired?`<button class="btn btn-danger btn-sm" data-del="${s.key}">🗑️ ย้ายไปถังขยะ</button>`:''}
         </div>
       </div>`;
     }).join('');
@@ -580,6 +582,7 @@ function renderSetList(){
     </div>`;
   }).join('');
   wrap.querySelectorAll('[data-quick-open]').forEach(b=>b.addEventListener('click', ()=>toggleQuickOpen(b.dataset.quickOpen,b.dataset.open==='1',b)));
+  wrap.querySelectorAll('[data-open-absentees]').forEach(b=>b.addEventListener('click', ()=>openForAbsentees(b.dataset.openAbsentees,b)));
   wrap.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', ()=>openEditor(b.dataset.edit)));
   wrap.querySelectorAll('[data-exam-pdf]').forEach(b=>b.addEventListener('click', ()=>downloadExamPdf(b.dataset.examPdf,b)));
   wrap.querySelectorAll('[data-archive]').forEach(b=>b.addEventListener('click', ()=>archiveSet(b.dataset.archive)));
@@ -588,6 +591,7 @@ function renderSetList(){
     head.nextElementSibling.classList.toggle('collapsed');
   }));
 }
+async function openForAbsentees(key,button){const value=prompt('เปิดข้อสอบให้ผู้ขาดสอบกี่ชั่วโมง? (1-72)','24');if(value===null)return;const hours=Number(value);if(!Number.isFinite(hours)||hours<1||hours>72){showToast('กรุณาระบุ 1-72 ชั่วโมง');return;}button.disabled=true;try{const result=await apiOpenAbsentees(key,hours);ADMIN_SETS=await apiGetAdminSets();renderSetList();showToast(result.count?`เปิดข้อสอบให้ผู้ขาดสอบ ${result.count} คนแล้ว`:'ไม่พบผู้ขาดสอบที่ต้องเปิดสิทธิ์');}catch(error){button.disabled=false;showToast(error.message);}}
 async function toggleQuickOpen(key,open,button){
   if(!open && !confirm('ยกเลิกการเปิดข้อสอบด่วน และกลับไปใช้ตารางสอบเดิม?')) return;
   button.disabled=true;
@@ -1051,9 +1055,9 @@ function updateTotalIndicator(){
 
 function scheduleNameForPeriod(period){ return ({เช้า:'รอบเช้า',บ่าย:'รอบบ่าย',ทวิภาคี:'รอบทวิภาคี'})[period]||''; }
 function syncExamSchedulesFromAssignedClasses(){
-  const s=editingSet, previous=new Map((s.examSchedules||[]).map(item=>[item.name,item])); const groups=new Map();
+  const s=editingSet, absenceSchedules=(s.examSchedules||[]).filter(item=>item.absenceOnly),previous=new Map((s.examSchedules||[]).filter(item=>!item.absenceOnly).map(item=>[item.name,item])); const groups=new Map();
   s.assignedClasses.forEach(room=>{const name=scheduleNameForPeriod(classPeriods[room]);if(name){if(!groups.has(name))groups.set(name,[]);groups.get(name).push(room);}});
-  s.examSchedules=[...groups.entries()].map(([name,classes])=>Object.assign({name,classes,studentIds:[],availableFrom:'',availableUntil:'',lateAccessCode:''},previous.get(name)||{}, {name,classes}));
+  s.examSchedules=[...groups.entries()].map(([name,classes])=>Object.assign({name,classes,studentIds:[],availableFrom:'',availableUntil:'',lateAccessCode:''},previous.get(name)||{}, {name,classes})).concat(absenceSchedules);
 }
 function renderExamSchedules(){
   const host=document.getElementById('examSchedulesWrap'); if(!host) return; const s=editingSet;
