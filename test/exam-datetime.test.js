@@ -1,9 +1,19 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { normalizeExamDateTime, getExamSchedule } = require('../src/grading');
+const { normalizeExamDateTime, getExamSchedule, hasExamAccess } = require('../src/grading');
 
 test('normalizes a legacy Buddhist year stored as a Gregorian year', () => {
   assert.equal(normalizeExamDateTime('2569-07-21T05:00:00.000Z'), '2026-07-21T05:00:00.000Z');
+});
+
+test('an individually assigned student uses the selected round even when enrolled in another room', () => {
+  const set = { examSchedules: [
+    { name: 'รอบเช้า', classes: ['CC.1/1'], studentIds: ['20999'], availableFrom: '2026-07-21T02:00:00.000Z' },
+    { name: 'รอบบ่าย', classes: ['CC.2/1'], studentIds: [], availableFrom: '2026-07-21T07:00:00.000Z' }
+  ] };
+  assert.equal(getExamSchedule(set, 'OTHER.1/1', '20999').name, 'รอบเช้า');
+  assert.equal(hasExamAccess(set, 'OTHER.1/1', '20999'), true);
+  assert.equal(hasExamAccess(set, 'OTHER.1/1', '20888'), false);
 });
 
 test('leaves a correctly stored Gregorian date unchanged', () => {

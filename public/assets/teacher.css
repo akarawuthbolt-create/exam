@@ -211,3 +211,5 @@ html[data-theme="dark"] .mini-card,html[data-theme="dark"] .editor-box,html[data
 .password-dialog .editor-actions{margin-top:20px;padding-top:16px;border-top:1px solid #E2E8F0;}
 .password-error{color:var(--red);font-size:12.5px;margin:-4px 0 12px;min-height:18px;}
 @media(max-width:700px){.schedule-time-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}@media(max-width:560px){.lv-grid{grid-template-columns:1fr;}.lv-card{min-height:0;}.deadline-card{min-width:0;width:100%;}.schedule-time-grid{grid-template-columns:1fr;}}
+.schedule-student-access{margin-top:14px;padding:14px;border:1px solid #cbdaf7;border-radius:14px;background:#fff}.schedule-student-access>label{display:block;margin-bottom:8px;font-weight:800;color:#203354}.schedule-student-access small{display:block;margin-top:7px;color:#64748b}.schedule-student-picker{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:8px}.schedule-student-picker input{min-width:0}
+@media(max-width:640px){.schedule-student-picker{grid-template-columns:1fr}.schedule-student-picker button{width:100%}}

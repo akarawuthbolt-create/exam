@@ -6,6 +6,17 @@ function registerTeacherClassRoutes(app, { readDB, requireTeacher, getExamSchedu
     res.json(classes);
   });
 
+  app.get('/api/teacher/students', requireTeacher, (req, res) => {
+    const students = readDB().students.map(student => ({
+      studentId: student.studentId,
+      firstName: student.firstName,
+      lastName: student.lastName,
+      classRoom: student.classRoom,
+      examPeriod: student.examPeriod || ''
+    })).sort((a, b) => String(a.classRoom).localeCompare(String(b.classRoom), 'th', { numeric: true }) || String(a.studentId).localeCompare(String(b.studentId), 'th', { numeric: true }));
+    res.json(students);
+  });
+
   app.get('/api/teacher/exam-roster', requireTeacher, (req, res) => {
     const setKey = String(req.query.setKey || '').trim();
     const classRoom = String(req.query.classRoom || '').trim();

@@ -23,14 +23,14 @@ function registerSubmissionRoutes(app, { readDB, mutateDB, newId, gradeMC, grade
     if (!readiness.ready) return res.status(409).json({ error: 'exam_not_ready', message: 'ชุดข้อสอบยังไม่ผ่านการตรวจความพร้อม กรุณาแจ้งอาจารย์ผู้สอน', details: readiness.errors });
     applyAcademicPeriod(set, db.settings);
     const resit = payload.resitAccessId ? activeResitAccess(set, student.studentId, payload.resitAccessId) : null;
-    if (!resit && isBeforeStart(set, student.classRoom)) return res.status(403).json({ error: 'not_started', message: 'ยังไม่ถึงเวลาเริ่มสอบ' });
-    if (!resit && !hasExamAccess(set, student.classRoom)) return res.status(403).json({ error: 'forbidden', message: 'ไม่มีสิทธิ์เข้าสอบชุดนี้' });
+    if (!resit && isBeforeStart(set, student.classRoom, student.studentId)) return res.status(403).json({ error: 'not_started', message: 'ยังไม่ถึงเวลาเริ่มสอบ' });
+    if (!resit && !hasExamAccess(set, student.classRoom, student.studentId)) return res.status(403).json({ error: 'forbidden', message: 'ไม่มีสิทธิ์เข้าสอบชุดนี้' });
     if (payload.resitAccessId && !resit) return res.status(403).json({ error: 'resit_unavailable', message: 'สิทธิ์สอบซ่อมหมดอายุหรือถูกใช้ไปแล้ว' });
     const previousSubmission = db.results.find(item => item.studentId === student.studentId && item.questionKey === payload.questionKey && (resit ? item.resitAccessId === resit.id : item.attemptType !== 'resit'));
     if (previousSubmission) return res.status(200).json({ id: previousSubmission.id, alreadySubmitted: true, message: 'บันทึกคำตอบนี้ไว้เรียบร้อยแล้ว' });
-    const schedule=getExamSchedule(set, student.classRoom);
+    const schedule=getExamSchedule(set, student.classRoom, student.studentId);
     const validAutoSubmit = hasStartedExamDraft(db, student.studentId, payload, schedule);
-    if (!resit && isPastDeadline(set, student.classRoom) && !validAutoSubmit && (!schedule?.lateAccessCode || payload.lateCode !== schedule.lateAccessCode)) return res.status(403).json({ error: 'deadline_passed', message: 'หมดเวลาสอบแล้ว' });
+    if (!resit && isPastDeadline(set, student.classRoom, student.studentId) && !validAutoSubmit && (!schedule?.lateAccessCode || payload.lateCode !== schedule.lateAccessCode)) return res.status(403).json({ error: 'deadline_passed', message: 'หมดเวลาสอบแล้ว' });
     const answers = payload.answers || {};
     const visibleWrittenQuestions = filterWrittenQuestionsForClass(set.sections.written, student.classRoom);
     if (!payload.autoSubmit) {

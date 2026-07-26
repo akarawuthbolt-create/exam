@@ -60,37 +60,37 @@ function gradeWritten(section, answers) {
   return { total: round2(total), perQuestion };
 }
 
-function getExamSchedule(set, classRoom) {
+function getExamSchedule(set, classRoom, studentId) {
   const schedules = Array.isArray(set.examSchedules) ? set.examSchedules.filter(item => item && Array.isArray(item.classes)) : [];
   const schedule = schedules.length
-    ? schedules.find(item => (item.classes || []).includes(classRoom)) || schedules.find(item => !(item.classes || []).length) || null
-    : { classes: set.assignedClasses || [], availableFrom: set.availableFrom, availableUntil: set.availableUntil, lateAccessCode: set.lateAccessCode || '' };
+    ? schedules.find(item => studentId && (item.studentIds || []).includes(studentId)) || schedules.find(item => (item.classes || []).includes(classRoom)) || schedules.find(item => !(item.classes || []).length) || null
+    : { classes: set.assignedClasses || [], studentIds: set.studentIds || [], availableFrom: set.availableFrom, availableUntil: set.availableUntil, lateAccessCode: set.lateAccessCode || '' };
   return schedule ? { ...schedule, availableFrom: normalizeExamDateTime(schedule.availableFrom), availableUntil: normalizeExamDateTime(schedule.availableUntil) } : null;
 }
-function isPastDeadline(set, classRoom) {
+function isPastDeadline(set, classRoom, studentId) {
   if (set.quickOpen) return false;
-  const schedule = getExamSchedule(set, classRoom);
+  const schedule = getExamSchedule(set, classRoom, studentId);
   return !!(schedule?.availableUntil && Date.now() > new Date(schedule.availableUntil).getTime());
 }
-function isBeforeStart(set, classRoom) {
+function isBeforeStart(set, classRoom, studentId) {
   if (set.quickOpen) return false;
-  const schedule = getExamSchedule(set, classRoom);
+  const schedule = getExamSchedule(set, classRoom, studentId);
   return !!(schedule?.availableFrom && Date.now() < new Date(schedule.availableFrom).getTime());
 }
-function hasExamAccess(set, classRoom) {
-  const schedule = getExamSchedule(set, classRoom);
-  return !!schedule && (!(schedule.classes || []).length || schedule.classes.includes(classRoom));
+function hasExamAccess(set, classRoom, studentId) {
+  const schedule = getExamSchedule(set, classRoom, studentId);
+  return !!schedule && (!(schedule.classes || []).length || schedule.classes.includes(classRoom) || (studentId && (schedule.studentIds || []).includes(studentId)));
 }
 
-function sanitizeSetForStudent(set, classRoom) {
-  const schedule = getExamSchedule(set, classRoom);
+function sanitizeSetForStudent(set, classRoom, studentId) {
+  const schedule = getExamSchedule(set, classRoom, studentId);
   return {
     key: set.key, title: set.title, courseName: set.courseName || set.title, tagline: set.tagline, desc: set.desc,
     examType: set.examType || '', assignedClasses: set.assignedClasses || [],
     subjectTeacherName: set.subjectTeacherName || '', shuffleQuestions: !!set.shuffleQuestions,
     availableFrom: schedule?.availableFrom || null,
     shuffleChoices: !!set.shuffleChoices, availableUntil: schedule?.availableUntil || null,
-    lateAccessRequired: isPastDeadline(set, classRoom),
+    lateAccessRequired: isPastDeadline(set, classRoom, studentId),
     sections: {
       mc: { title: set.sections.mc.title, desc: set.sections.mc.desc, questions: set.sections.mc.questions.map(q => ({ id: q.id, text: q.text, choices: q.choices, points: q.points, resources: q.resources || null })) },
       matching: { title: set.sections.matching.title, desc: set.sections.matching.desc, left: set.sections.matching.left, right: set.sections.matching.right, pointsEach: set.sections.matching.pointsEach },

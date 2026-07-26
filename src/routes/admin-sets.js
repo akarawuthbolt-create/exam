@@ -2,7 +2,7 @@ const { validateExamSetPayload, sendValidationError } = require('../validation')
 const { checkExamReadiness } = require('../exam-readiness');
 const { normalizeExamDateTime } = require('../grading');
 
-const normalizeSchedules = schedules => (Array.isArray(schedules) ? schedules : []).map(schedule => ({ ...schedule, availableFrom: normalizeExamDateTime(schedule?.availableFrom) || '', availableUntil: normalizeExamDateTime(schedule?.availableUntil) || '' }));
+const normalizeSchedules = schedules => (Array.isArray(schedules) ? schedules : []).map(schedule => ({ ...schedule, studentIds: [...new Set((Array.isArray(schedule?.studentIds) ? schedule.studentIds : []).map(value => String(value).trim()).filter(Boolean))], availableFrom: normalizeExamDateTime(schedule?.availableFrom) || '', availableUntil: normalizeExamDateTime(schedule?.availableUntil) || '' }));
 
 function registerAdminSetRoutes(app, { readDB, writeDB, requireAdmin, examTypes, newId, applyAcademicPeriod }) {
   app.get('/api/admin/sets', requireAdmin, (req, res) => res.json(readDB().sets));

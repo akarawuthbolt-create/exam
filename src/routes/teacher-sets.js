@@ -5,7 +5,7 @@ const { normalizeExamDateTime } = require('../grading');
 function normalizeSetSchedule(set) {
   set.availableFrom = normalizeExamDateTime(set.availableFrom) || null;
   set.availableUntil = normalizeExamDateTime(set.availableUntil) || null;
-  set.examSchedules = (Array.isArray(set.examSchedules) ? set.examSchedules : []).map(schedule => ({ ...schedule, availableFrom: normalizeExamDateTime(schedule?.availableFrom) || '', availableUntil: normalizeExamDateTime(schedule?.availableUntil) || '' }));
+  set.examSchedules = (Array.isArray(set.examSchedules) ? set.examSchedules : []).map(schedule => ({ ...schedule, studentIds: [...new Set((Array.isArray(schedule?.studentIds) ? schedule.studentIds : []).map(value => String(value).trim()).filter(Boolean))], availableFrom: normalizeExamDateTime(schedule?.availableFrom) || '', availableUntil: normalizeExamDateTime(schedule?.availableUntil) || '' }));
   return set;
 }
 
