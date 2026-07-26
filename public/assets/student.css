@@ -183,18 +183,26 @@ html.restoring-session #startScreen{visibility:hidden;}html.restoring-session bo
 .modal-card{background:var(--surface);border-radius:18px;padding:30px;max-width:420px;width:92%;box-shadow:0 30px 60px -20px rgba(0,0,0,.4);}
 .modal-card h3{font-size:16px;margin:0 0 4px;}
 .modal-card p{color:var(--sub);font-size:13.5px;line-height:1.7;}
-.student-identity-confirm-card{max-width:500px;text-align:center;border:2px solid var(--blue);}
-.student-identity-confirm-card h2{font-size:21px;margin:10px 0 16px;}
-.student-identity-confirm-card .identity-box{text-align:left;font-size:16px;margin-bottom:12px;}
-.student-identity-confirm-card .identity-warning{color:var(--red);font-weight:700;text-align:left;margin:0 0 12px;}
-.student-identity-confirm-card .name-input{margin:0 0 10px;text-align:center;font-size:17px;letter-spacing:.08em;}
+.student-identity-confirm-card{max-width:480px;text-align:center;border:1px solid var(--line);padding:26px 28px;box-shadow:0 18px 50px -24px rgba(15,23,42,.45);}
+.student-identity-confirm-card .eyebrow{background:transparent;padding:0;color:var(--sub);font-size:11px;letter-spacing:.08em;}
+.student-identity-confirm-card h2{font-size:20px;margin:8px 0 18px;}
+.student-identity-confirm-card .identity-box{background:rgba(100,116,139,.06);border:1px solid var(--line);text-align:left;font-size:14px;line-height:1.65;margin-bottom:12px;padding:12px 14px;}
+.student-identity-confirm-card .identity-box b{color:var(--ink);font-size:16px;}
+.student-identity-confirm-card .identity-warning{color:var(--sub);font-weight:500;text-align:left;font-size:12.5px;line-height:1.55;margin:0 0 12px;}
+.student-identity-confirm-card .name-input{margin:0 0 9px;padding:12px 14px;text-align:left;font-size:15px;}
+.student-identity-confirm-card .name-input[type="password"]{text-align:center;letter-spacing:.08em;}
 .student-identity-confirm-card .id-error{text-align:left;margin:0 0 10px;}
-.btn-identity-edit{background:#FFF7ED;border:1.5px solid #FDBA74;color:#9A3412;}
-.btn-identity-edit:hover{background:#FFEDD5;border-color:#FB923C;}
-.identity-forgot-pin{display:flex;width:100%;margin:10px 0 0;align-items:center;justify-content:center;background:rgba(100,116,139,.08);border:1.5px solid var(--line);color:var(--blue);font-size:13px;box-shadow:none;}
-.identity-forgot-pin:hover{background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.35);}
+#identityPinRecoveryFields{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+#identityPinRecoveryFields.hidden{display:none;}
+#identityPinRecoveryFields .name-input{margin:0;min-width:0;}
+.btn-identity-edit{background:transparent;border:1px solid #FDBA74;color:#9A3412;box-shadow:none;}
+.btn-identity-edit:hover{background:#FFF7ED;border-color:#FB923C;}
+.student-identity-confirm-card .btn-primary{box-shadow:none;}
+.identity-forgot-pin{display:flex;width:100%;margin:10px 0 0;padding:9px 12px;align-items:center;justify-content:center;background:transparent;border:0;border-top:1px solid var(--line);border-radius:0;color:var(--blue);font-size:12.5px;box-shadow:none;}
+.identity-forgot-pin:hover{background:rgba(37,99,235,.04);}
 .student-identity-confirm-card .modal-actions{justify-content:center;align-items:stretch;}
 .student-identity-confirm-card .modal-actions .btn{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;}
+@media(max-width:520px){.student-identity-confirm-card{padding:24px 20px;}#identityPinRecoveryFields{grid-template-columns:1fr;}.student-identity-confirm-card .modal-actions{gap:8px;}.student-identity-confirm-card .modal-actions .btn{font-size:13px;padding-left:8px;padding-right:8px;}}
 .modal-check{font-size:44px;color:var(--green);margin:14px 0;}
 .modal-actions{display:flex;gap:10px;}
 
