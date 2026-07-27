@@ -113,6 +113,19 @@ function repeatAssignments(xml, assignments) {
   return xml.slice(0, start) + rendered + xml.slice(end);
 }
 
+function normalizeUniqueDocumentIds(xml) {
+  let drawingId = 0, paragraphId = 0, textId = 0, anchorId = 0, editId = 0;
+  const decimalId = () => String(++drawingId);
+  const hexId = counter => counter.toString(16).toUpperCase().padStart(8, '0');
+  return xml
+    .replace(/(<wp:docPr\b[^>]*?\bid=")[^"]*(")/g, (_, prefix, suffix) => prefix + decimalId() + suffix)
+    .replace(/(<pic:cNvPr\b[^>]*?\bid=")[^"]*(")/g, (_, prefix, suffix) => prefix + decimalId() + suffix)
+    .replace(/w14:paraId="[^"]*"/g, () => `w14:paraId="${hexId(++paragraphId)}"`)
+    .replace(/w14:textId="[^"]*"/g, () => `w14:textId="${hexId(++textId)}"`)
+    .replace(/wp14:anchorId="[^"]*"/g, () => `wp14:anchorId="${hexId(++anchorId)}"`)
+    .replace(/wp14:editId="[^"]*"/g, () => `wp14:editId="${hexId(++editId)}"`);
+}
+
 async function buildLearningPlanDocx(plan) {
   const zip = await JSZip.loadAsync(fs.readFileSync(TEMPLATE_PATH));
   const part = zip.file('word/document.xml');
@@ -127,8 +140,9 @@ async function buildLearningPlanDocx(plan) {
     if (!remaining) break;
     xml = replaceVisibleText(xml, remaining, '');
   }
+  xml = normalizeUniqueDocumentIds(xml);
   zip.file('word/document.xml', xml);
   return zip.generateAsync({ type:'nodebuffer', compression:'DEFLATE' });
 }
 
-module.exports = { buildLearningPlanDocx, repeatAssignments, repeatUnitSection, renderPrototypeRows, scalarValues, unitValues };
+module.exports = { buildLearningPlanDocx, normalizeUniqueDocumentIds, repeatAssignments, repeatUnitSection, renderPrototypeRows, scalarValues, unitValues };

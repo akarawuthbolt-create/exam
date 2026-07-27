@@ -27,3 +27,13 @@ test('learning plan Word export repeats unit sections and fills repeatable rows'
   assert.ok(text.includes('แบบฝึกพื้นฐาน'));
   assert.ok(text.includes('U1'));
 });
+
+test('learning plan Word export gives repeated unit drawings and paragraphs unique ids', async () => {
+  const units=Array.from({length:8},(_,index)=>({unitNo:String(index+1),unitTitle:`หน่วย ${index+1}`,objectives:'จุดประสงค์',content:'สาระการเรียนรู้'}));
+  const buffer=await buildLearningPlanDocx({subjectName:'ทดสอบ',subjectCode:'1000',teacherName:'ผู้สอน',units,competencyRows:[],dutyRows:[],analysisRows:[],scheduleRows:[],evaluationRows:[],assignments:[]});
+  const zip=await JSZip.loadAsync(buffer),xml=await zip.file('word/document.xml').async('string');
+  for(const pattern of [/<wp:docPr\b[^>]*?\bid="([^"]*)"/g,/<pic:cNvPr\b[^>]*?\bid="([^"]*)"/g,/w14:paraId="([^"]*)"/g,/wp14:anchorId="([^"]*)"/g,/wp14:editId="([^"]*)"/g]){
+    const ids=[...xml.matchAll(pattern)].map(match=>match[1]);
+    assert.equal(new Set(ids).size,ids.length);
+  }
+});
