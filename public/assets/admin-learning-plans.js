@@ -78,12 +78,26 @@ function learningPlanTextarea([name,label], value='', attr='data-plan-field'){
 
 function renderLearningPlanList(){
   const wrap=document.getElementById('learningPlansWrap');
-  wrap.innerHTML=`<div class="toolbar-row"><div><h2>สร้างแผนการสอน</h2><p class="sub" style="margin:0;">จัดเก็บข้อมูลตามแบบฟอร์ม Word และเพิ่มหน่วยการเรียนได้หลายหน่วย</p></div><button class="btn btn-primary btn-sm" id="newLearningPlanBtn">＋ สร้างแผนการสอน</button></div>
+  wrap.innerHTML=`<div class="toolbar-row"><div><h2>สร้างแผนการสอน</h2><p class="sub" style="margin:0;">จัดเก็บข้อมูลตามแบบฟอร์ม Word และเพิ่มหน่วยการเรียนได้หลายหน่วย</p></div><div class="editor-actions"><input id="learningPlanJsonInput" type="file" accept="application/json,.json" hidden><button class="btn btn-ghost btn-sm" id="importLearningPlanBtn">นำเข้า JSON</button><button class="btn btn-primary btn-sm" id="newLearningPlanBtn">＋ สร้างแผนการสอน</button></div></div>
     ${learningPlans.length?`<div class="learning-plan-list">${learningPlans.map(plan=>`<div class="learning-plan-list-card"><div><h3>${escapeHtml(plan.subjectName||'ยังไม่ระบุชื่อวิชา')}</h3><p>${escapeHtml(plan.subjectCode||'-')} · ผู้สอน ${escapeHtml(plan.teacherName||'-')} · ${plan.units?.length||0} หน่วย</p><span>แก้ไขล่าสุด ${escapeHtml(learningPlanDateTime(plan.updatedAt))}</span></div><div class="editor-actions"><button class="btn btn-primary btn-sm" data-download-learning-plan="${escapeAttr(plan.id)}">⬇ Word</button><button class="btn btn-ghost btn-sm" data-edit-learning-plan="${escapeAttr(plan.id)}">แก้ไข</button><button class="btn btn-danger btn-sm" data-delete-learning-plan="${escapeAttr(plan.id)}">ลบ</button></div></div>`).join('')}</div>`:'<div class="empty-note">ยังไม่มีแผนการสอน กด “สร้างแผนการสอน” เพื่อเริ่มกรอกข้อมูล</div>'}`;
   document.getElementById('newLearningPlanBtn').addEventListener('click',()=>{learningPlanOpenRowGroup='';openLearningPlanEditor(emptyLearningPlan());});
+  document.getElementById('importLearningPlanBtn').addEventListener('click',()=>document.getElementById('learningPlanJsonInput').click());
+  document.getElementById('learningPlanJsonInput').addEventListener('change',importLearningPlanFile);
   wrap.querySelectorAll('[data-edit-learning-plan]').forEach(button=>button.addEventListener('click',()=>{learningPlanOpenRowGroup='';openLearningPlanEditor(learningPlans.find(plan=>plan.id===button.dataset.editLearningPlan));}));
   wrap.querySelectorAll('[data-download-learning-plan]').forEach(button=>button.addEventListener('click',()=>downloadLearningPlan(button.dataset.downloadLearningPlan,button)));
   wrap.querySelectorAll('[data-delete-learning-plan]').forEach(button=>button.addEventListener('click',()=>deleteLearningPlan(button.dataset.deleteLearningPlan)));
+}
+
+async function importLearningPlanFile(event){
+  const file=event.target.files?.[0];event.target.value='';if(!file)return;
+  if(file.size>5*1024*1024)return showToast('ไฟล์ JSON ต้องมีขนาดไม่เกิน 5 MB');
+  try{
+    const data=JSON.parse(await file.text());
+    const imported=window.learningPlanImporter.importLearningPlanJson(data);
+    learningPlanOpenRowGroup='';openLearningPlanEditor(imported.plan);
+    const missing=imported.summary.units-imported.summary.completeActivities;
+    showToast(`นำเข้า ${imported.summary.units} หน่วยแล้ว${missing?` · ${missing} หน่วยยังไม่มีกิจกรรม`:''} กรุณาตรวจสอบก่อนบันทึก`);
+  }catch(error){showToast(error instanceof SyntaxError?'ไฟล์นี้ไม่ใช่ JSON ที่ถูกต้อง':error.message);}
 }
 
 function renderScalarSections(plan){
