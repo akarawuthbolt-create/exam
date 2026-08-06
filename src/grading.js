@@ -63,8 +63,9 @@ function gradeWritten(section, answers) {
 function getExamSchedule(set, classRoom, studentId) {
   const schedules = Array.isArray(set.examSchedules) ? set.examSchedules.filter(item => item && Array.isArray(item.classes)) : [];
   const requestedStudentId = String(studentId ?? '').trim();
+  const isAssignedStudent = item => requestedStudentId && (item.studentIds || []).some(value => String(value ?? '').trim() === requestedStudentId);
   const schedule = schedules.length
-    ? schedules.find(item => requestedStudentId && (item.studentIds || []).some(value => String(value ?? '').trim() === requestedStudentId)) || schedules.find(item => (item.classes || []).includes(classRoom)) || schedules.find(item => !(item.classes || []).length) || null
+    ? schedules.find(item => item.absenceOnly && isAssignedStudent(item)) || schedules.find(isAssignedStudent) || schedules.find(item => (item.classes || []).includes(classRoom)) || schedules.find(item => !(item.classes || []).length) || null
     : { classes: set.assignedClasses || [], studentIds: set.studentIds || [], availableFrom: set.availableFrom, availableUntil: set.availableUntil, lateAccessCode: set.lateAccessCode || '' };
   return schedule ? { ...schedule, availableFrom: normalizeExamDateTime(schedule.availableFrom), availableUntil: normalizeExamDateTime(schedule.availableUntil) } : null;
 }

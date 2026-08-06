@@ -18,7 +18,7 @@ test('an individually assigned student uses the selected round even when enrolle
 
 test('an absentee-only round overrides the expired classroom round', () => {
   const set = { examSchedules: [
-    { name: 'รอบปกติ', classes: ['CIT.2/5'], studentIds: [], availableFrom: '2026-07-20T02:00:00.000Z', availableUntil: '2026-07-20T03:00:00.000Z' },
+    { name: 'รอบปกติ', classes: ['CIT.2/5'], studentIds: ['20999'], availableFrom: '2026-07-20T02:00:00.000Z', availableUntil: '2026-07-20T03:00:00.000Z' },
     { name: 'รอบผู้ขาดสอบ', classes: ['__ABSENCE_ONLY__'], studentIds: [20999], availableFrom: '2026-08-06T02:00:00.000Z', availableUntil: '2026-08-07T02:00:00.000Z', absenceOnly: true }
   ] };
   assert.equal(getExamSchedule(set, 'CIT.2/5', '20999').name, 'รอบผู้ขาดสอบ');
