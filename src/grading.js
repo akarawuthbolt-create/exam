@@ -85,6 +85,12 @@ function hasExamAccess(set, classRoom, studentId) {
   return !!schedule && (!(schedule.classes || []).length || schedule.classes.includes(classRoom) || (requestedStudentId && (schedule.studentIds || []).some(value => String(value ?? '').trim() === requestedStudentId)));
 }
 
+function haveAllExamSchedulesEnded(schedules, now = Date.now()) {
+  if (!Array.isArray(schedules) || !schedules.length) return false;
+  const endTimes = schedules.map(schedule => new Date(normalizeExamDateTime(schedule?.availableUntil)).getTime());
+  return endTimes.every(Number.isFinite) && Math.max(...endTimes) < now;
+}
+
 function sanitizeSetForStudent(set, classRoom, studentId) {
   const schedule = getExamSchedule(set, classRoom, studentId);
   return {
@@ -106,4 +112,4 @@ function sanitizeSetForStudent(set, classRoom, studentId) {
   };
 }
 
-module.exports = { round2, gradeMC, gradeMatching, gradeWritten, normalizeCodeAnswer, filterWrittenQuestionsForClass, normalizeExamDateTime, getExamSchedule, hasExamAccess, isPastDeadline, isBeforeStart, sanitizeSetForStudent };
+module.exports = { round2, gradeMC, gradeMatching, gradeWritten, normalizeCodeAnswer, filterWrittenQuestionsForClass, normalizeExamDateTime, haveAllExamSchedulesEnded, getExamSchedule, hasExamAccess, isPastDeadline, isBeforeStart, sanitizeSetForStudent };

@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { normalizeExamDateTime, getExamSchedule, hasExamAccess } = require('../src/grading');
+const { normalizeExamDateTime, haveAllExamSchedulesEnded, getExamSchedule, hasExamAccess } = require('../src/grading');
 
 test('normalizes a legacy Buddhist year stored as a Gregorian year', () => {
   assert.equal(normalizeExamDateTime('2569-07-21T05:00:00.000Z'), '2026-07-21T05:00:00.000Z');
@@ -14,6 +14,11 @@ test('an individually assigned student uses the selected round even when enrolle
   assert.equal(getExamSchedule(set, 'OTHER.1/1', '20999').name, 'รอบเช้า');
   assert.equal(hasExamAccess(set, 'OTHER.1/1', '20999'), true);
   assert.equal(hasExamAccess(set, 'OTHER.1/1', '20888'), false);
+});
+
+test('treats an ended Buddhist-year schedule as finished', () => {
+  const schedules = [{ availableUntil: '2569-07-21T07:30:00.000Z' }];
+  assert.equal(haveAllExamSchedulesEnded(schedules, new Date('2026-08-06T00:00:00.000Z').getTime()), true);
 });
 
 test('an absentee-only round overrides the expired classroom round', () => {
