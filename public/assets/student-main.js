@@ -466,11 +466,15 @@ async function proceedToSelectScreen(){
 }
 let pickedKey = null;
 let COMPLETED_KEYS = new Set();
+let selectRefreshInFlight=false,lastSelectRefreshAt=0;
 async function refreshSelectScreen(){
+  if(selectRefreshInFlight)return;
+  selectRefreshInFlight=true;lastSelectRefreshAt=Date.now();
+  const refreshButton=document.getElementById('refreshEligibleSetsBtn');if(refreshButton){refreshButton.disabled=true;refreshButton.textContent='กำลังตรวจสอบ...';}
   document.getElementById('qgridWrap').innerHTML = '<div class="loading-note">กำลังโหลดรายวิชา...</div>';
   document.getElementById('selectScoreWrap').innerHTML = '<div class="loading-note">กำลังโหลดผลสอบ...</div>';
   try{ ELIGIBLE_SETS = await apiGetEligibleSets(); }
-  catch(e){ document.getElementById('qgridWrap').innerHTML = '<div class="empty-note">'+escapeHtml(e.message)+'</div>'; return; }
+  catch(e){ document.getElementById('qgridWrap').innerHTML = '<div class="empty-note">'+escapeHtml(e.message)+'</div>';selectRefreshInFlight=false;if(refreshButton){refreshButton.disabled=false;refreshButton.textContent='↻ ตรวจสอบข้อสอบใหม่';}return; }
   ELIGIBLE_SETS_BY_KEY = {}; ELIGIBLE_SETS.forEach(s=>ELIGIBLE_SETS_BY_KEY[s.key]=s);
   try{
     const mine = await apiGetMyResults(app.studentId);
@@ -481,7 +485,10 @@ async function refreshSelectScreen(){
     document.getElementById('selectScoreWrap').innerHTML = `<div class="empty-note">โหลดผลสอบไม่สำเร็จ: ${escapeHtml(e.message)}</div>`;
   }
   renderQGrid();
+  selectRefreshInFlight=false;if(refreshButton){refreshButton.disabled=false;refreshButton.textContent='↻ ตรวจสอบข้อสอบใหม่';}
 }
+document.getElementById('refreshEligibleSetsBtn').addEventListener('click',refreshSelectScreen);
+window.addEventListener('focus',()=>{if(!selectScreen.classList.contains('hidden')&&Date.now()-lastSelectRefreshAt>5000)refreshSelectScreen();});
 let lateCodeVerified = {}; // {questionKey: code} once verified this session
 async function apiVerifyLateCode(key, code){ return apiFetch('/api/sets/'+encodeURIComponent(key)+'/verify-late-code', { method:'POST', body:{code} }); }
 

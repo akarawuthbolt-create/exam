@@ -16,6 +16,16 @@ test('an individually assigned student uses the selected round even when enrolle
   assert.equal(hasExamAccess(set, 'OTHER.1/1', '20888'), false);
 });
 
+test('an absentee-only round overrides the expired classroom round', () => {
+  const set = { examSchedules: [
+    { name: 'รอบปกติ', classes: ['CIT.2/5'], studentIds: [], availableFrom: '2026-07-20T02:00:00.000Z', availableUntil: '2026-07-20T03:00:00.000Z' },
+    { name: 'รอบผู้ขาดสอบ', classes: ['__ABSENCE_ONLY__'], studentIds: [20999], availableFrom: '2026-08-06T02:00:00.000Z', availableUntil: '2026-08-07T02:00:00.000Z', absenceOnly: true }
+  ] };
+  assert.equal(getExamSchedule(set, 'CIT.2/5', '20999').name, 'รอบผู้ขาดสอบ');
+  assert.equal(hasExamAccess(set, 'CIT.2/5', '20999'), true);
+  assert.equal(getExamSchedule(set, 'CIT.2/5', '20888').name, 'รอบปกติ');
+});
+
 test('leaves a correctly stored Gregorian date unchanged', () => {
   assert.equal(normalizeExamDateTime('2026-07-21T05:00:00.000Z'), '2026-07-21T05:00:00.000Z');
 });

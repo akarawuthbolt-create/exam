@@ -62,8 +62,9 @@ function gradeWritten(section, answers) {
 
 function getExamSchedule(set, classRoom, studentId) {
   const schedules = Array.isArray(set.examSchedules) ? set.examSchedules.filter(item => item && Array.isArray(item.classes)) : [];
+  const requestedStudentId = String(studentId ?? '').trim();
   const schedule = schedules.length
-    ? schedules.find(item => studentId && (item.studentIds || []).includes(studentId)) || schedules.find(item => (item.classes || []).includes(classRoom)) || schedules.find(item => !(item.classes || []).length) || null
+    ? schedules.find(item => requestedStudentId && (item.studentIds || []).some(value => String(value ?? '').trim() === requestedStudentId)) || schedules.find(item => (item.classes || []).includes(classRoom)) || schedules.find(item => !(item.classes || []).length) || null
     : { classes: set.assignedClasses || [], studentIds: set.studentIds || [], availableFrom: set.availableFrom, availableUntil: set.availableUntil, lateAccessCode: set.lateAccessCode || '' };
   return schedule ? { ...schedule, availableFrom: normalizeExamDateTime(schedule.availableFrom), availableUntil: normalizeExamDateTime(schedule.availableUntil) } : null;
 }
@@ -79,7 +80,8 @@ function isBeforeStart(set, classRoom, studentId) {
 }
 function hasExamAccess(set, classRoom, studentId) {
   const schedule = getExamSchedule(set, classRoom, studentId);
-  return !!schedule && (!(schedule.classes || []).length || schedule.classes.includes(classRoom) || (studentId && (schedule.studentIds || []).includes(studentId)));
+  const requestedStudentId = String(studentId ?? '').trim();
+  return !!schedule && (!(schedule.classes || []).length || schedule.classes.includes(classRoom) || (requestedStudentId && (schedule.studentIds || []).some(value => String(value ?? '').trim() === requestedStudentId)));
 }
 
 function sanitizeSetForStudent(set, classRoom, studentId) {
