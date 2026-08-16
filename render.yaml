@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: charan-exam
+    runtime: node
+    region: singapore
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    maxShutdownDelaySeconds: 15
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 22.13.0
+      - key: ADMIN_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: "true"
+      - key: DATABASE_READINESS_TIMEOUT_MS
+        value: "10000"
+      - key: BACKUP_ENABLED
+        value: "false"
+      - key: RESTORE_DRILL_ENABLED
+        value: "false"

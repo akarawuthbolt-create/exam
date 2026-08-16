@@ -110,7 +110,9 @@ Frontend หลักถูกแยกเป็น HTML สำหรับโ�
 - Admin > Operations ใช้ authenticated SSE stream เพื่อแสดงจำนวนนักเรียนที่กำลังทำข้อสอบ ผลส่งล่าสุด และสถานะคิวทุก 3 วินาที โดยส่งเฉพาะ aggregate metrics และไม่ใส่ admin key ใน URL
 - การ์ดคะแนนไม่ตรง/ตรวจสอบไม่ได้ใน Operations เปิดรายงาน expected เทียบ actual แยกตามส่วน พร้อมสาเหตุและผู้เรียนที่ได้รับผล โดยไม่ส่งคำตอบหรือเฉลย และไม่แก้คะแนนอัตโนมัติ
 
-หาก deploy บน Railway หรือ container ต้อง mount persistent volume ให้ `BACKUP_DIR` มิฉะนั้นไฟล์ backup จะหายเมื่อ redeploy และควรให้ระบบ monitoring ภายนอก (เช่น UptimeRobot, Better Stack หรือ provider health check) เรียก `/health` สำหรับการตรวจถี่ และเรียก `/ready` ทุก 5-10 นาทีจากภายนอกเพื่อยืนยันฐานข้อมูลจริง ไม่ควรพึ่ง webhook ภายใน process เพียงทางเดียว ควรทดสอบ restore จากไฟล์ `.json.gz.enc` เป็นระยะและเก็บ `BACKUP_ENCRYPTION_KEY` แยกจากไฟล์ backup
+หาก deploy บน Render Free หรือ container ที่ไม่มี persistent volume ไฟล์ใน `BACKUP_DIR` จะหายเมื่อ redeploy จึงไม่ควรเปิด file backup โดยไม่มี external storage และควรให้ระบบ monitoring ภายนอก (เช่น UptimeRobot, Better Stack หรือ provider health check) เรียก `/health` สำหรับการตรวจถี่ และเรียก `/ready` ทุก 5-10 นาทีจากภายนอกเพื่อยืนยันฐานข้อมูลจริง ไม่ควรพึ่ง webhook ภายใน process เพียงทางเดียว ควรทดสอบ restore จากไฟล์ `.json.gz.enc` เป็นระยะและเก็บ `BACKUP_ENCRYPTION_KEY` แยกจากไฟล์ backup
+
+ขั้นตอนย้ายจาก Railway ไป Render และรายการ environment variables อยู่ใน [DEPLOY_RENDER.md](./DEPLOY_RENDER.md)
 
 ชุดทดสอบใช้ SQLite และปิดการเชื่อมต่อ PostgreSQL เมื่อ `NODE_ENV=test` โดยครอบคลุมการยืนยันตัวตน สิทธิ์การเข้าถึง การตรวจคะแนน การส่งออกเอกสาร Google Forms และการไม่เปิดเผยเฉลยแก่นักเรียน
 
