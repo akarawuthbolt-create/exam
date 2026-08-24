@@ -143,16 +143,6 @@
           </div>
           <button class="btn btn-primary btn-sm" id="addTeacherBtn">+ เพิ่มอาจารย์</button>
         </div>
-        <div class="panel">
-          <h3>📥 นำเข้าบัญชีอาจารย์จาก Excel</h3>
-          <p class="panel-sub">ดาวน์โหลดไฟล์ตัวอย่าง กรอกข้อมูลตามคอลัมน์ แล้วเลือกไฟล์เพื่อนำเข้าบัญชีหลายรายการพร้อมกัน</p>
-          <div class="editor-actions" style="justify-content:flex-start;flex-wrap:wrap;">
-            <a class="btn btn-ghost btn-sm" id="downloadTeacherTemplateBtn" href="/api/teachers/import-template.xlsx">ดาวน์โหลดไฟล์ตัวอย่าง Excel</a>
-            <input type="file" id="teacherExcelFile" accept=".xlsx,.xls" class="filter-select">
-            <button class="btn btn-primary btn-sm" id="importTeachersExcelBtn" type="button">นำเข้าบัญชี</button>
-          </div>
-          <div id="teacherImportReport"></div>
-        </div>
         <div id="teachersWrap"><div class="loading-note">กำลังโหลด...</div></div>
       </div>
 
@@ -214,6 +204,16 @@
             <button class="btn btn-primary btn-sm" id="openPromotionDialogBtn" type="button">จัดการเลื่อนชั้น →</button>
           </div>
           <button class="panel settings-menu-card" id="openStudentFilesDialogBtn" type="button"><div><h3>📁 นำเข้า / ส่งออกข้อมูล</h3><p class="panel-sub">นำเข้ารายชื่อนักเรียนจาก Excel, ส่งออกรายชื่อ และสำรองข้อมูลระบบ</p></div><span class="btn btn-primary btn-sm">จัดการไฟล์ →</span></button>
+          <div class="panel">
+            <h3>📥 นำเข้าบัญชีอาจารย์จาก Excel</h3>
+            <p class="panel-sub">ดาวน์โหลดไฟล์ตัวอย่าง กรอกข้อมูลตามคอลัมน์ แล้วเลือกไฟล์เพื่อนำเข้าบัญชีหลายรายการพร้อมกัน</p>
+            <div class="editor-actions" style="justify-content:flex-start;flex-wrap:wrap;">
+              <a class="btn btn-ghost btn-sm" id="downloadTeacherTemplateBtn" href="/api/teachers/import-template.xlsx">ดาวน์โหลดไฟล์ตัวอย่าง Excel</a>
+              <input type="file" id="teacherExcelFile" accept=".xlsx" class="filter-select">
+              <button class="btn btn-primary btn-sm" id="importTeachersExcelBtn" type="button">นำเข้าบัญชี</button>
+            </div>
+            <div id="teacherImportReport"></div>
+          </div>
           <div class="panel" id="adminAccountPanel">
             <h3>บัญชีผู้ดูแล</h3>
             <p class="panel-sub">ออกจากระบบเมื่อใช้งานบนเครื่องสาธารณะหรือใช้งานเสร็จแล้ว</p>
