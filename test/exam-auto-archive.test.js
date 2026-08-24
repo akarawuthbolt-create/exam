@@ -21,3 +21,16 @@ test('auto archive normalizes legacy Buddhist years before calculating 30 days',
   assert.deepEqual(archiveExpiredExamSets(db, now), ['buddhist-year']);
   assert.equal(db.sets[0].archived, true);
 });
+
+test('auto archive uses regular schedules instead of stale set dates or absence-only rounds', () => {
+  const set = {
+    key: 'completed-regular-round',
+    availableUntil: '2026-12-31T10:00:00.000Z',
+    examSchedules: [
+      { availableUntil: '2026-07-21T07:30:00.000Z' },
+      { availableUntil: '2026-08-20T07:30:00.000Z', absenceOnly: true }
+    ]
+  };
+  assert.equal(examLastEndAt(set), Date.parse('2026-07-21T07:30:00.000Z'));
+  assert.deepEqual(archiveExpiredExamSets({ sets: [set] }, Date.parse('2026-08-24T07:30:00.000Z')), [set.key]);
+});
