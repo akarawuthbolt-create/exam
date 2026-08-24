@@ -1915,7 +1915,8 @@ function renderResultSubjectGroups(records){
 function archivedResultPeriod(record){
   const set=ADMIN_SETS.find(item=>item.key===(record.questionKey||'')); if(!set)return null;
   const regular=(set.examSchedules||[]).filter(item=>item&&!item.absenceOnly),dates=(regular.length?regular.map(item=>item.availableFrom):[set.availableFrom]).map(normalizedExamTimestamp).filter(Number.isFinite);
-  if(!dates.length||Date.now()-Math.max(...dates)<30*86400000)return null;
+  const olderThanThirtyDays=dates.length&&Date.now()-Math.max(...dates)>=30*86400000;
+  if(!set.archived&&!olderThanThirtyDays)return null;
   const semester=String(set.semester||'').toLowerCase(),term=semester==='summer'?'s':(semester||'?'),yearText=String(set.academicYear||''),shortYear=yearText.length>=2?yearText.slice(-2):'?';
   return {key:`${set.examType||record.examType||'ข้อสอบ'}|${term}|${shortYear}`,label:`ผลสอบ ${set.examType||record.examType||'ข้อสอบ'} ${term}/${shortYear}`,sort:`${yearText.padStart(4,'0')}-${term==='s'?'3':term}`};
 }
