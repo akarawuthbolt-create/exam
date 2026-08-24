@@ -1,8 +1,10 @@
+const { normalizeExamDateTime } = require('./grading');
+
 const DEFAULT_ARCHIVE_AFTER_MS = 30 * 24 * 60 * 60 * 1000;
 
 function examLastEndAt(set) {
   const values = [set?.availableUntil, ...(set?.examSchedules || []).map(schedule => schedule?.availableUntil)]
-    .map(value => Date.parse(value)).filter(Number.isFinite);
+    .map(value => Date.parse(normalizeExamDateTime(value))).filter(Number.isFinite);
   return values.length ? Math.max(...values) : null;
 }
 

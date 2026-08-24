@@ -13,3 +13,11 @@ test('auto archive ignores unscheduled, already archived, and deleted exams', ()
   const db = { sets: [{ key:'none' },{ key:'archived', archived:true, availableUntil:'2020-01-01' },{ key:'deleted', deletedAt:'2020-01-02', availableUntil:'2020-01-01' }] };
   assert.deepEqual(archiveExpiredExamSets(db, Date.parse('2026-01-01')), []);
 });
+
+test('auto archive normalizes legacy Buddhist years before calculating 30 days', () => {
+  const db = { sets: [{ key: 'buddhist-year', examSchedules: [{ availableUntil: '2569-07-21T07:30:00.000Z' }] }] };
+  const now = Date.parse('2026-08-24T07:30:00.000Z');
+  assert.equal(examLastEndAt(db.sets[0]), Date.parse('2026-07-21T07:30:00.000Z'));
+  assert.deepEqual(archiveExpiredExamSets(db, now), ['buddhist-year']);
+  assert.equal(db.sets[0].archived, true);
+});
