@@ -91,7 +91,9 @@ test('frontend pages load extracted CSS and JavaScript assets', async () => {
   const teacherTab = admin.body.match(/id="atab-teachers"[\s\S]*?id="atab-learning-plans"/)?.[0] || '';
   const settingsTab = admin.body.match(/id="atab-settings"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>\s*<dialog/)?.[0] || '';
   assert.doesNotMatch(teacherTab, /teacherExcelFile/);
-  assert.match(settingsTab, /teacherExcelFile/);
+  assert.match(settingsTab, /openTeacherImportDialogBtn/);
+  assert.match(admin.body, /id="teacherImportDialog"/);
+  assert.match(admin.body, /id="teacherExcelFile"/);
   assert.match(admin.body, /id="manageTeacherDialog"/);
   assert.doesNotMatch(admin.body, /<style>/);
   const student = await request('/student');

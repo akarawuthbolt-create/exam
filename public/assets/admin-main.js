@@ -197,7 +197,8 @@ function organizeAdminSettings(){
   const filePanel=document.getElementById('studentFileImportPanel');
   if(filePanel) document.getElementById('studentFilesDialogBody')?.appendChild(filePanel);
   document.getElementById('openStudentFilesDialogBtn')?.addEventListener('click',()=>openDialog('studentFilesDialog'));
-  [['closeAcademicCalendarDialogBtn','academicCalendarDialog'],['closeStudentFilesDialogBtn','studentFilesDialog'],['closeAdminAccountDialogBtn','adminAccountDialog']].forEach(([buttonId,dialogId])=>document.getElementById(buttonId)?.addEventListener('click',()=>document.getElementById(dialogId)?.close()));
+  document.getElementById('openTeacherImportDialogBtn')?.addEventListener('click',()=>openDialog('teacherImportDialog'));
+  [['closeAcademicCalendarDialogBtn','academicCalendarDialog'],['closeStudentFilesDialogBtn','studentFilesDialog'],['closeTeacherImportDialogBtn','teacherImportDialog'],['closeAdminAccountDialogBtn','adminAccountDialog']].forEach(([buttonId,dialogId])=>document.getElementById(buttonId)?.addEventListener('click',()=>document.getElementById(dialogId)?.close()));
 }
 organizeAdminSettings();
 

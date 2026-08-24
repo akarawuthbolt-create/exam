@@ -204,16 +204,7 @@
             <button class="btn btn-primary btn-sm" id="openPromotionDialogBtn" type="button">จัดการเลื่อนชั้น →</button>
           </div>
           <button class="panel settings-menu-card" id="openStudentFilesDialogBtn" type="button"><div><h3>📁 นำเข้า / ส่งออกข้อมูล</h3><p class="panel-sub">นำเข้ารายชื่อนักเรียนจาก Excel, ส่งออกรายชื่อ และสำรองข้อมูลระบบ</p></div><span class="btn btn-primary btn-sm">จัดการไฟล์ →</span></button>
-          <div class="panel">
-            <h3>📥 นำเข้าบัญชีอาจารย์จาก Excel</h3>
-            <p class="panel-sub">ดาวน์โหลดไฟล์ตัวอย่าง กรอกข้อมูลตามคอลัมน์ แล้วเลือกไฟล์เพื่อนำเข้าบัญชีหลายรายการพร้อมกัน</p>
-            <div class="editor-actions" style="justify-content:flex-start;flex-wrap:wrap;">
-              <a class="btn btn-ghost btn-sm" id="downloadTeacherTemplateBtn" href="/api/teachers/import-template.xlsx">ดาวน์โหลดไฟล์ตัวอย่าง Excel</a>
-              <input type="file" id="teacherExcelFile" accept=".xlsx" class="filter-select">
-              <button class="btn btn-primary btn-sm" id="importTeachersExcelBtn" type="button">นำเข้าบัญชี</button>
-            </div>
-            <div id="teacherImportReport"></div>
-          </div>
+          <button class="panel settings-menu-card" id="openTeacherImportDialogBtn" type="button"><div><h3>📥 นำเข้าบัญชีอาจารย์จาก Excel</h3><p class="panel-sub">เพิ่มบัญชีอาจารย์หลายรายการพร้อมกันด้วยไฟล์ตัวอย่างที่กำหนดคอลัมน์ไว้แล้ว</p></div><span class="btn btn-primary btn-sm">จัดการบัญชี →</span></button>
           <div class="panel" id="adminAccountPanel">
             <h3>บัญชีผู้ดูแล</h3>
             <p class="panel-sub">ออกจากระบบเมื่อใช้งานบนเครื่องสาธารณะหรือใช้งานเสร็จแล้ว</p>
@@ -237,6 +228,18 @@
   <div class="google-import-dialog-inner">
     <div class="google-import-dialog-head"><div><h3>📁 นำเข้า / ส่งออกข้อมูล</h3><p>นำเข้ารายชื่อนักเรียน สำรองข้อมูล และกู้คืนข้อมูลทั้งระบบ</p></div><button class="btn btn-ghost btn-sm" id="closeStudentFilesDialogBtn" type="button">✕</button></div>
     <div id="studentFilesDialogBody"></div>
+  </div>
+</dialog>
+
+<dialog class="google-import-dialog settings-dialog" id="teacherImportDialog">
+  <div class="google-import-dialog-inner">
+    <div class="google-import-dialog-head"><div><h3>📥 นำเข้าบัญชีอาจารย์จาก Excel</h3><p>ดาวน์โหลดไฟล์ตัวอย่าง กรอกข้อมูลตามคอลัมน์ แล้วเลือกไฟล์เพื่อนำเข้าบัญชีหลายรายการพร้อมกัน</p></div><button class="btn btn-ghost btn-sm" id="closeTeacherImportDialogBtn" type="button">✕</button></div>
+    <div class="editor-actions" style="justify-content:flex-start;flex-wrap:wrap;">
+      <a class="btn btn-ghost btn-sm" id="downloadTeacherTemplateBtn" href="/api/teachers/import-template.xlsx">ดาวน์โหลดไฟล์ตัวอย่าง Excel</a>
+      <input type="file" id="teacherExcelFile" accept=".xlsx" class="filter-select">
+      <button class="btn btn-primary btn-sm" id="importTeachersExcelBtn" type="button">นำเข้าบัญชี</button>
+    </div>
+    <div id="teacherImportReport"></div>
   </div>
 </dialog>
 
@@ -277,7 +280,7 @@
   </div>
 </div>
 
-<script src="/assets/admin-main.js?v=20260824-1"></script>
+<script src="/assets/admin-main.js?v=20260824-2"></script>
 <script src="/assets/learning-plan-import.js?v=20260727-1"></script>
 <script src="/assets/admin-learning-plans.js?v=20260727-1"></script>
 </body>
