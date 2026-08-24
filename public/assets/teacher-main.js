@@ -377,7 +377,6 @@ async function deleteSet(key){
 }
 document.getElementById('newSetBtn').addEventListener('click', ()=> openEditor(null));
 function dfdSetDraft(){ return { ...blankSet(), key:'object_analysis_design_dfd', title:'การวิเคราะห์และออกแบบเชิงวัตถุ: Data Flow Diagram', courseName:'การวิเคราะห์และออกแบบเชิงวัตถุ', tagline:'DFD Drawing Examination', desc:'ข้อสอบวาด Data Flow Diagram (Level 0, 1 และ 2)', delivery:'object-analysis-design', examType:'ปลายภาค', shuffleQuestions:false, shuffleChoices:false }; }
-document.getElementById('newDfdSetBtn').addEventListener('click', ()=>{ const existing=ADMIN_SETS.find(set=>set.key==='object_analysis_design_dfd'); openEditor(existing?.key||null, existing?null:dfdSetDraft()); });
 document.getElementById('importGoogleFormsSetBtn').addEventListener('click', ()=> openGoogleFormsSetDialog());
 document.getElementById('setSearchInput').addEventListener('input',event=>{ setSearchQuery=event.target.value; renderSetList(); });
 

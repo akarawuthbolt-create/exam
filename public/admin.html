@@ -65,7 +65,7 @@
             <p class="sub" style="margin:0;">จัดกลุ่มตามชื่อวิชา — 1 วิชาอาจมีทั้งข้อสอบกลางภาคและปลายภาค</p>
             <input class="filter-select" type="search" id="setSearchInput" placeholder="ค้นหาชื่อวิชา หรือชุดข้อสอบ" aria-label="ค้นหาชุดข้อสอบ" style="min-width:250px;margin-top:12px;">
           </div>
-          <div class="editor-actions" style="margin:0;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" id="importQuestionFileBtn">📄 นำเข้าจาก Word / PDF / Excel</button><button class="btn btn-ghost btn-sm" id="importGoogleFormsSetBtn">นำเข้าข้อสอบจาก Forms</button><button class="btn btn-ghost btn-sm" id="newDfdSetBtn">🧩 สร้างข้อสอบ DFD</button><button class="btn btn-primary btn-sm" id="newSetBtn">+ เพิ่มชุดข้อสอบใหม่</button></div>
+          <div class="editor-actions" style="margin:0;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" id="openExamImportDialogBtn">📥 นำเข้าข้อสอบ</button><button class="btn btn-ghost btn-sm" id="newDfdSetBtn">🧩 สร้างข้อสอบ DFD</button><button class="btn btn-primary btn-sm" id="newSetBtn">+ เพิ่มชุดข้อสอบใหม่</button></div>
         </div>
         <div id="setListWrap"><div class="loading-note">กำลังโหลด...</div></div>
       </div>
@@ -269,6 +269,16 @@
   </div>
 </dialog>
 
+<dialog class="google-import-dialog" id="examImportChoiceDialog">
+  <div class="google-import-dialog-inner">
+    <div class="google-import-dialog-head"><div><h3>📥 นำเข้าข้อสอบ</h3><p>เลือกแหล่งข้อมูลที่ต้องการนำเข้า</p></div><button class="btn btn-ghost btn-sm" type="button" id="closeExamImportChoiceDialog">✕</button></div>
+    <div class="settings-grid">
+      <button class="panel settings-menu-card" id="chooseQuestionFileImportBtn" type="button"><div><h3>📄 Word / PDF / Excel / TXT</h3><p class="panel-sub">อ่านข้อสอบจากไฟล์และแสดงตัวอย่างก่อนนำเข้า</p></div><span class="btn btn-primary btn-sm">เลือกไฟล์ →</span></button>
+      <button class="panel settings-menu-card" id="chooseGoogleFormsImportBtn" type="button"><div><h3>🟢 Google Forms</h3><p class="panel-sub">เชื่อมต่อแบบทดสอบ Google Forms พร้อมเฉลยและคะแนน</p></div><span class="btn btn-primary btn-sm">เชื่อมต่อ Forms →</span></button>
+    </div>
+  </div>
+</dialog>
+
 <dialog class="google-import-dialog" id="questionFileImportDialog">
   <div class="google-import-dialog-inner">
     <div class="google-import-dialog-head"><div><h3>📄 นำเข้าข้อสอบจากไฟล์</h3><p>รองรับ Word (.docx), PDF (.pdf), Excel (.xlsx) และข้อความ (.txt)</p></div><button class="btn btn-ghost btn-sm" type="button" id="closeQuestionFileImportDialog">✕</button></div>
@@ -288,7 +298,7 @@
   </div>
 </div>
 
-<script src="/assets/admin-main.js?v=20260824-3"></script>
+<script src="/assets/admin-main.js?v=20260824-4"></script>
 <script src="/assets/learning-plan-import.js?v=20260727-1"></script>
 <script src="/assets/admin-learning-plans.js?v=20260727-1"></script>
 </body>

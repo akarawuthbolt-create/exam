@@ -692,7 +692,10 @@ async function deleteSet(key){
 document.getElementById('newSetBtn').addEventListener('click', ()=> openEditor(null));
 function dfdSetDraft(){ return { ...blankSet(), key:'object_analysis_design_dfd', title:'การวิเคราะห์และออกแบบเชิงวัตถุ: Data Flow Diagram', courseName:'การวิเคราะห์และออกแบบเชิงวัตถุ', tagline:'DFD Drawing Examination', desc:'ข้อสอบวาด Data Flow Diagram (Level 0, 1 และ 2)', delivery:'object-analysis-design', examType:'ปลายภาค', shuffleQuestions:false, shuffleChoices:false }; }
 document.getElementById('newDfdSetBtn').addEventListener('click', ()=>{ const existing=ADMIN_SETS.find(set=>set.key==='object_analysis_design_dfd'); openEditor(existing?.key||null, existing?null:dfdSetDraft()); });
-document.getElementById('importGoogleFormsSetBtn').addEventListener('click', ()=> openGoogleFormsSetDialog());
+const examImportChoiceDialog=document.getElementById('examImportChoiceDialog');
+document.getElementById('openExamImportDialogBtn').addEventListener('click',()=>examImportChoiceDialog.showModal());
+document.getElementById('closeExamImportChoiceDialog').addEventListener('click',()=>examImportChoiceDialog.close());
+document.getElementById('chooseGoogleFormsImportBtn').addEventListener('click',()=>{examImportChoiceDialog.close();openGoogleFormsSetDialog();});
 document.getElementById('setSearchInput').addEventListener('input',event=>{ setSearchQuery=event.target.value; renderSetList(); });
 
 function round2(n){ return Math.round((n+Number.EPSILON)*100)/100; }
@@ -1313,7 +1316,7 @@ function questionFilePreviewHtml(preview){
 }
 function bindQuestionFileImportEvents(){
   const dialog=document.getElementById('questionFileImportDialog'),input=document.getElementById('questionImportFile'),output=document.getElementById('questionFilePreview'),apply=document.getElementById('applyQuestionFileBtn');
-  document.getElementById('importQuestionFileBtn').addEventListener('click',()=>{questionFilePreview=null;input.value='';output.textContent='';apply.disabled=true;dialog.showModal();});
+  document.getElementById('chooseQuestionFileImportBtn').addEventListener('click',()=>{examImportChoiceDialog.close();questionFilePreview=null;input.value='';output.textContent='';apply.disabled=true;dialog.showModal();});
   document.getElementById('closeQuestionFileImportDialog').addEventListener('click',()=>dialog.close());
   document.getElementById('previewQuestionFileBtn').addEventListener('click',async()=>{const file=input.files?.[0];if(!file){showToast('กรุณาเลือกไฟล์ข้อสอบ');return;}output.textContent='กำลังอ่านข้อความและตรวจสอบรูปแบบ...';apply.disabled=true;try{questionFilePreview=await apiPreviewQuestionFile(file);output.innerHTML=questionFilePreviewHtml(questionFilePreview);apply.disabled=!questionFilePreview.questions.length;}catch(error){questionFilePreview=null;output.textContent=error.message;}});
   apply.addEventListener('click',()=>{if(!questionFilePreview?.questions.length)return;const draft=googleFormsDraftSet(questionFilePreview);dialog.close();openEditor(null,draft);showToast(`นำเข้าข้อสอบ ${questionFilePreview.questions.length} ข้อแล้ว กรุณาตรวจเฉลยและคะแนนก่อนบันทึก`);});

@@ -94,7 +94,8 @@ test('frontend pages load extracted CSS and JavaScript assets', async () => {
   assert.match(settingsTab, /openTeacherImportDialogBtn/);
   assert.match(admin.body, /id="teacherImportDialog"/);
   assert.match(admin.body, /id="teacherExcelFile"/);
-  assert.match(admin.body, /id="importQuestionFileBtn"/);
+  assert.match(admin.body, /id="openExamImportDialogBtn"/);
+  assert.match(admin.body, /id="examImportChoiceDialog"/);
   assert.match(admin.body, /id="questionFileImportDialog"/);
   assert.match(admin.body, /id="manageTeacherDialog"/);
   assert.doesNotMatch(admin.body, /<style>/);
@@ -105,6 +106,9 @@ test('frontend pages load extracted CSS and JavaScript assets', async () => {
   assert.match(student.body, /id="pinRecoveryScreen"/);
   assert.doesNotMatch(student.body, /id="pinSetupScreen"/);
   assert.doesNotMatch(student.body, /id="pinVerifyScreen"/);
+  const teacherPage = await request('/teacher');
+  assert.equal(teacherPage.status, 200);
+  assert.doesNotMatch(teacherPage.body, /id="newDfdSetBtn"/);
   const [css, script, learningPlanScript] = await Promise.all([request('/assets/admin.css'), request('/assets/admin-main.js'), request('/assets/admin-learning-plans.js')]);
   assert.equal(css.status, 200);
   assert.match(css.headers['content-type'], /text\/css/);

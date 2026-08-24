@@ -35,6 +35,7 @@ const { createSystemMonitor } = require('./src/system-monitor');
 const { createJobQueue } = require('./src/job-queue');
 const { createRestoreDrill } = require('./src/restore-drill');
 const { createScoreEmailService } = require('./src/score-email');
+const { createExamAutoArchive } = require('./src/exam-auto-archive');
 
 if (ADMIN_KEY === 'changeme123') {
   console.warn('[WARNING] Using the default ADMIN_KEY. Set ADMIN_KEY in your .env file before deploying for real use.');
@@ -96,10 +97,11 @@ async function seedIfEmpty() {
   await writeDB(db);
 }
 const seedReady = seedIfEmpty();
+const examAutoArchive = createExamAutoArchive({ mutateDB });
 
 /* ---------------------------- APP SETUP ---------------------------- */
 const app = express();
-app.ready = Promise.all([databaseReady, seedReady, sessionStore.ready]);
+app.ready = Promise.all([databaseReady, seedReady, sessionStore.ready]).then(() => examAutoArchive.run());
 app.disable('x-powered-by');
 // Production hosts such as Render sit behind a reverse proxy. Trust the first
 // hop so login rate limits and audit records use the visitor IP.
@@ -145,6 +147,7 @@ if (require.main === module) {
   app.ready
     .then(() => {
       systemMonitor.start();
+      examAutoArchive.start();
       backupService.schedule(enqueueBackup);
       if (backupService.status().configured) enqueueBackup();
       const server = app.listen(PORT, () => {
@@ -152,6 +155,7 @@ if (require.main === module) {
       });
       registerShutdownSignals(createShutdownHandler({ server, closeDatabase: async () => {
         systemMonitor.stop();
+        examAutoArchive.stop();
         backupService.stop();
         await jobQueue.stop();
         await sessionStore.close();

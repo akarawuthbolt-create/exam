@@ -16,10 +16,11 @@ function registerTeacherSetRoutes(app, { readDB, writeDB, requireTeacher, examTy
   app.post('/api/teacher/sets', requireTeacher, async (req, res) => {
     const body = req.body; const errors = validateExamSetPayload(body);
     if (errors.length) return sendValidationError(res, errors);
+    if (body.delivery === 'object-analysis-design') return res.status(403).json({ error: 'admin_only', message: 'การสร้างข้อสอบ DFD สงวนสิทธิ์สำหรับผู้ดูแลระบบ' });
     const now = new Date().toISOString(); const db = readDB(); const key = body.key || newId('set');
     const teacher = db.teachers.find(item => item.id === req.teacherId);
     const subjectTeacherName = teacher ? `${teacher.firstName} ${teacher.lastName}`.trim() : '';
-    const set = normalizeSetSchedule({ ...body, key, educationLevel: body.educationLevel, teacherId: req.teacherId, subjectTeacherName, subjectTeacherDepartment: teacher?.department || '', subjectTeacherEmail: teacher?.email || '', examType: examTypes.includes(body.examType) ? body.examType : examTypes[0], assignedClasses: Array.isArray(body.assignedClasses) ? body.assignedClasses : [], publishMode: body.publishMode === 'auto' ? 'auto' : 'manual', delivery: body.delivery === 'object-analysis-design' ? 'object-analysis-design' : null, createdAt: now, updatedAt: now });
+    const set = normalizeSetSchedule({ ...body, key, educationLevel: body.educationLevel, teacherId: req.teacherId, subjectTeacherName, subjectTeacherDepartment: teacher?.department || '', subjectTeacherEmail: teacher?.email || '', examType: examTypes.includes(body.examType) ? body.examType : examTypes[0], assignedClasses: Array.isArray(body.assignedClasses) ? body.assignedClasses : [], publishMode: body.publishMode === 'auto' ? 'auto' : 'manual', delivery: null, createdAt: now, updatedAt: now });
     applyAcademicPeriod(set, db.settings); db.sets.push(set); await writeDB(db); res.status(201).json({ key, academicYear: set.academicYear || null, semester: set.semester || null, semesterLabel: set.semesterLabel || null });
   });
   app.put('/api/teacher/sets/:key', requireTeacher, async (req, res) => {
