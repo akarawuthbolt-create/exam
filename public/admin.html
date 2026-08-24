@@ -7,7 +7,7 @@
 <script src="/assets/admin-boot.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/admin.css?v=20260824-4">
+<link rel="stylesheet" href="/assets/admin.css?v=20260824-5">
 </head>
 <body>
 
@@ -154,12 +154,12 @@
 
       <!-- ============ RESULTS TAB ============ -->
       <div id="atab-results" class="hidden">
-        <div class="toolbar-row">
+        <div class="toolbar-row results-toolbar">
           <div>
             <h2>ผลสอบที่นักเรียนส่งเข้ามา</h2>
             <p class="sub" style="margin:0;">คะแนนเป็นความลับจนกว่าจะกด "ประกาศผล" — นักเรียนจะไม่เห็นคะแนนในระบบไม่ว่ากรณีใด ต้องแจ้งผลเองนอกระบบ</p>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div class="results-filter-row">
             <select class="filter-select" id="examTypeFilterSelect"><option value="">ทุกประเภทข้อสอบ</option></select>
             <select class="filter-select" id="academicYearFilterSelect"><option value="">ทุกปีการศึกษา</option></select>
             <select class="filter-select" id="semesterFilterSelect"><option value="">ทุกภาคเรียน</option></select>
@@ -298,7 +298,7 @@
   </div>
 </div>
 
-<script src="/assets/admin-main.js?v=20260824-6"></script>
+<script src="/assets/admin-main.js?v=20260824-7"></script>
 <script src="/assets/learning-plan-import.js?v=20260727-1"></script>
 <script src="/assets/admin-learning-plans.js?v=20260727-1"></script>
 </body>

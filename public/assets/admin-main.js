@@ -1896,7 +1896,7 @@ function resultScoreMax(records,key){
   const set=ADMIN_SETS.find(item=>item.key===key),setMax=set?computeSetTotal(set):0;
   return setMax>0?setMax:20;
 }
-function renderResultGroups(records){
+function renderResultSubjectGroups(records){
   const groups=new Map();
   records.forEach(record=>{
     const key=record.questionKey||record.questionTitle||'unknown';
@@ -1911,6 +1911,19 @@ function renderResultGroups(records){
       <td>${new Date(r.submittedAt).toLocaleString('th-TH')}</td><td>${escapeHtml(r.studentId)}</td><td>${escapeHtml(r.studentName)}</td><td>${escapeHtml(r.classRoom)}</td><td>${escapeHtml(r.examType||'-')}</td><td>${escapeHtml(r.questionTitle)}</td><td>${escapeHtml(r.subjectTeacherName||'-')}</td>${columns.mc?`<td>${r.sectionScores.mc}</td>`:''}${columns.matching?`<td>${r.sectionScores.matching}</td>`:''}${columns.written?`<td>${r.sectionScores.written}</td>`:''}<td><b>${r.overallScore20}</b></td><td>${r.rightClickAttempts||0}</td><td>${r.copyAttempts||0}</td><td>${r.tabSwitches||0}</td>
       <td><div class="result-row-actions"><button class="btn btn-ghost btn-sm" data-viewdetail="${r.id}">ดูรายละเอียด</button><button class="btn btn-danger btn-sm" data-delres="${r.id}">ลบ</button></div></td>
     </tr>`).join('')}</tbody></table></div></div>`;}).join('');
+}
++function archivedResultPeriod(record){
+  const set=ADMIN_SETS.find(item=>item.key===(record.questionKey||'')); if(!set)return null;
+  const regular=(set.examSchedules||[]).filter(item=>item&&!item.absenceOnly),dates=(regular.length?regular.map(item=>item.availableFrom):[set.availableFrom]).map(normalizedExamTimestamp).filter(Number.isFinite);
+  if(!dates.length||Date.now()-Math.max(...dates)<30*86400000)return null;
+  const semester=String(set.semester||'').toLowerCase(),term=semester==='summer'?'s':(semester||'?'),yearText=String(set.academicYear||''),shortYear=yearText.length>=2?yearText.slice(-2):'?';
+  return {key:`${set.examType||record.examType||'ข้อสอบ'}|${term}|${shortYear}`,label:`ผลสอบ ${set.examType||record.examType||'ข้อสอบ'} ${term}/${shortYear}`,sort:`${yearText.padStart(4,'0')}-${term==='s'?'3':term}`};
+}
+function renderResultGroups(records){
+  const current=[],periods=new Map();
+  records.forEach(record=>{const period=archivedResultPeriod(record);if(!period){current.push(record);return;}if(!periods.has(period.key))periods.set(period.key,{...period,records:[]});periods.get(period.key).records.push(record);});
+  const currentHtml=renderResultSubjectGroups(current),periodHtml=[...periods.values()].sort((a,b)=>b.sort.localeCompare(a.sort)).map(period=>{const subjects=new Set(period.records.map(record=>record.questionKey||record.questionTitle)).size;return `<section class="result-period-group"><button class="result-period-head" type="button" data-toggle-result-period><span><b>🗂️ ${escapeHtml(period.label)}</b><small>${subjects} รายวิชา · ${period.records.length} ผลสอบ</small></span><span class="result-period-chevron">⌄</span></button><div class="result-period-body collapsed">${renderResultSubjectGroups(period.records)}</div></section>`;}).join('');
+  return currentHtml+periodHtml;
 }
 async function refreshResults(){
   const wrap = document.getElementById('resultsWrap');
@@ -1942,6 +1955,7 @@ async function refreshResults(){
   }));
   wrap.querySelectorAll('[data-viewdetail]').forEach(b=>b.addEventListener('click', ()=> toggleDetailRow(b.dataset.viewdetail)));
   wrap.querySelectorAll('[data-toggleresultgroup]').forEach(head=>head.addEventListener('click',()=>head.nextElementSibling.classList.toggle('collapsed')));
+  wrap.querySelectorAll('[data-toggle-result-period]').forEach(head=>head.addEventListener('click',()=>{head.classList.toggle('open');head.nextElementSibling.classList.toggle('collapsed');}));
   wrap.querySelectorAll('[data-question-analysis]').forEach(button=>button.addEventListener('click',event=>{ event.stopPropagation(); showQuestionAnalysis(button.dataset.questionAnalysis); }));
   wrap.querySelectorAll('[data-export-gradebook]').forEach(button=>button.addEventListener('click',event=>{ event.stopPropagation(); downloadGradebook(button.dataset.exportGradebook,button); }));
 }
