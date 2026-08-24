@@ -1,10 +1,10 @@
 const { activeResitAccess } = require('../resit');
 const { checkExamReadiness } = require('../exam-readiness');
-function registerPublicExamRoutes(app, { readDB, examTypes, sanitizeSetForStudent, getExamSchedule, hasExamAccess, isPastDeadline, isBeforeStart, requireStudent }) {
+function registerPublicExamRoutes(app, { readDB, readDBView, examTypes, sanitizeSetForStudent, getExamSchedule, hasExamAccess, isPastDeadline, isBeforeStart, requireStudent }) {
   app.get('/api/exam-types', (req, res) => res.json(examTypes));
 
   app.get('/api/sets', requireStudent, (req, res) => {
-    const db = readDB();
+    const db = readDBView ? readDBView() : readDB();
     const student = db.students.find(item => item.studentId === req.studentId);
     if (!student) return res.status(401).json({ error: 'unauthorized' });
     const sets = db.sets

@@ -143,6 +143,16 @@
           </div>
           <button class="btn btn-primary btn-sm" id="addTeacherBtn">+ เพิ่มอาจารย์</button>
         </div>
+        <div class="panel">
+          <h3>📥 นำเข้าบัญชีอาจารย์จาก Excel</h3>
+          <p class="panel-sub">ดาวน์โหลดไฟล์ตัวอย่าง กรอกข้อมูลตามคอลัมน์ แล้วเลือกไฟล์เพื่อนำเข้าบัญชีหลายรายการพร้อมกัน</p>
+          <div class="editor-actions" style="justify-content:flex-start;flex-wrap:wrap;">
+            <a class="btn btn-ghost btn-sm" id="downloadTeacherTemplateBtn" href="/api/teachers/import-template.xlsx">ดาวน์โหลดไฟล์ตัวอย่าง Excel</a>
+            <input type="file" id="teacherExcelFile" accept=".xlsx,.xls" class="filter-select">
+            <button class="btn btn-primary btn-sm" id="importTeachersExcelBtn" type="button">นำเข้าบัญชี</button>
+          </div>
+          <div id="teacherImportReport"></div>
+        </div>
         <div id="teachersWrap"><div class="loading-note">กำลังโหลด...</div></div>
       </div>
 
@@ -267,7 +277,7 @@
   </div>
 </div>
 
-<script src="/assets/admin-main.js?v=20260727-4"></script>
+<script src="/assets/admin-main.js?v=20260824-1"></script>
 <script src="/assets/learning-plan-import.js?v=20260727-1"></script>
 <script src="/assets/admin-learning-plans.js?v=20260727-1"></script>
 </body>

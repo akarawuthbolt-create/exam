@@ -19,10 +19,19 @@ test('ordinary PostgreSQL writes never download the full database', () => {
   assert.doesNotMatch(mutate, /readPostgresDatabase\s*\(/);
 });
 
-test('exam draft autosave performs no PostgreSQL read query', () => {
-  const draft = functionBody('mutateExamDraft', 'replaceDB');
-  assert.doesNotMatch(draft, /SELECT\s+data\s+FROM\s+exam_drafts/i);
+test('exam draft autosave locks only its own PostgreSQL row', () => {
+  const draft = functionBody('mutateExamDraft', 'saveExamSubmission');
+  assert.match(draft, /SELECT\s+data\s+FROM\s+exam_drafts\s+WHERE\s+draft_key\s*=\s*\$1\s+FOR\s+UPDATE/i);
   assert.match(draft, /INSERT INTO exam_drafts/);
+  assert.doesNotMatch(draft, /pg_advisory_xact_lock/);
+});
+
+test('normal exam submission inserts one result without the global write lock', () => {
+  const save = functionBody('saveExamSubmission', 'replaceDB');
+  assert.match(save, /INSERT INTO results/);
+  assert.match(save, /ON CONFLICT \(attempt_key\)/);
+  assert.doesNotMatch(save, /pg_advisory_xact_lock/);
+  assert.doesNotMatch(save, /writeChain/);
 });
 
 test('only startup and explicit full restore may read all PostgreSQL tables', () => {

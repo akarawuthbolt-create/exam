@@ -214,22 +214,35 @@ const DATABASE_URL = process.env.NODE_ENV === 'test' ? '' : process.env.DATABASE
 let pool = null;
 let currentDatabase = DATABASE_URL ? emptyDatabase() : readSqliteDatabase();
 let writeChain = Promise.resolve();
+const directWrites = new Set();
+
+function trackDirectWrite(promise) {
+  directWrites.add(promise);
+  promise.then(() => directWrites.delete(promise), () => directWrites.delete(promise));
+  return promise;
+}
 
 function hasData(db) {
   return db.sets.length || db.results.length || db.students.length || db.teachers.length || db.questionBank.length || db.drafts.length;
 }
 
 async function readPostgresDatabase(queryable = pool) {
-  const [sets, results, students, teachers, questionBank, drafts, auditLogs, settings] = await Promise.all([
-    queryable.query('SELECT data FROM exam_sets ORDER BY created_at, key'),
-    queryable.query('SELECT data FROM results ORDER BY submitted_at, id'),
-    queryable.query('SELECT data FROM students ORDER BY class_room, student_id'),
-    queryable.query('SELECT data FROM teachers ORDER BY username'),
-    queryable.query('SELECT data FROM question_bank ORDER BY created_at, id'),
-    queryable.query('SELECT data FROM exam_drafts ORDER BY updated_at'),
-    queryable.query('SELECT data FROM audit_logs ORDER BY event_at, id'),
-    queryable.query("SELECT data FROM system_settings WHERE id = 'main'")
-  ]);
+  const statements = [
+    'SELECT data FROM exam_sets ORDER BY created_at, key',
+    'SELECT data FROM results ORDER BY submitted_at, id',
+    'SELECT data FROM students ORDER BY class_room, student_id',
+    'SELECT data FROM teachers ORDER BY username',
+    'SELECT data FROM question_bank ORDER BY created_at, id',
+    'SELECT data FROM exam_drafts ORDER BY updated_at',
+    'SELECT data FROM audit_logs ORDER BY event_at, id',
+    "SELECT data FROM system_settings WHERE id = 'main'"
+  ];
+  // A Pool can run these in parallel on different connections. A checked-out
+  // client must run them sequentially (pg 9 removes concurrent client.query).
+  const rows = queryable === pool
+    ? await Promise.all(statements.map(statement => queryable.query(statement)))
+    : await statements.reduce(async (pending, statement) => [...await pending, await queryable.query(statement)], Promise.resolve([]));
+  const [sets, results, students, teachers, questionBank, drafts, auditLogs, settings] = rows;
   return normalizeDatabase({
     sets: sets.rows.map(row => row.data), results: results.rows.map(row => row.data),
     students: students.rows.map(row => row.data), teachers: teachers.rows.map(row => row.data),
@@ -431,6 +444,13 @@ function readDB() {
   return structuredClone(currentDatabase);
 }
 
+// High-volume student routes only inspect these objects. Returning the live
+// read-only view avoids cloning every student, draft and result per request.
+// Mutating/admin routes must continue to use readDB() and writeDB()/mutateDB().
+function readDBView() {
+  return currentDatabase;
+}
+
 function writeDB(db) {
   const intended = normalizeDatabase(structuredClone(db));
   const base = currentDatabase;
@@ -508,12 +528,14 @@ function mutateExamDraft(draftKey, mutator) {
       return next;
     });
   }
-  const run = writeChain.catch(() => {}).then(async () => {
+  const run = (async () => {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-      await client.query("SELECT pg_advisory_xact_lock(hashtext('exam_system_write'))");
-      const current = currentDatabase.drafts.find(draft => draft.draftKey === draftKey) || null;
+      // Lock only this student's draft. Different students can now autosave in
+      // parallel instead of waiting behind one application-wide advisory lock.
+      const selected = await client.query('SELECT data FROM exam_drafts WHERE draft_key = $1 FOR UPDATE', [draftKey]);
+      const current = selected.rows[0]?.data || null;
       const next = mutator(current ? structuredClone(current) : null);
       if (next) {
         await client.query(
@@ -531,10 +553,65 @@ function mutateExamDraft(draftKey, mutator) {
       await client.query('ROLLBACK');
       throw error;
     } finally { client.release(); }
-  });
-  writeChain = run.catch(() => {});
-  mutationChain = writeChain;
-  return run;
+  })();
+  return trackDirectWrite(run);
+}
+
+function saveExamSubmission(record, { resit = null } = {}) {
+  if (!DATABASE_URL) {
+    return mutateDB(latest => {
+      const existing = latest.results.find(item => item.attemptKey === record.attemptKey);
+      if (existing) return existing;
+      latest.results.push(record);
+      latest.drafts = latest.drafts.filter(draft => draft.draftKey !== `${record.studentId}::${record.questionKey}::${resit?.id || 'normal'}`);
+      if (resit) {
+        const latestSet = latest.sets.find(item => item.key === record.questionKey);
+        const latestResit = (latestSet?.resitAccesses || []).find(item => item.id === resit.id);
+        if (latestResit) { latestResit.usedResultId = record.id; latestResit.usedAt = record.submittedAt; }
+      }
+      return record;
+    });
+  }
+  const run = (async () => {
+    const client = await pool.connect();
+    let updatedSet = null;
+    try {
+      await client.query('BEGIN');
+      const inserted = await client.query(
+        `INSERT INTO results (id,student_id,question_key,attempt_key,submitted_at,published,overall_score_20,data)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8::jsonb)
+         ON CONFLICT (attempt_key) WHERE attempt_key IS NOT NULL DO NOTHING
+         RETURNING data`,
+        [record.id, record.studentId, record.questionKey, record.attemptKey, record.submittedAt, !!record.published, record.overallScore20 ?? null, JSON.stringify(record)]
+      );
+      if (!inserted.rowCount) {
+        const existing = await client.query('SELECT data FROM results WHERE attempt_key = $1', [record.attemptKey]);
+        await client.query('ROLLBACK');
+        return existing.rows[0]?.data || record;
+      }
+      await client.query('DELETE FROM exam_drafts WHERE draft_key = $1', [`${record.studentId}::${record.questionKey}::${resit?.id || 'normal'}`]);
+      if (resit) {
+        const selected = await client.query('SELECT data FROM exam_sets WHERE key = $1 FOR UPDATE', [record.questionKey]);
+        updatedSet = selected.rows[0]?.data || null;
+        const latestResit = (updatedSet?.resitAccesses || []).find(item => item.id === resit.id);
+        if (latestResit) {
+          latestResit.usedResultId = record.id;
+          latestResit.usedAt = record.submittedAt;
+          updatedSet.updatedAt = new Date().toISOString();
+          await client.query('UPDATE exam_sets SET data=$2::jsonb, updated_at=$3 WHERE key=$1', [record.questionKey, JSON.stringify(updatedSet), updatedSet.updatedAt]);
+        }
+      }
+      await client.query('COMMIT');
+      if (!currentDatabase.results.some(item => item.attemptKey === record.attemptKey)) currentDatabase.results.push(structuredClone(record));
+      currentDatabase.drafts = currentDatabase.drafts.filter(draft => draft.draftKey !== `${record.studentId}::${record.questionKey}::${resit?.id || 'normal'}`);
+      if (updatedSet) currentDatabase.sets = currentDatabase.sets.map(set => set.key === updatedSet.key ? structuredClone(updatedSet) : set);
+      return record;
+    } catch (error) {
+      try { await client.query('ROLLBACK'); } catch {}
+      throw error;
+    } finally { client.release(); }
+  })();
+  return trackDirectWrite(run);
 }
 
 function replaceDB(db) {
@@ -568,6 +645,7 @@ async function closeDatabase() {
   let failure = null;
   try { await mutationChain; } catch (error) { failure = error; }
   try { await writeChain; } catch (error) { failure = error; }
+  try { await Promise.allSettled([...directWrites]); } catch (error) { failure = error; }
   try {
     if (pool) {
       await pool.end();
@@ -580,4 +658,4 @@ async function closeDatabase() {
   if (failure) throw failure;
 }
 
-module.exports = { readDB, writeDB, mutateDB, mutateExamDraft, replaceDB, closeDatabase, databaseReady, pingDatabase, changedRows, deletedIds, mergeDatabaseChanges };
+module.exports = { readDB, readDBView, writeDB, mutateDB, mutateExamDraft, saveExamSubmission, replaceDB, closeDatabase, databaseReady, pingDatabase, changedRows, deletedIds, mergeDatabaseChanges };

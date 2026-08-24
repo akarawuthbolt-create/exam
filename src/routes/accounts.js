@@ -3,6 +3,7 @@ const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const express = require('express');
 const { validateTeacherPayload, sendValidationError } = require('../validation');
 const { validateRestoredBackup } = require('../restore-drill');
+const { buildTeacherImportTemplate, parseTeacherImport, validateTeacherImportRows } = require('../teacher-import');
 
 function purgeExpiredLoginFailures(store, now = Date.now()) {
   let removed = 0;
@@ -112,6 +113,32 @@ function registerAccountRoutes(app, dependencies) {
     await writeDB(db);
     await removeTeacherSessions(teacher.id);
     res.json({ ok: true });
+  });
+
+  app.get('/api/teachers/import-template.xlsx', requireAdmin, async (req, res) => {
+    const buffer = await buildTeacherImportTemplate();
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="teacher-account-template.xlsx"');
+    res.send(buffer);
+  });
+
+  app.post('/api/teachers/import-xlsx', requireAdmin, express.raw({ type: ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel', 'application/octet-stream'], limit: '2mb' }), async (req, res) => {
+    if (!Buffer.isBuffer(req.body) || !req.body.length) return res.status(400).json({ error: 'invalid_file', message: 'กรุณาเลือกไฟล์ Excel' });
+    try {
+      const rows = await parseTeacherImport(req.body);
+      const db = readDB();
+      const { accepted, errors } = validateTeacherImportRows(rows, db.teachers.map(item => item.username));
+      const createdAt = new Date().toISOString();
+      for (const body of accepted) db.teachers.push({
+        id: newId('teacher'), firstName: body.firstName, lastName: body.lastName,
+        username: body.username, department: body.department,
+        email: body.email.toLowerCase(), passwordHash: hashPassword(body.password), createdAt
+      });
+      if (accepted.length) await writeDB(db);
+      res.json({ imported: accepted.length, errors });
+    } catch (error) {
+      res.status(400).json({ error: 'invalid_file', message: error.message || 'ไม่สามารถอ่านไฟล์ Excel นี้ได้' });
+    }
   });
 
   app.patch('/api/teachers/:id/email', requireAdmin, async (req, res) => {

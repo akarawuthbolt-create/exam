@@ -1,6 +1,16 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const { findRecoverableExamDraft } = require('../src/routes/students');
+
+test('exam device identity survives closing the browser and migrates an active session', () => {
+  const source = fs.readFileSync(path.join(__dirname, '../public/assets/student-main.js'), 'utf8');
+  assert.match(source, /localStorage\.getItem\('examDeviceId'\)/);
+  assert.match(source, /sessionStorage\.getItem\('examDeviceId'\)/);
+  assert.match(source, /localStorage\.setItem\('examDeviceId',id\)/);
+  assert.doesNotMatch(source, /removeItem\('examDeviceId'\)/);
+});
 
 test('recovers an active exam only for the original device secret', () => {
   const now = Date.parse('2026-07-20T08:00:00.000Z');

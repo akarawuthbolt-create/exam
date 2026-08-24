@@ -10,14 +10,15 @@ function hasStartedExamDraft(db, studentId, payload, schedule) {
     String(draft.resitAccessId || '') === String(payload.resitAccessId || '') && draft.examEndTime &&
     (!payload.deviceId || draft.deviceId === payload.deviceId) && Number.isFinite(deadline) && Date.parse(draft.savedAt) <= deadline);
 }
-function registerSubmissionRoutes(app, { readDB, mutateDB, newId, gradeMC, gradeMatching, gradeWritten, getExamSchedule, hasExamAccess, isPastDeadline, isBeforeStart, round2, requireStudent, applyAcademicPeriod, submissionGate }) {
+function registerSubmissionRoutes(app, { readDB, readDBView, mutateDB, saveExamSubmission, newId, gradeMC, gradeMatching, gradeWritten, getExamSchedule, hasExamAccess, isPastDeadline, isBeforeStart, round2, requireStudent, applyAcademicPeriod, submissionGate }) {
   app.post('/api/results', requireStudent, submissionGate.middleware, async (req, res) => {
     const payload = req.body;
     if (!payload || !payload.questionKey) return res.status(400).json({ error: 'invalid_payload', message: 'ข้อมูลผลสอบไม่ครบ' });
-    const db = readDB();
+    const db = readDBView ? readDBView() : readDB();
     const student = db.students.find(item => item.studentId === req.studentId);
     if (!student) return res.status(401).json({ error: 'unauthorized' });
-    const set = db.sets.find(item => item.key === payload.questionKey);
+    const sourceSet = db.sets.find(item => item.key === payload.questionKey);
+    const set = sourceSet ? structuredClone(sourceSet) : null;
     if (!set || set.archived) return res.status(404).json({ error: 'not_found', message: 'ไม่พบชุดข้อสอบนี้ในระบบ' });
     const readiness = checkExamReadiness(set);
     if (!readiness.ready) return res.status(409).json({ error: 'exam_not_ready', message: 'ชุดข้อสอบยังไม่ผ่านการตรวจความพร้อม กรุณาแจ้งอาจารย์ผู้สอน', details: readiness.errors });
@@ -57,7 +58,7 @@ function registerSubmissionRoutes(app, { readDB, mutateDB, newId, gradeMC, grade
     record.scoreVerification = { ...verifyResultScore(record, set), verifiedAt: new Date().toISOString() };
     record.published = set.publishMode === 'auto' && record.scoreVerification.status === 'verified';
     try {
-      const savedRecord = await mutateDB(latest => {
+      const savedRecord = saveExamSubmission ? await saveExamSubmission(record, { resit }) : await mutateDB(latest => {
         const existing = latest.results.find(item => item.attemptKey === record.attemptKey || (item.studentId === student.studentId && item.questionKey === payload.questionKey && (resit ? item.resitAccessId === resit.id : item.attemptType !== 'resit')));
         if (existing) return existing;
         latest.results.push(record);

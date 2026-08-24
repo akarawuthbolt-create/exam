@@ -1,6 +1,7 @@
 const path = require('path');
 
 const ROOT_DIR = path.resolve(__dirname, '..');
+const DATA_DIR = path.resolve(process.env.EXAM_DATA_DIR || path.join(ROOT_DIR, 'data'));
 
 function positiveNumber(value, fallback) {
   const parsed = Number(value);
@@ -14,9 +15,9 @@ function enabled(value, fallback = false) {
 
 module.exports = {
   ROOT_DIR,
-  DATA_DIR: path.join(ROOT_DIR, 'data'),
-  SQLITE_PATH: path.join(ROOT_DIR, 'data', 'exam-system.sqlite'),
-  LEGACY_DB_PATH: path.join(ROOT_DIR, 'data', 'db.json'),
+  DATA_DIR,
+  SQLITE_PATH: path.join(DATA_DIR, 'exam-system.sqlite'),
+  LEGACY_DB_PATH: path.join(DATA_DIR, 'db.json'),
   PUBLIC_DIR: path.join(ROOT_DIR, 'public'),
   PORT: process.env.PORT || 3000,
   DATABASE_URL: process.env.DATABASE_URL || '',
@@ -44,6 +45,8 @@ module.exports = {
   JOB_CONCURRENCY: positiveNumber(process.env.JOB_CONCURRENCY, 2),
   JOB_MAX_PENDING: positiveNumber(process.env.JOB_MAX_PENDING, 100),
   JOB_RETRY_BASE_MS: positiveNumber(process.env.JOB_RETRY_BASE_MS, 1000),
+  SUBMISSION_MAX_CONCURRENT: positiveNumber(process.env.SUBMISSION_MAX_CONCURRENT, 75),
+  SUBMISSION_MAX_PENDING: positiveNumber(process.env.SUBMISSION_MAX_PENDING, 1200),
   REDIS_URL: process.env.REDIS_URL || '',
   SESSION_KEY_PREFIX: process.env.SESSION_KEY_PREFIX || 'exam',
   RESEND_API_KEY: process.env.RESEND_API_KEY || '',

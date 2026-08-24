@@ -109,6 +109,10 @@ async function apiUpdateWrittenScores(id, writtenManualScores, reason){ return a
 async function apiPublishAllForSet(key){ return apiFetch('/api/sets/'+encodeURIComponent(key)+'/publish', { method:'POST', admin:true }); }
 async function apiGetTeachers(){ return apiFetch('/api/teachers', { admin:true }); }
 async function apiAddTeacher(t){ return apiFetch('/api/teachers', { method:'POST', body:t, admin:true }); }
+async function apiImportTeachersExcel(file){
+  const res=await fetch('/api/teachers/import-xlsx',{method:'POST',headers:{'x-admin-key':adminKey||'','Content-Type':file.type||'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'},body:file});
+  const body=await res.json().catch(()=>({}));if(res.status===401){showSessionExpiredDialog();throw new Error('หมดเวลาการเข้าสู่ระบบ');}if(!res.ok)throw new Error(body.message||'นำเข้าบัญชีอาจารย์ไม่สำเร็จ');return body;
+}
 async function apiDeleteTeacher(id){ return apiFetch('/api/teachers/'+encodeURIComponent(id), { method:'DELETE', admin:true }); }
 async function apiResetTeacherPassword(id,password){ return apiFetch('/api/teachers/'+encodeURIComponent(id)+'/password', { method:'PATCH', body:{password}, admin:true }); }
 async function apiUpdateTeacherProfile(id,department,email){ return apiFetch('/api/teachers/'+encodeURIComponent(id)+'/profile', { method:'PATCH', body:{department,email}, admin:true }); }
@@ -502,6 +506,19 @@ document.getElementById('addTeacherBtn').addEventListener('click', async ()=>{
     refreshTeachers();
     showToast('เพิ่มบัญชีอาจารย์แล้ว');
   }catch(e){ showToast(e.message); }
+});
+document.getElementById('downloadTeacherTemplateBtn').addEventListener('click',event=>{
+  event.preventDefault();
+  const link=document.createElement('a');link.href='/api/teachers/import-template.xlsx';
+  fetch(link.href,{headers:{'x-admin-key':adminKey||''}}).then(async response=>{if(!response.ok)throw new Error('ดาวน์โหลดไฟล์ตัวอย่างไม่สำเร็จ');const blob=await response.blob();link.href=URL.createObjectURL(blob);link.download='teacher-account-template.xlsx';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);}).catch(error=>showToast(error.message));
+});
+document.getElementById('importTeachersExcelBtn').addEventListener('click',async()=>{
+  const input=document.getElementById('teacherExcelFile'),file=input.files?.[0],button=document.getElementById('importTeachersExcelBtn'),report=document.getElementById('teacherImportReport');
+  if(!file){showToast('กรุณาเลือกไฟล์ Excel');return;}
+  button.disabled=true;button.textContent='กำลังนำเข้า...';report.innerHTML='';
+  try{const result=await apiImportTeachersExcel(file);input.value='';await refreshTeachers();report.innerHTML=`<div class="empty-note" style="margin-top:12px;">นำเข้าสำเร็จ ${result.imported} บัญชี${result.errors.length?` · พบข้อผิดพลาด ${result.errors.length} แถว<br><small>${result.errors.map(escapeHtml).join('<br>')}</small>`:''}</div>`;showToast(`นำเข้าสำเร็จ ${result.imported} บัญชี`);}
+  catch(error){report.innerHTML=`<div class="empty-note" style="margin-top:12px;color:var(--red);">${escapeHtml(error.message)}</div>`;}
+  finally{button.disabled=false;button.textContent='นำเข้าบัญชี';}
 });
 
 async function refreshScoreEmails(){

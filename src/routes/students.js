@@ -14,7 +14,7 @@ function findRecoverableExamDraft(db, payload, now = Date.now()) {
     String(draft.resitAccessId || '') === String(payload?.resitAccessId || '') && Number.isFinite(examEndAt(draft.examEndTime)) && examEndAt(draft.examEndTime) + 15 * 60 * 1000 >= now) || null;
 }
 
-function registerStudentRoutes(app, { readDB, writeDB, mutateDB, mutateExamDraft, requireAdmin, requireStudent, hashPassword, verifyPassword, createStudentSession, sessionStore }) {
+function registerStudentRoutes(app, { readDB, readDBView, writeDB, mutateDB, mutateExamDraft, requireAdmin, requireStudent, hashPassword, verifyPassword, createStudentSession, sessionStore }) {
   const findStudent = (students, studentId) => students.find(student => student.studentId === studentId.trim());
   const publicStudent = student => ({ studentId: student.studentId, firstName: student.firstName, lastName: student.lastName, classRoom: student.classRoom, examPeriod: student.examPeriod || '' });
   const pinRecoveryFailures = new Map();
@@ -48,7 +48,7 @@ function registerStudentRoutes(app, { readDB, writeDB, mutateDB, mutateExamDraft
   });
 
   app.get('/api/student/session', requireStudent, (req, res) => {
-    const student = findStudent(readDB().students, req.studentId);
+    const student = findStudent((readDBView ? readDBView() : readDB()).students, req.studentId);
     if (!student) return res.status(401).json({ error: 'unauthorized' });
     res.json({ student: publicStudent(student) });
   });
@@ -69,14 +69,14 @@ function registerStudentRoutes(app, { readDB, writeDB, mutateDB, mutateExamDraft
     return next;
   }));
   app.post('/api/student/session/recover-exam', async (req, res) => {
-    const db = readDB(), draft = findRecoverableExamDraft(db, req.body);
+    const db = readDBView ? readDBView() : readDB(), draft = findRecoverableExamDraft(db, req.body);
     if (!draft) return res.status(401).json({ error:'exam_session_unavailable', message:'ไม่สามารถกู้เซสชันสอบจากอุปกรณ์นี้ได้ กรุณายืนยัน PIN ใหม่' });
     const student = findStudent(db.students, draft.studentId);
     if (!student) return res.status(401).json({ error:'unauthorized' });
     res.json({ ok:true, token:await createStudentSession(student.studentId), student:publicStudent(student) });
   });
   app.post('/api/exam-drafts/:questionKey/claim', requireStudent, async (req, res) => {
-    const db = readDB(); const deviceId = String(req.body?.deviceId || ''); const questionKey = String(req.params.questionKey || ''); const resitAccessId=req.body?.resitAccessId || null;
+    const db = readDBView ? readDBView() : readDB(); const deviceId = String(req.body?.deviceId || ''); const questionKey = String(req.params.questionKey || ''); const resitAccessId=req.body?.resitAccessId || null;
     if (!/^[a-z0-9_-]{12,80}$/i.test(deviceId) || !db.sets.some(set => set.key === questionKey)) return res.status(400).json({ error:'invalid_payload', message:'ไม่สามารถยืนยันอุปกรณ์สอบได้' });
     try {
       const key=`${req.studentId}::${draftId(questionKey,resitAccessId)}`;
@@ -91,7 +91,7 @@ function registerStudentRoutes(app, { readDB, writeDB, mutateDB, mutateExamDraft
     }
   });
   app.get('/api/exam-drafts/:questionKey', requireStudent, (req, res) => {
-    const db = readDB();
+    const db = readDBView ? readDBView() : readDB();
     const resitAccessId = req.query.resitAccessId || null;
     const submitted = db.results.some(result => result.studentId === req.studentId && result.questionKey === req.params.questionKey && (resitAccessId ? result.resitAccessId === resitAccessId : result.attemptType !== 'resit'));
     if (submitted) return res.json({ draft: null, submitted: true });
@@ -99,7 +99,7 @@ function registerStudentRoutes(app, { readDB, writeDB, mutateDB, mutateExamDraft
     res.json({ draft: draft || null, submitted: false });
   });
   app.put('/api/exam-drafts/:questionKey', requireStudent, async (req, res) => {
-    const db = readDB(); const student = findStudent(db.students, req.studentId);
+    const db = readDBView ? readDBView() : readDB(); const student = findStudent(db.students, req.studentId);
     const questionKey = String(req.params.questionKey || ''); const payload = req.body?.draft;
     if (!student || !db.sets.some(set => set.key === questionKey)) return res.status(404).json({ error: 'not_found' });
     if (!payload || typeof payload !== 'object' || JSON.stringify(payload).length > 250000) return res.status(400).json({ error: 'invalid_payload', message: 'ข้อมูลร่างข้อสอบไม่ถูกต้อง' });

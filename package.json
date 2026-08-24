@@ -9,6 +9,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
+    "load-test": "node scripts/load-benchmark.js 1000 1 100",
+    "load-test:postgres": "node scripts/load-benchmark.js 1000 1 200",
     "migrate:postgres": "node scripts/migrate-postgres.js",
     "test": "node --test"
   },

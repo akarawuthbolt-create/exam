@@ -53,7 +53,18 @@ async function apiGetMyResults(studentId){ return apiFetch('/api/students/'+enco
 async function apiGetExamDraft(key,resitAccessId){ return apiFetch('/api/exam-drafts/'+encodeURIComponent(key)+(resitAccessId?('?resitAccessId='+encodeURIComponent(resitAccessId)):'')); }
 async function apiSaveExamDraft(key,draft){ return apiFetch('/api/exam-drafts/'+encodeURIComponent(key),{method:'PUT',body:{draft}}); }
 async function apiClearExamDraft(key,resitAccessId){ return apiFetch('/api/exam-drafts/'+encodeURIComponent(key)+(resitAccessId?('?resitAccessId='+encodeURIComponent(resitAccessId)):''),{method:'DELETE'}); }
-const EXAM_DEVICE_ID=(()=>{let id=sessionStorage.getItem('examDeviceId');if(!id){id='dev_'+crypto.randomUUID().replace(/-/g,'');sessionStorage.setItem('examDeviceId',id);}return id;})();
+const EXAM_DEVICE_ID=(()=>{
+  let id='';
+  try{
+    // localStorage survives closing and reopening the browser. Keep the
+    // sessionStorage fallback once so an exam already in progress retains its
+    // original device identity after this version is deployed.
+    id=localStorage.getItem('examDeviceId')||sessionStorage.getItem('examDeviceId')||'';
+  }catch(e){}
+  if(!id) id='dev_'+crypto.randomUUID().replace(/-/g,'');
+  try{localStorage.setItem('examDeviceId',id);}catch(e){try{sessionStorage.setItem('examDeviceId',id);}catch(_){} }
+  return id;
+})();
 async function apiClaimExamDevice(key,resitAccessId){ return apiFetch('/api/exam-drafts/'+encodeURIComponent(key)+'/claim',{method:'POST',body:{resitAccessId,deviceId:EXAM_DEVICE_ID}}); }
 async function recoverExamStudentSession(){
   const response=await fetch('/api/student/session/recover-exam',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({studentId:app.studentId,questionKey:app.questionKey,resitAccessId:app.resitAccessId||null,deviceId:EXAM_DEVICE_ID})});
