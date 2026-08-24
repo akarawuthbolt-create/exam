@@ -94,6 +94,8 @@ test('frontend pages load extracted CSS and JavaScript assets', async () => {
   assert.match(settingsTab, /openTeacherImportDialogBtn/);
   assert.match(admin.body, /id="teacherImportDialog"/);
   assert.match(admin.body, /id="teacherExcelFile"/);
+  assert.match(admin.body, /id="importQuestionFileBtn"/);
+  assert.match(admin.body, /id="questionFileImportDialog"/);
   assert.match(admin.body, /id="manageTeacherDialog"/);
   assert.doesNotMatch(admin.body, /<style>/);
   const student = await request('/student');

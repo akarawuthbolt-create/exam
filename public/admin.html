@@ -65,7 +65,7 @@
             <p class="sub" style="margin:0;">จัดกลุ่มตามชื่อวิชา — 1 วิชาอาจมีทั้งข้อสอบกลางภาคและปลายภาค</p>
             <input class="filter-select" type="search" id="setSearchInput" placeholder="ค้นหาชื่อวิชา หรือชุดข้อสอบ" aria-label="ค้นหาชุดข้อสอบ" style="min-width:250px;margin-top:12px;">
           </div>
-          <div class="editor-actions" style="margin:0;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" id="importGoogleFormsSetBtn">นำเข้าข้อสอบจาก Forms</button><button class="btn btn-ghost btn-sm" id="newDfdSetBtn">🧩 สร้างข้อสอบ DFD</button><button class="btn btn-primary btn-sm" id="newSetBtn">+ เพิ่มชุดข้อสอบใหม่</button></div>
+          <div class="editor-actions" style="margin:0;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" id="importQuestionFileBtn">📄 นำเข้าจาก Word / PDF / Excel</button><button class="btn btn-ghost btn-sm" id="importGoogleFormsSetBtn">นำเข้าข้อสอบจาก Forms</button><button class="btn btn-ghost btn-sm" id="newDfdSetBtn">🧩 สร้างข้อสอบ DFD</button><button class="btn btn-primary btn-sm" id="newSetBtn">+ เพิ่มชุดข้อสอบใหม่</button></div>
         </div>
         <div id="setListWrap"><div class="loading-note">กำลังโหลด...</div></div>
       </div>
@@ -269,6 +269,14 @@
   </div>
 </dialog>
 
+<dialog class="google-import-dialog" id="questionFileImportDialog">
+  <div class="google-import-dialog-inner">
+    <div class="google-import-dialog-head"><div><h3>📄 นำเข้าข้อสอบจากไฟล์</h3><p>รองรับ Word (.docx), PDF (.pdf), Excel (.xlsx) และข้อความ (.txt)</p></div><button class="btn btn-ghost btn-sm" type="button" id="closeQuestionFileImportDialog">✕</button></div>
+    <div class="google-import-step"><h4>1. เลือกไฟล์ข้อสอบ</h4><input class="filter-select" type="file" id="questionImportFile" accept=".docx,.pdf,.xlsx,.txt"><p>รูปแบบข้อความ: เลขข้อ ตามด้วยตัวเลือก ก./ข./ค./ง. และบรรทัด <b>เฉลย:</b> สำหรับข้อปรนัย ข้อที่ไม่มีตัวเลือกจะเป็นข้ออัตนัย</p><div class="editor-actions"><button class="btn btn-ghost btn-sm" id="previewQuestionFileBtn" type="button">ตรวจสอบไฟล์</button><button class="btn btn-primary btn-sm" id="applyQuestionFileBtn" type="button" disabled>นำเข้าและตั้งค่าชุดข้อสอบ</button></div></div>
+    <div class="mc-import-preview" id="questionFilePreview"></div>
+  </div>
+</dialog>
+
 <div id="setWizardScreen" class="hidden" style="min-height:100vh;display:flex;flex-direction:column;background:var(--bg);">
   <div class="admin-topbar">
     <div class="brand" id="wizardTitleBar">🧩 สร้างชุดข้อสอบใหม่</div>
@@ -280,7 +288,7 @@
   </div>
 </div>
 
-<script src="/assets/admin-main.js?v=20260824-2"></script>
+<script src="/assets/admin-main.js?v=20260824-3"></script>
 <script src="/assets/learning-plan-import.js?v=20260727-1"></script>
 <script src="/assets/admin-learning-plans.js?v=20260727-1"></script>
 </body>

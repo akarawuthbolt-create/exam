@@ -63,6 +63,10 @@ async function apiUploadQuestionAsset(file){
 async function apiStartGoogleForms(){ return apiFetch('/api/admin/google-forms/start', { method:'POST', admin:true }); }
 async function apiPreviewGoogleForm(connectionId, formUrl){ return apiFetch('/api/admin/google-forms/preview', { method:'POST', body:{formUrl}, headers:{'x-google-forms-connection':connectionId}, admin:true }); }
 async function apiImportGoogleForm(connectionId, formUrl){ return apiFetch('/api/admin/google-forms/import', { method:'POST', body:{formUrl}, headers:{'x-google-forms-connection':connectionId}, admin:true }); }
+async function apiPreviewQuestionFile(file){
+  const response=await fetch('/api/admin/question-file/preview',{method:'POST',headers:{'x-admin-key':adminKey||'','Content-Type':file.type||'application/octet-stream','x-file-name':encodeURIComponent(file.name)},body:file});
+  const body=await response.json().catch(()=>({}));if(response.status===401){showSessionExpiredDialog();throw new Error('หมดเวลาการเข้าสู่ระบบ');}if(!response.ok)throw new Error(body.message||'ไม่สามารถอ่านข้อสอบจากไฟล์นี้ได้');return body;
+}
 async function apiGoogleFormsStatus(requestId){ return apiFetch('/api/admin/google-forms/status?requestId='+encodeURIComponent(requestId), { admin:true }); }
 async function apiCreateSet(set){ return apiFetch('/api/sets', { method:'POST', body:set, admin:true }); }
 async function apiUpdateSet(key, set){ return apiFetch('/api/sets/'+encodeURIComponent(key), { method:'PUT', body:set, admin:true }); }
@@ -1302,6 +1306,19 @@ function bindGoogleFormsSetImportEvents(){
   });
 }
 bindGoogleFormsSetImportEvents();
+let questionFilePreview=null;
+function questionFilePreviewHtml(preview){
+  const cards=(preview.questions||[]).map((question,index)=>`<div class="google-form-question-preview"><div><span class="status-pill">${question.type==='written'?'อัตนัย':'ปรนัย'}</span><span class="google-form-source-number">ข้อเดิม ${escapeHtml(question.sourceNumber||index+1)}</span></div><b>ข้อ ${index+1}. ${escapeHtml(question.text)}</b><small>${question.type==='written'?`คำสำคัญ ${(question.keywords||[]).length} รายการ`:`${question.choices.length} ตัวเลือก · เฉลยข้อ ${question.answer+1}`} · ${Number(question.sourcePoints)||0} คะแนน</small></div>`).join('');
+  return `<div class="google-form-preview-summary"><span class="ok">นำเข้าได้ ${preview.questions?.length||0} ข้อ</span><span>ปรนัย ${preview.counts?.mc||0}</span><span>อัตนัย ${preview.counts?.written||0}</span></div>${cards}${preview.skipped?.length?`<div class="bad google-form-skipped">ข้าม ${preview.skipped.length} รายการ:<br>${preview.skipped.map(escapeHtml).join('<br>')}</div>`:''}`;
+}
+function bindQuestionFileImportEvents(){
+  const dialog=document.getElementById('questionFileImportDialog'),input=document.getElementById('questionImportFile'),output=document.getElementById('questionFilePreview'),apply=document.getElementById('applyQuestionFileBtn');
+  document.getElementById('importQuestionFileBtn').addEventListener('click',()=>{questionFilePreview=null;input.value='';output.textContent='';apply.disabled=true;dialog.showModal();});
+  document.getElementById('closeQuestionFileImportDialog').addEventListener('click',()=>dialog.close());
+  document.getElementById('previewQuestionFileBtn').addEventListener('click',async()=>{const file=input.files?.[0];if(!file){showToast('กรุณาเลือกไฟล์ข้อสอบ');return;}output.textContent='กำลังอ่านข้อความและตรวจสอบรูปแบบ...';apply.disabled=true;try{questionFilePreview=await apiPreviewQuestionFile(file);output.innerHTML=questionFilePreviewHtml(questionFilePreview);apply.disabled=!questionFilePreview.questions.length;}catch(error){questionFilePreview=null;output.textContent=error.message;}});
+  apply.addEventListener('click',()=>{if(!questionFilePreview?.questions.length)return;const draft=googleFormsDraftSet(questionFilePreview);dialog.close();openEditor(null,draft);showToast(`นำเข้าข้อสอบ ${questionFilePreview.questions.length} ข้อแล้ว กรุณาตรวจเฉลยและคะแนนก่อนบันทึก`);});
+}
+bindQuestionFileImportEvents();
 function bindQuestionBankEvents(){
   document.getElementById('saveMcToBankBtn').addEventListener('click', async ()=>{
     if(!editingSet.sections.mc.questions.length){ showToast('ยังไม่มีข้อปรนัยให้เก็บ'); return; }

@@ -21,6 +21,7 @@ const { registerOperationsRoutes } = require('./operations');
 const { registerSystemControlRoutes } = require('./system-control');
 const { registerScoreEmailRoutes } = require('./score-email');
 const { registerLearningPlanRoutes } = require('./learning-plans');
+const { registerQuestionFileImportRoutes } = require('./question-file-import');
 
 function registerRoutes(app, dependencies) {
   registerHealthRoutes(app, dependencies);
@@ -42,6 +43,7 @@ function registerRoutes(app, dependencies) {
   registerQuestionBankRoutes(app, dependencies);
   registerAssetRoutes(app, dependencies);
   registerGoogleFormsRoutes(app, dependencies);
+  registerQuestionFileImportRoutes(app, dependencies);
   registerQuestionAnalysisRoutes(app, dependencies);
   registerResitRoutes(app, dependencies);
   registerAcademicCalendarRoutes(app, dependencies);
