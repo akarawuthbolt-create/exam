@@ -1449,7 +1449,7 @@ function renderResultSubjectGroups(records){
     </tr>`).join('')}</tbody></table></div></div>`;}).join('');
 }
 
-+function archivedResultPeriod(record){
+function archivedResultPeriod(record){
   const set=ADMIN_SETS.find(item=>item.key===(record.questionKey||'')); if(!set)return null;
   const regular=(set.examSchedules||[]).filter(item=>item&&!item.absenceOnly),dates=(regular.length?regular.map(item=>item.availableFrom):[set.availableFrom]).map(normalizedExamTimestamp).filter(Number.isFinite);
   if(!dates.length||Date.now()-Math.max(...dates)<30*86400000)return null;
