@@ -3,6 +3,7 @@ const { formIdFrom, parseGoogleForm } = require('../google-forms');
 
 const OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
 const CONNECTION_TTL_MS = 30 * 60 * 1000;
+const GOOGLE_FORMS_OAUTH_SCOPE_VERSION = 2;
 const oauthStates = new Map();
 const connections = new Map();
 const completedConnections = new Map();
@@ -38,6 +39,11 @@ function startAuth(config, role) {
 }
 
 async function connectionFor(req, role, config, readDB, mutateDB) {
+  if (readDB()?.settings?.googleFormsOAuthScopeVersion !== GOOGLE_FORMS_OAUTH_SCOPE_VERSION) {
+    connections.clear(); completedConnections.clear();
+    await mutateDB(db => { db.settings = { ...(db.settings || {}), googleFormsOAuthScopeVersion: GOOGLE_FORMS_OAUTH_SCOPE_VERSION }; delete db.settings.googleFormsRefreshTokens; });
+    return null;
+  }
   purgeExpired(connections);
   const connection = connections.get(req.get('x-google-forms-connection'));
   if (ownerMatches(connection, req, role)) return connection;
@@ -157,7 +163,7 @@ function registerGoogleFormsRoutes(app, { requireAdmin, requireTeacher, googleFo
       const connectionId = token();
       connections.set(connectionId, { role: state.role, ownerId: state.ownerId, accessToken: payload.access_token, expiresAt: Date.now() + CONNECTION_TTL_MS });
       const encryptedRefreshToken = encryptRefreshToken(payload.refresh_token, googleFormsConfig);
-      if (encryptedRefreshToken) await mutateDB(db => { db.settings = { ...(db.settings || {}), googleFormsRefreshTokens: { ...(db.settings?.googleFormsRefreshTokens || {}), [state.role === 'admin' ? 'admin' : `teacher:${state.ownerId}`]: { token: encryptedRefreshToken, updatedAt: new Date().toISOString() } } }; });
+      if (encryptedRefreshToken) await mutateDB(db => { db.settings = { ...(db.settings || {}), googleFormsOAuthScopeVersion: GOOGLE_FORMS_OAUTH_SCOPE_VERSION, googleFormsRefreshTokens: { ...(db.settings?.googleFormsRefreshTokens || {}), [state.role === 'admin' ? 'admin' : `teacher:${state.ownerId}`]: { token: encryptedRefreshToken, updatedAt: new Date().toISOString() } } }; });
       completedConnections.set(req.query.state, { role: state.role, ownerId: state.ownerId, connectionId, expiresAt: Date.now() + OAUTH_STATE_TTL_MS });
       const safeToken = JSON.stringify(connectionId);
       res.type('html').send(`<!doctype html><title>เชื่อมต่อแล้ว</title><script nonce="${res.locals.cspNonce}">window.opener&&window.opener.postMessage({type:'google-forms-connected',connectionId:${safeToken}},window.location.origin);window.close()</script>เชื่อมต่อ Google สำเร็จ สามารถปิดหน้านี้ได้`);

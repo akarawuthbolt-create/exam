@@ -987,7 +987,6 @@ function bindGoogleFormsSetImportEvents(){
     try{const result=await apiStartGoogleForms();const popup=window.open(result.authorizationUrl,'googleFormsAuth','width=560,height=700');if(!popup)showToast('กรุณาอนุญาตให้เปิดหน้าต่างเชื่อมต่อ Google');else waitForGoogleFormsConnection(result.requestId);}catch(error){showToast(error.message);}
   };
   document.getElementById('connectGoogleFormsSetBtn').addEventListener('click',reconnectGoogleForms);
-  document.getElementById('reconnectGoogleFormsSetBtn').addEventListener('click',reconnectGoogleForms);
   document.getElementById('previewGoogleFormsSetBtn').addEventListener('click',async()=>{
     const output=document.getElementById('googleFormsSetPreview'); const formUrl=document.getElementById('googleFormsSetUrl').value.trim();
     if(!googleFormsConnectionId){showToast('กรุณาเชื่อมต่อ Google ก่อน');return;} if(!formUrl){showToast('กรุณาวางลิงก์ Google Forms');return;}
