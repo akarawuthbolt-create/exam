@@ -1,5 +1,6 @@
 const { validateExamSetPayload, sendValidationError } = require('../validation');
 const { checkExamReadiness } = require('../exam-readiness');
+const crypto = require('crypto');
 const { normalizeExamDateTime, haveAllExamSchedulesEnded } = require('../grading');
 
 const normalizeSchedules = schedules => (Array.isArray(schedules) ? schedules : []).map(schedule => ({ ...schedule, studentIds: [...new Set((Array.isArray(schedule?.studentIds) ? schedule.studentIds : []).map(value => String(value).trim()).filter(Boolean))], availableFrom: normalizeExamDateTime(schedule?.availableFrom) || '', availableUntil: normalizeExamDateTime(schedule?.availableUntil) || '' }));
@@ -36,6 +37,11 @@ function registerAdminSetRoutes(app, { readDB, writeDB, requireAdmin, examTypes,
     set.updatedAt = new Date().toISOString();
     await writeDB(db);
     res.json({ ok: true, quickOpen: set.quickOpen, quickOpenedAt: set.quickOpenedAt });
+  });
+  app.post('/api/sets/:key/test-link', requireAdmin, async (req, res) => {
+    const db = readDB(), set = db.sets.find(item => item.key === req.params.key); if (!set) return res.status(404).json({ error: 'not_found' });
+    const token = crypto.randomBytes(24).toString('base64url'); set.testAccessHash = crypto.createHash('sha256').update(token).digest('hex'); set.updatedAt = new Date().toISOString(); await writeDB(db);
+    res.json({ url: `/test-exam.html?setKey=${encodeURIComponent(set.key)}&token=${encodeURIComponent(token)}` });
   });
   app.post('/api/sets/:key/open-absentees', requireAdmin, async (req, res) => {
     const db=readDB(),set=db.sets.find(item=>item.key===req.params.key);if(!set)return res.status(404).json({error:'not_found'});

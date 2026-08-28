@@ -71,6 +71,7 @@ async function apiGoogleFormsStatus(requestId=''){ return apiFetch('/api/admin/g
 async function apiCreateSet(set){ return apiFetch('/api/sets', { method:'POST', body:set, admin:true }); }
 async function apiUpdateSet(key, set){ return apiFetch('/api/sets/'+encodeURIComponent(key), { method:'PUT', body:set, admin:true }); }
 async function apiQuickOpenSet(key, open){ return apiFetch('/api/sets/'+encodeURIComponent(key)+'/quick-open', { method:'POST', body:{open}, admin:true }); }
+async function apiCreateTestLink(key){ return apiFetch('/api/sets/'+encodeURIComponent(key)+'/test-link', { method:'POST', admin:true }); }
 async function apiOpenAbsentees(key,hours){ return apiFetch('/api/sets/'+encodeURIComponent(key)+'/open-absentees', { method:'POST', body:{hours}, admin:true }); }
 async function apiDuplicateSetCall(key){ return apiFetch('/api/sets/'+encodeURIComponent(key)+'/duplicate', { method:'POST', admin:true }); }
 async function apiArchiveSetCall(key){ return apiFetch('/api/sets/'+encodeURIComponent(key)+'/archive', { method:'POST', admin:true }); }
@@ -587,7 +588,7 @@ function renderSetList(){
         <p style="color:${total===20?'var(--green)':'var(--blue)'};">🎯 คะแนนเต็มรวม: ${total} คะแนน · ${total===20?'ข้อสอบปกติ':'บล็อกคอร์ส — แบ่งลงกลางภาค/ปลายภาค'}</p>
         <p style="color:var(--sub);font-size:11.5px;">${s.publishMode==='auto'?'⚡ ประกาศคะแนนอัตโนมัติ':'🔒 ต้องตรวจก่อนประกาศ'}${s.shuffleQuestions?' · 🔀 สุ่มโจทย์':''}${s.shuffleChoices?' · 🔀 สุ่มตัวเลือก':''}</p>
         <div class="set-actions set-actions-clear">
-          ${!actionsExpired?`<button class="btn ${s.quickOpen?'btn-danger':examFinished?'btn-ghost':'btn-primary'} btn-sm" data-quick-open="${s.key}" data-open="${s.quickOpen?'0':'1'}">${s.quickOpen?'ยกเลิกการเปิดทันที':'เปิดข้อสอบทันที'}</button><button class="btn btn-ghost btn-sm" data-edit="${s.key}">แก้ไขข้อสอบ</button>`:''}
+          ${!actionsExpired?`<button class="btn ${s.quickOpen?'btn-danger':examFinished?'btn-ghost':'btn-primary'} btn-sm" data-quick-open="${s.key}" data-open="${s.quickOpen?'0':'1'}">${s.quickOpen?'ยกเลิกการเปิดทันที':'เปิดข้อสอบทันที'}</button><button class="btn btn-ghost btn-sm" data-edit="${s.key}">แก้ไขข้อสอบ</button><button class="btn btn-ghost btn-sm" data-test-link="${s.key}">🔗 ลิงก์ทดสอบ</button>`:''}
           ${examFinished?`<button class="btn btn-primary btn-sm" data-open-absentees="${s.key}">เปิดสอบเฉพาะผู้ขาดสอบ</button>`:''}
           <button class="btn btn-ghost btn-sm" data-exam-pdf="${s.key}">ดาวน์โหลดข้อสอบ PDF</button>
           <button class="btn btn-ghost btn-sm" data-archive="${s.key}">เก็บข้อสอบเข้าคลัง</button>
@@ -606,6 +607,7 @@ function renderSetList(){
   wrap.querySelectorAll('[data-quick-open]').forEach(b=>b.addEventListener('click', ()=>toggleQuickOpen(b.dataset.quickOpen,b.dataset.open==='1',b)));
   wrap.querySelectorAll('[data-open-absentees]').forEach(b=>b.addEventListener('click', ()=>openForAbsentees(b.dataset.openAbsentees,b)));
   wrap.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', ()=>openEditor(b.dataset.edit)));
+  wrap.querySelectorAll('[data-test-link]').forEach(b=>b.addEventListener('click',()=>createTestLink(b.dataset.testLink)));
   wrap.querySelectorAll('[data-exam-pdf]').forEach(b=>b.addEventListener('click', ()=>downloadExamPdf(b.dataset.examPdf,b)));
   wrap.querySelectorAll('[data-archive]').forEach(b=>b.addEventListener('click', ()=>archiveSet(b.dataset.archive)));
   wrap.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', ()=>deleteSet(b.dataset.del)));
@@ -613,6 +615,7 @@ function renderSetList(){
     head.nextElementSibling.classList.toggle('collapsed');
   }));
 }
+async function createTestLink(key){ try{const result=await apiCreateTestLink(key),url=location.origin+result.url;await navigator.clipboard.writeText(url);showToast('สร้างและคัดลอกลิงก์ทดสอบแล้ว — ลิงก์เก่าถูกยกเลิก');}catch(error){showToast(error.message);} }
 async function openForAbsentees(key,button){const value=prompt('เปิดข้อสอบให้ผู้ขาดสอบกี่ชั่วโมง? (1-72)','24');if(value===null)return;const hours=Number(value);if(!Number.isFinite(hours)||hours<1||hours>72){showToast('กรุณาระบุ 1-72 ชั่วโมง');return;}button.disabled=true;try{const result=await apiOpenAbsentees(key,hours);ADMIN_SETS=await apiGetAdminSets();renderSetList();showToast(result.count?`เปิดข้อสอบให้ผู้ขาดสอบ ${result.count} คนแล้ว`:'ไม่พบผู้ขาดสอบที่ต้องเปิดสิทธิ์');}catch(error){button.disabled=false;showToast(error.message);}}
 async function toggleQuickOpen(key,open,button){
   if(!open && !confirm('ยกเลิกการเปิดข้อสอบด่วน และกลับไปใช้ตารางสอบเดิม?')) return;
