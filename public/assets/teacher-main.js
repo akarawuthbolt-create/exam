@@ -443,7 +443,7 @@ let wizardStep = 'info'; // 'info'|'access'|'sections'|'hub'|'section:mc'|'secti
 const WIZARD_STEP_ORDER = ['info','access','sections','hub'];
 const WIZARD_STEP_LABELS = {info:'1. ข้อมูล', access:'2. สิทธิ์ & อาจารย์', sections:'3. เลือกส่วน', hub:'4. รายการส่วนข้อสอบ'};
 
-async function openEditor(key, draftSet=null){
+function openEditor(key, draftSet=null){
   editingIsNew = !key;
   editingSet = key ? JSON.parse(JSON.stringify(ADMIN_SETS.find(s=>s.key===key))) : (draftSet ? JSON.parse(JSON.stringify(draftSet)) : blankSet());
   if(teacherInfo){
@@ -473,14 +473,21 @@ async function openEditor(key, draftSet=null){
   document.getElementById('setWizardScreen').classList.remove('hidden');
   document.getElementById('wizardTitleBar').textContent = editingIsNew ? '🧩 สร้างชุดข้อสอบใหม่' : ('🧩 แก้ไขชุดข้อสอบ: ' + (editingSet.title||''));
   renderWizard();
-  // These values are only needed on later steps.  Do not make opening the editor wait for them.
-  try{ knownClasses = await apiGetClasses(); }catch(e){ knownClasses = []; }
-  try{ knownStudents = await apiGetStudents(); }catch(e){ knownStudents = []; }
-  try{
-    const periods=['เช้า','บ่าย','ทวิภาคี'];
-    const groups=await Promise.all(periods.map(async period=>[period,await apiGetClasses(period)]));
-    classPeriods=Object.fromEntries(groups.flatMap(([period,rooms])=>rooms.map(room=>[room,period])));
-  }catch(e){ classPeriods={}; }
+  // Let the browser paint the editor before requesting values used by later steps.
+  const targetSet = editingSet;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{ loadEditorReferenceData(targetSet); }));
+}
+async function loadEditorReferenceData(targetSet){
+  const periods=['เช้า','บ่าย','ทวิภาคี'];
+  const [classes,students,groups]=await Promise.all([
+    apiGetClasses().catch(()=>[]),
+    apiGetStudents().catch(()=>[]),
+    Promise.all(periods.map(async period=>[period,await apiGetClasses(period)])).catch(()=>[])
+  ]);
+  if(editingSet!==targetSet) return;
+  knownClasses=classes;
+  knownStudents=students;
+  classPeriods=Object.fromEntries(groups.flatMap(([period,rooms])=>rooms.map(room=>[room,period])));
 }
 function closeEditor(){
   editingSet = null;
