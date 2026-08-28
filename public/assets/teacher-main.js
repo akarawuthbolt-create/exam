@@ -469,6 +469,11 @@ async function openEditor(key, draftSet=null){
   editingUiEnabled = { mc: editingSet.sections.mc.questions.length>0, matching: editingSet.sections.matching.left.length>0, written: editingSet.sections.written.questions.length>0 };
   openQEditor = null;
   wizardStep = 'info';
+  adminScreen.classList.add('hidden');
+  document.getElementById('setWizardScreen').classList.remove('hidden');
+  document.getElementById('wizardTitleBar').textContent = editingIsNew ? '🧩 สร้างชุดข้อสอบใหม่' : ('🧩 แก้ไขชุดข้อสอบ: ' + (editingSet.title||''));
+  renderWizard();
+  // These values are only needed on later steps.  Do not make opening the editor wait for them.
   try{ knownClasses = await apiGetClasses(); }catch(e){ knownClasses = []; }
   try{ knownStudents = await apiGetStudents(); }catch(e){ knownStudents = []; }
   try{
@@ -476,10 +481,6 @@ async function openEditor(key, draftSet=null){
     const groups=await Promise.all(periods.map(async period=>[period,await apiGetClasses(period)]));
     classPeriods=Object.fromEntries(groups.flatMap(([period,rooms])=>rooms.map(room=>[room,period])));
   }catch(e){ classPeriods={}; }
-  adminScreen.classList.add('hidden');
-  document.getElementById('setWizardScreen').classList.remove('hidden');
-  document.getElementById('wizardTitleBar').textContent = editingIsNew ? '🧩 สร้างชุดข้อสอบใหม่' : ('🧩 แก้ไขชุดข้อสอบ: ' + (editingSet.title||''));
-  renderWizard();
 }
 function closeEditor(){
   editingSet = null;
