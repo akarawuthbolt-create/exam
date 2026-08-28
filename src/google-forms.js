@@ -38,7 +38,12 @@ function parseGoogleForm(form) {
     pendingImages = [];
     if (textQuestion) {
       const correctAnswers = (question.grading?.correctAnswers?.answers || []).map(answer => String(answer.value || '').trim()).filter(Boolean);
-      questions.push({ sourceId: question.questionId || item.itemId || '', type: 'written', text: numbered.text, sourceNumber: numbered.sourceNumber, keywords: correctAnswers, sourcePoints: Number(question.grading?.pointValue) || 0, images });
+      const sourcePoints = Number(question.grading?.pointValue);
+      if (!Number.isFinite(sourcePoints) || sourcePoints <= 0) {
+        skipped.push({ title: String(item.title || 'ไม่มีชื่อข้อ'), reason: 'ไม่ได้กำหนดคะแนน หรือกำหนดเป็น 0 คะแนน' });
+        continue;
+      }
+      questions.push({ sourceId: question.questionId || item.itemId || '', type: 'written', text: numbered.text, sourceNumber: numbered.sourceNumber, keywords: correctAnswers, sourcePoints, images });
       continue;
     }
     if (!['RADIO', 'DROP_DOWN'].includes(choices.type)) {
@@ -56,7 +61,12 @@ function parseGoogleForm(form) {
       skipped.push({ title: String(item.title || 'ไม่มีชื่อข้อ'), reason: 'ไม่พบเฉลยของข้อสอบ' });
       continue;
     }
-    questions.push({ sourceId: question.questionId || item.itemId || '', type: 'mc', text: numbered.text, sourceNumber: numbered.sourceNumber, choices: options, answer, sourcePoints: Number(question.grading?.pointValue) || 0, images });
+    const sourcePoints = Number(question.grading?.pointValue);
+    if (!Number.isFinite(sourcePoints) || sourcePoints <= 0) {
+      skipped.push({ title: String(item.title || 'ไม่มีชื่อข้อ'), reason: 'ไม่ได้กำหนดคะแนน หรือกำหนดเป็น 0 คะแนน' });
+      continue;
+    }
+    questions.push({ sourceId: question.questionId || item.itemId || '', type: 'mc', text: numbered.text, sourceNumber: numbered.sourceNumber, choices: options, answer, sourcePoints, images });
   }
   return { title: String(form?.info?.title || 'Google Forms'), questions, skipped, counts: { mc: questions.filter(question => question.type === 'mc').length, written: questions.filter(question => question.type === 'written').length, images: questions.reduce((sum, question) => sum + question.images.length, 0) } };
 }
