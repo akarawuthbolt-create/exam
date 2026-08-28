@@ -200,6 +200,15 @@
     </div>
   </div>
 
+  <div id="submitConfirmModal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="submitConfirmTitle">
+    <div class="modal-card submit-confirm-card" style="text-align:center;">
+      <div class="modal-check" style="color:var(--amber);">✦</div>
+      <h3 id="submitConfirmTitle">ยืนยันการส่งข้อสอบ</h3>
+      <p>หลังจากนี้จะไม่สามารถแก้ไขคำตอบได้อีก กรุณาตรวจสอบให้เรียบร้อยก่อนส่ง</p>
+      <div class="modal-actions"><button class="btn btn-ghost" id="cancelExamSubmitBtn" type="button" style="flex:1;">กลับไปตรวจคำตอบ</button><button class="btn btn-primary" id="confirmExamSubmitBtn" type="button" style="flex:1;">ยืนยันส่งข้อสอบ</button></div>
+    </div>
+  </div>
+
   <div id="tabWarningModal" class="hidden">
     <div class="modal-card" style="text-align:center;border:2px solid var(--red);">
       <div class="modal-check" style="color:var(--amber);">⚠️</div>
@@ -236,6 +245,6 @@
   </div>
 </div>
 
-<script src="/assets/student-main.js?v=20260829-1"></script>
+<script src="/assets/student-main.js?v=20260829-2"></script>
 </body>
 </html>

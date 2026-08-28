@@ -299,6 +299,7 @@ document.getElementById('goLoginBtn').addEventListener('click', ()=>{
 });
 document.getElementById('backToStartBtn').addEventListener('click', ()=>{ hideAllTopScreens(); startScreen.classList.remove('hidden'); });
 document.getElementById('backToLoginBtn').addEventListener('click', async ()=>{
+  if(document.fullscreenElement) document.exitFullscreen?.().catch(()=>{});
   const token = app.studentToken;
   try{ if(token) await apiLogoutStudent(); }catch(e){}
   sessionStorage.removeItem('examStudentToken');
@@ -702,11 +703,14 @@ function attemptEndExam(){
     jumpToIncomplete(incomplete);
     return;
   }
-  if(confirm('ยืนยันจบการสอบและส่งคำตอบ? หลังจากนี้จะไม่สามารถแก้ไขคำตอบได้อีก')){
-    clearInterval(app.globalTimerHandle);
-    finalizeExam('manual');
-  }
+  document.getElementById('submitConfirmModal').classList.remove('hidden');
 }
+document.getElementById('cancelExamSubmitBtn').addEventListener('click',()=>document.getElementById('submitConfirmModal').classList.add('hidden'));
+document.getElementById('confirmExamSubmitBtn').addEventListener('click',()=>{
+  document.getElementById('submitConfirmModal').classList.add('hidden');
+  clearInterval(app.globalTimerHandle);
+  finalizeExam('manual');
+});
 document.getElementById('endExamBtn').addEventListener('click', attemptEndExam);
 document.getElementById('backToHubBtn').addEventListener('click', showHub);
 function isOnlyMcSection(){
