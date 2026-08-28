@@ -103,7 +103,7 @@ const examAutoArchive = createExamAutoArchive({ mutateDB });
 const app = express();
 app.ready = Promise.all([databaseReady, seedReady, sessionStore.ready]).then(() => examAutoArchive.run());
 app.disable('x-powered-by');
-// Production hosts such as Render sit behind a reverse proxy. Trust the first
+// Railway sits behind a reverse proxy. Trust the first
 // hop so login rate limits and audit records use the visitor IP.
 app.set('trust proxy', 1);
 app.use(applySecurityHeaders);
