@@ -307,8 +307,7 @@ function refreshCurrentPageData(){
   if(activeTab==='learning-plans' && typeof refreshLearningPlans==='function') return refreshLearningPlans();
   if(activeTab==='results') return refreshResults();
   if(activeTab==='score-emails') return refreshScoreEmails();
-  if(activeTab==='operations') return refreshOperations();
-  if(activeTab==='exam-pulse') return refreshExamPulse();
+  if(activeTab==='operations') return Promise.all([refreshOperations(),refreshExamPulse()]);
   return initAdmin();
 }
 
@@ -318,12 +317,11 @@ function openAdminTab(tab, options={}){
     document.querySelectorAll('.admin-tab-btn').forEach(b=>b.classList.remove('active'));
     const activeButton=document.querySelector(`.admin-tab-btn[data-atab="${options.keepSettingsActive?'settings':tab}"]`);
     activeButton?.classList.add('active');
-    ['dashboard','sets','test-links','library','students','teachers','learning-plans','results','score-emails','operations','exam-pulse','settings'].forEach(t=> document.getElementById('atab-'+t).classList.toggle('hidden', tab!==t));
+    ['dashboard','sets','test-links','library','students','teachers','learning-plans','results','score-emails','operations','settings'].forEach(t=> document.getElementById('atab-'+t).classList.toggle('hidden', tab!==t));
     if(tab==='dashboard') refreshDashboard();
     if(tab==='library') renderLibrarySetList();
     if(tab==='test-links') renderTestLinkSelector();
-    if(tab==='operations'){ refreshOperations(); startOperationsStream(); } else stopOperationsStream();
-    if(tab==='exam-pulse') startExamPulse(); else stopExamPulse();
+    if(tab==='operations'){ refreshOperations(); startOperationsStream(); startExamPulse(); } else { stopOperationsStream(); stopExamPulse(); }
     if(tab==='results') refreshResults();
     if(tab==='score-emails') refreshScoreEmails();
     if(tab==='students') refreshStudents();
@@ -386,14 +384,15 @@ async function refreshOperations(){
   const wrap=document.getElementById('operationsWrap');
   wrap.innerHTML='<div class="loading-note">กำลังตรวจสอบระบบ...</div>';
   try{
-    const data=await apiGetOperations(),counts=data.counts||{},activity=data.recentActivity||[],requests=data.requests||{},submissions=data.submissions||{},scoreChecks=data.scoreVerification||{},examChecks=data.examReadiness||{},backup=data.backup||{},restore=data.restoreDrill||{},alerts=data.alerts||{},jobs=data.jobs||{},sessions=data.sessions||{};
+    const data=await apiGetOperations(),counts=data.counts||{},activity=data.recentActivity||[],requests=data.requests||{},submissions=data.submissions||{},scoreChecks=data.scoreVerification||{},examChecks=data.examReadiness||{},backup=data.backup||{},restore=data.restoreDrill||{},alerts=data.alerts||{},jobs=data.jobs||{},sessions=data.sessions||{},serverLoad=data.serverLoad||{};
     const storageReady=data.storage?.status==='configured';
     const databaseReady=data.database?.status==='connected',backupReady=backup.configured,alertsReady=alerts.configured,restoreHealthy=restore.lastSuccessAt&&(!restore.lastFailureAt||restore.lastSuccessAt>=restore.lastFailureAt);
     const countCards=[['นักเรียน',counts.students],['อาจารย์',counts.teachers],['ชุดข้อสอบ',counts.examSets],['ผลสอบ',counts.results],['ฉบับร่าง',counts.drafts],['เซสชันอาจารย์',counts.activeTeacherSessions]];
     const activityRows=activity.length?activity.map(row=>`<tr><td>${escapeHtml(new Date(row.eventAt).toLocaleString('th-TH'))}</td><td>${escapeHtml(row.action||'-')}</td><td>${escapeHtml(row.actorId||row.actorType||'-')}</td><td>${escapeHtml(row.targetId||'-')}</td></tr>`).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--sub);">ยังไม่มีกิจกรรมที่บันทึกไว้</td></tr>';
     const failureRows=requests.recentFailures?.length?requests.recentFailures.map(row=>`<tr><td>${escapeHtml(new Date(row.occurredAt).toLocaleString('th-TH'))}</td><td>${escapeHtml(row.method)}</td><td>${escapeHtml(row.path)}</td><td>${Number(row.status)}</td><td>${Number(row.durationMs)} ms</td></tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--green);">ไม่พบข้อผิดพลาดของเซิร์ฟเวอร์นับตั้งแต่เริ่มระบบ</td></tr>';
     const blockedExamRows=(examChecks.blockedSets||[]).length?(examChecks.blockedSets||[]).map(set=>`<div class="mini-card" style="margin:0 0 10px;"><div class="toolbar-row"><div><h4 style="margin:0 0 4px;">${escapeHtml(set.title||set.key||'-')}</h4>${set.courseName&&set.courseName!==set.title?`<div class="panel-sub">${escapeHtml(set.courseName)}</div>`:''}</div><button class="btn btn-primary btn-sm" type="button" data-fix-blocked-exam="${escapeAttr(set.key)}">แก้ไขชุดข้อสอบ</button></div><ul style="margin:10px 0 0;padding-left:22px;">${(set.errors||[]).map(error=>`<li>${escapeHtml(error.message||error.code||'ไม่ผ่านการตรวจความพร้อม')}</li>`).join('')}</ul></div>`).join(''):'<div class="empty-note">ไม่มีชุดข้อสอบที่ถูกบล็อก</div>';
-    wrap.innerHTML=`<div class="operations-status-grid">
+    const loadLevel=serverLoad.level||'normal',loadLabel={normal:'ปกติ',warning:'เริ่มทำงานหนัก',critical:'ภาระสูง'}[loadLevel];
+    wrap.innerHTML=`<div id="operationsServerLoad" class="server-load-card server-load-${loadLevel}"><div class="server-load-heading"><div><div class="label">หลอดภาระงานระบบ</div><strong id="operationsServerLoadLabel">${loadLabel}</strong></div><b id="operationsServerLoadPercent">${Number(serverLoad.percent)||0}%</b></div><div class="server-load-track" role="progressbar" aria-label="ภาระงานระบบ" aria-valuenow="${Number(serverLoad.percent)||0}" aria-valuemin="0" aria-valuemax="100"><i id="operationsServerLoadBar" style="width:${Math.min(100,Math.max(0,Number(serverLoad.percent)||0))}%"></i></div><div class="server-load-notes" id="operationsServerLoadNotes">หน่วยความจำ ${Number(serverLoad.components?.heapPercent)||0}% · ส่งข้อสอบ ${Number(serverLoad.components?.submissionPercent)||0}% · คิวส่ง ${Number(serverLoad.components?.submissionQueuePercent)||0}% · งานเบื้องหลัง ${Number(serverLoad.components?.jobQueuePercent)||0}%</div></div><div class="operations-status-grid">
       <div class="operations-card"><div class="label">ระบบ API</div><div class="value operations-ok">● ปกติ</div><div class="note">Uptime ${formatOperationsUptime(data.uptimeSeconds)}</div></div>
       <div class="operations-card"><div class="label">ฐานข้อมูล (Live)</div><div class="value ${databaseReady?'operations-ok':'operations-warn'}">● ${databaseReady?'เชื่อมต่อแล้ว':'ขาดการเชื่อมต่อ'}</div><div class="note">${escapeHtml(data.database.engine)} · ${databaseReady?Number(data.database.latencyMs||0)+' ms':'probe ไม่ผ่าน'} · ${formatOperationsBytes(data.database.sizeBytes)}</div></div>
       <div class="operations-card"><div class="label">พื้นที่เก็บไฟล์</div><div class="value ${storageReady?'operations-ok':'operations-warn'}">● ${storageReady?'พร้อมใช้งาน':'ยังไม่ได้ตั้งค่า'}</div><div class="note">ขนาดไฟล์สูงสุด ${formatOperationsBytes(data.storage.maxBytes)}</div></div>
@@ -449,6 +448,7 @@ function renderLiveOperations(data){
   const set=(id,value)=>{const element=document.getElementById(id);if(element)element.textContent=value;};
   set('liveActiveStudents',Number(data.activeStudents)||0);set('liveActiveExams',Number(data.activeExams)||0);set('liveRecentResults',Number(data.resultsLast5Minutes)||0);set('liveSubmissionQueue',`${Number(data.submissions?.active)||0} / ${Number(data.submissions?.pending)||0}`);
   const state=document.getElementById('operationsLiveState');if(state){state.textContent='● สด · '+new Date(data.generatedAt).toLocaleTimeString('th-TH');state.className='operations-ok';}
+  const load=data.serverLoad;if(load){const card=document.getElementById('operationsServerLoad'),label=document.getElementById('operationsServerLoadLabel'),percent=document.getElementById('operationsServerLoadPercent'),bar=document.getElementById('operationsServerLoadBar'),notes=document.getElementById('operationsServerLoadNotes'),labels={normal:'ปกติ',warning:'เริ่มทำงานหนัก',critical:'ภาระสูง'};if(card)card.className=`server-load-card server-load-${load.level||'normal'}`;if(label)label.textContent=labels[load.level]||labels.normal;if(percent)percent.textContent=`${Number(load.percent)||0}%`;if(bar)bar.style.width=`${Math.min(100,Math.max(0,Number(load.percent)||0))}%`;if(notes)notes.textContent=`หน่วยความจำ ${Number(load.components?.heapPercent)||0}% · ส่งข้อสอบ ${Number(load.components?.submissionPercent)||0}% · คิวส่ง ${Number(load.components?.submissionQueuePercent)||0}% · งานเบื้องหลัง ${Number(load.components?.jobQueuePercent)||0}%`;}
 }
 function stopOperationsStream(){if(operationsStreamController)operationsStreamController.abort();operationsStreamController=null;if(operationsReconnectTimer)clearTimeout(operationsReconnectTimer);operationsReconnectTimer=null;}
 async function startOperationsStream(){

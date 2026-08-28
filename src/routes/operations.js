@@ -4,6 +4,16 @@ const { verificationSummary, verificationReport } = require('../score-verificati
 const { readinessSummary } = require('../exam-readiness');
 const { appendAuditLog } = require('../audit-log');
 
+function serverLoadSnapshot({ submissions = {}, jobs = {}, requests = {} }, memory = process.memoryUsage()) {
+  const heapPercent = memory.heapTotal ? (memory.heapUsed / memory.heapTotal) * 100 : 0;
+  const submissionPercent = submissions.maxConcurrent ? (submissions.active / submissions.maxConcurrent) * 100 : 0;
+  const submissionQueuePercent = submissions.maxPending ? (submissions.pending / submissions.maxPending) * 100 : 0;
+  const jobQueuePercent = jobs.maxPending ? (jobs.pending / jobs.maxPending) * 100 : 0;
+  const inFlightPercent = Math.min(100, (requests.inFlight / 50) * 100);
+  const percent = Math.round(Math.min(100, heapPercent * .25 + submissionPercent * .3 + submissionQueuePercent * .2 + jobQueuePercent * .15 + inFlightPercent * .1));
+  return { percent, level: percent >= 85 ? 'critical' : percent >= 60 ? 'warning' : 'normal', components: { heapPercent: Math.round(heapPercent), submissionPercent: Math.round(submissionPercent), submissionQueuePercent: Math.round(submissionQueuePercent), jobQueuePercent: Math.round(jobQueuePercent), inFlightPercent: Math.round(inFlightPercent) } };
+}
+
 function liveOperationsSnapshot(db, { submissions, jobs, requests }, now = Date.now()) {
   const activeStudentIds = new Set(db.drafts.filter(draft => draft.studentId && new Date(draft.lockUntil || 0).getTime() > now).map(draft => draft.studentId));
   const recentCutoff = now - 5 * 60 * 1000;
@@ -13,7 +23,8 @@ function liveOperationsSnapshot(db, { submissions, jobs, requests }, now = Date.
     resultsLast5Minutes: db.results.filter(result => new Date(result.submittedAt || 0).getTime() >= recentCutoff).length,
     submissions: { active: submissions.active, pending: submissions.pending, overloaded: submissions.overloaded },
     jobs: { active: jobs.active, pending: jobs.pending, failed: jobs.failed },
-    api: { inFlight: requests.inFlight, errorRatePercent: requests.errorRatePercent }
+    api: { inFlight: requests.inFlight, errorRatePercent: requests.errorRatePercent },
+    serverLoad: serverLoadSnapshot({ submissions, jobs, requests })
   };
 }
 
@@ -92,6 +103,8 @@ function registerOperationsRoutes(app, { requireAdmin, readDB, mutateDB, newId, 
     database.sizeBytes = databaseBytes;
 
     const activeTeacherSessions = await sessionStore.count('teacher');
+    const submissions = submissionGate.snapshot(), jobs = jobQueue.snapshot();
+    const serverLoad = serverLoadSnapshot({ submissions, jobs, requests }, memory);
     res.json({
       generatedAt: new Date().toISOString(),
       status: 'operational',
@@ -101,13 +114,14 @@ function registerOperationsRoutes(app, { requireAdmin, readDB, mutateDB, newId, 
       restoreDrill: restoreDrill.status(),
       monitoring: systemMonitor.status(),
       alerts: alertManager.status(),
-      jobs: jobQueue.snapshot(),
+      jobs,
       scoreEmails: scoreEmailService.status(),
       sessions: sessionStore.status(),
       storage: { status: assetStorage.configured ? 'configured' : 'not_configured', maxBytes: assetStorage.maxBytes },
       memory: { rssBytes: memory.rss, heapUsedBytes: memory.heapUsed, heapTotalBytes: memory.heapTotal },
       requests,
-      submissions: submissionGate.snapshot(),
+      submissions,
+      serverLoad,
       scoreVerification: verificationSummary(db),
       examReadiness: readinessSummary(db.sets),
       counts: {
