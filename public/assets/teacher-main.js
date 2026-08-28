@@ -59,7 +59,7 @@ async function apiUploadQuestionAsset(file){
 async function apiStartGoogleForms(){ return apiFetch('/api/teacher/google-forms/start', { method:'POST', auth:true }); }
 async function apiPreviewGoogleForm(connectionId, formUrl){ return apiFetch('/api/teacher/google-forms/preview', { method:'POST', body:{formUrl}, headers:{'x-google-forms-connection':connectionId}, auth:true }); }
 async function apiImportGoogleForm(connectionId, formUrl){ return apiFetch('/api/teacher/google-forms/import', { method:'POST', body:{formUrl}, headers:{'x-google-forms-connection':connectionId}, auth:true }); }
-async function apiGoogleFormsStatus(requestId){ return apiFetch('/api/teacher/google-forms/status?requestId='+encodeURIComponent(requestId), { auth:true }); }
+async function apiGoogleFormsStatus(requestId=''){ return apiFetch('/api/teacher/google-forms/status?requestId='+encodeURIComponent(requestId), { auth:true }); }
 async function apiCreateSet(set){ return apiFetch('/api/teacher/sets', { method:'POST', body:set, auth:true }); }
 async function apiUpdateSet(key, set){ return apiFetch('/api/teacher/sets/'+encodeURIComponent(key), { method:'PUT', body:set, auth:true }); }
 async function apiQuickOpenSet(key, open){ return apiFetch('/api/teacher/sets/'+encodeURIComponent(key)+'/quick-open', { method:'POST', body:{open}, auth:true }); }
@@ -950,10 +950,11 @@ function updateGoogleFormsSetDialog(){
   document.getElementById('googleFormsConnectStep').classList.toggle('hidden',connected);
   document.getElementById('googleFormsImportStep').classList.toggle('hidden',!connected);
 }
-function openGoogleFormsSetDialog(){
+async function openGoogleFormsSetDialog(){
   googleFormsPreview=null;
   document.getElementById('googleFormsSetPreview').textContent='';
   document.getElementById('applyGoogleFormsSetBtn').disabled=true;
+  if(!googleFormsConnectionId){ try{ const status=await apiGoogleFormsStatus(); if(status.connected) googleFormsConnectionId=status.connectionId; }catch(_){} }
   updateGoogleFormsSetDialog();
   document.getElementById('googleFormsSetDialog').showModal();
 }

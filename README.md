@@ -56,6 +56,7 @@ npm run migrate:postgres  # ย้ายข้อมูล local ไป PostgreS
 | `GOOGLE_FORMS_CLIENT_ID` | ไม่ | Google OAuth client ID |
 | `GOOGLE_FORMS_CLIENT_SECRET` | ไม่ | Google OAuth client secret |
 | `GOOGLE_FORMS_REDIRECT_URI` | ไม่ | callback URL ซึ่งต้องลงท้ายด้วย `/api/google-forms/callback` |
+| `GOOGLE_FORMS_TOKEN_ENCRYPTION_KEY` | ไม่ | key สำหรับเข้ารหัสการเชื่อมต่อ Google Forms ที่จำไว้ (ใช้ `BACKUP_ENCRYPTION_KEY` หากไม่กำหนด) |
 
 ห้าม commit ไฟล์ `.env`, database local หรือ secret ใด ๆ เข้า Git
 

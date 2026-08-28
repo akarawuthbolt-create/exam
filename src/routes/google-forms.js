@@ -10,6 +10,17 @@ const completedConnections = new Map();
 function token() { return crypto.randomBytes(24).toString('hex'); }
 function configured(config = {}) { return Boolean(config.clientId && config.clientSecret && config.redirectUri); }
 function purgeExpired(store) { const now = Date.now(); for (const [key, value] of store) if (value.expiresAt <= now) store.delete(key); }
+function ownerKey(role, req) { return role === 'admin' ? 'admin' : `teacher:${req.teacherId}`; }
+function encryptionKey(config) { return config.tokenEncryptionKey ? crypto.createHash('sha256').update(String(config.tokenEncryptionKey)).digest() : null; }
+function encryptRefreshToken(value, config) {
+  const key = encryptionKey(config); if (!key || !value) return null;
+  const iv = crypto.randomBytes(12), cipher = crypto.createCipheriv('aes-256-gcm', key, iv), encrypted = Buffer.concat([cipher.update(value, 'utf8'), cipher.final()]), tag = cipher.getAuthTag();
+  return `v1.${iv.toString('base64url')}.${tag.toString('base64url')}.${encrypted.toString('base64url')}`;
+}
+function decryptRefreshToken(value, config) {
+  const key = encryptionKey(config), parts = String(value || '').split('.'); if (!key || parts.length !== 4 || parts[0] !== 'v1') return null;
+  try { const decipher = crypto.createDecipheriv('aes-256-gcm', key, Buffer.from(parts[1], 'base64url')); decipher.setAuthTag(Buffer.from(parts[2], 'base64url')); return Buffer.concat([decipher.update(Buffer.from(parts[3], 'base64url')), decipher.final()]).toString('utf8'); } catch (_) { return null; }
+}
 
 function ownerMatches(connection, req, role) {
   return connection && connection.role === role && (role === 'admin' || connection.ownerId === req.teacherId);
@@ -21,19 +32,32 @@ function startAuth(config, role) {
     purgeExpired(oauthStates);
     const state = token();
     oauthStates.set(state, { role, ownerId: role === 'teacher' ? req.teacherId : null, expiresAt: Date.now() + OAUTH_STATE_TTL_MS });
-    const params = new URLSearchParams({ client_id: config.clientId, redirect_uri: config.redirectUri, response_type: 'code', scope: 'https://www.googleapis.com/auth/forms.body.readonly', access_type: 'online', state, prompt: 'consent' });
+    const params = new URLSearchParams({ client_id: config.clientId, redirect_uri: config.redirectUri, response_type: 'code', scope: 'https://www.googleapis.com/auth/forms.body.readonly', access_type: 'offline', state, prompt: 'consent' });
     res.json({ authorizationUrl: `https://accounts.google.com/o/oauth2/v2/auth?${params}`, requestId: state });
   };
 }
 
-function connectionFor(req, role) {
+async function connectionFor(req, role, config, readDB, mutateDB) {
   purgeExpired(connections);
   const connection = connections.get(req.get('x-google-forms-connection'));
-  return ownerMatches(connection, req, role) ? connection : null;
+  if (ownerMatches(connection, req, role)) return connection;
+  const saved = readDB()?.settings?.googleFormsRefreshTokens?.[ownerKey(role, req)];
+  const refreshToken = decryptRefreshToken(saved?.token, config);
+  if (!refreshToken) return null;
+  const body = new URLSearchParams({ client_id: config.clientId, client_secret: config.clientSecret, refresh_token: refreshToken, grant_type: 'refresh_token' });
+  const response = await fetch('https://oauth2.googleapis.com/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+  const payload = await response.json();
+  if (!response.ok || !payload.access_token) {
+    await mutateDB(db => { if (db.settings?.googleFormsRefreshTokens) delete db.settings.googleFormsRefreshTokens[ownerKey(role, req)]; });
+    return null;
+  }
+  const connectionId = token();
+  connections.set(connectionId, { role, ownerId: role === 'teacher' ? req.teacherId : null, accessToken: payload.access_token, expiresAt: Date.now() + Math.max(60, Number(payload.expires_in) || 1800) * 1000 });
+  return connections.get(connectionId);
 }
 
-async function fetchParsedForm(req, role) {
-  const connection = connectionFor(req, role);
+async function fetchParsedForm(req, role, config, readDB, mutateDB) {
+  const connection = await connectionFor(req, role, config, readDB, mutateDB);
   if (!connection) throw Object.assign(new Error('กรุณาเชื่อมต่อ Google ก่อนนำเข้า'), { status: 401, code: 'google_connection_required' });
   const formId = formIdFrom(req.body?.formUrl);
   if (!formId) throw Object.assign(new Error('กรุณาใช้ลิงก์หน้าแก้ไข Google Forms (/forms/d/.../edit) ไม่ใช่ลิงก์ตอบแบบฟอร์ม (/forms/d/e/.../viewform)'), { status: 400, code: 'invalid_form_url' });
@@ -42,10 +66,10 @@ async function fetchParsedForm(req, role) {
   return { connection, parsed: parseGoogleForm(await response.json()) };
 }
 
-function previewForm(role) {
+function previewForm(role, config, readDB, mutateDB) {
   return async (req, res) => {
     try {
-      res.json((await fetchParsedForm(req, role)).parsed);
+      res.json((await fetchParsedForm(req, role, config, readDB, mutateDB)).parsed);
     } catch (error) { res.status(error.status || 502).json({ error: error.code || 'google_form_fetch_failed', message: error.status ? error.message : 'เชื่อมต่อ Google Forms ไม่สำเร็จ' }); }
   };
 }
@@ -55,10 +79,10 @@ function imageFileName(question, index, contentType) {
   return `google-form-${question.sourceId || 'question'}-${index + 1}${extension}`;
 }
 
-function importForm(role, assetStorage) {
+function importForm(role, assetStorage, config, readDB, mutateDB) {
   return async (req, res) => {
     try {
-      const { connection, parsed } = await fetchParsedForm(req, role);
+      const { connection, parsed } = await fetchParsedForm(req, role, config, readDB, mutateDB);
       const warnings = [];
       for (const question of parsed.questions) {
         const attachments = [];
@@ -84,26 +108,27 @@ function importForm(role, assetStorage) {
   };
 }
 
-function connectionStatus(role) {
-  return (req, res) => {
+function connectionStatus(role, config, readDB, mutateDB) {
+  return async (req, res) => {
     purgeExpired(completedConnections);
     const completed = completedConnections.get(String(req.query.requestId || ''));
-    if (!ownerMatches(completed, req, role)) return res.json({ connected: false });
-    completedConnections.delete(String(req.query.requestId || ''));
-    res.json({ connected: true, connectionId: completed.connectionId });
+    if (ownerMatches(completed, req, role)) { completedConnections.delete(String(req.query.requestId || '')); return res.json({ connected: true, connectionId: completed.connectionId }); }
+    const connection = await connectionFor(req, role, config, readDB, mutateDB);
+    const connectionId = [...connections.entries()].find(([, value]) => value === connection)?.[0];
+    res.json(connectionId ? { connected: true, connectionId } : { connected: false });
   };
 }
 
-function registerGoogleFormsRoutes(app, { requireAdmin, requireTeacher, googleFormsConfig, assetStorage }) {
+function registerGoogleFormsRoutes(app, { requireAdmin, requireTeacher, googleFormsConfig, assetStorage, readDB, mutateDB }) {
   const closeScript = res => `<script nonce="${res.locals.cspNonce}">window.close()</script>`;
   app.post('/api/admin/google-forms/start', requireAdmin, startAuth(googleFormsConfig, 'admin'));
-  app.post('/api/admin/google-forms/preview', requireAdmin, previewForm('admin'));
-  app.post('/api/admin/google-forms/import', requireAdmin, importForm('admin', assetStorage));
-  app.get('/api/admin/google-forms/status', requireAdmin, connectionStatus('admin'));
+  app.post('/api/admin/google-forms/preview', requireAdmin, previewForm('admin', googleFormsConfig, readDB, mutateDB));
+  app.post('/api/admin/google-forms/import', requireAdmin, importForm('admin', assetStorage, googleFormsConfig, readDB, mutateDB));
+  app.get('/api/admin/google-forms/status', requireAdmin, connectionStatus('admin', googleFormsConfig, readDB, mutateDB));
   app.post('/api/teacher/google-forms/start', requireTeacher, startAuth(googleFormsConfig, 'teacher'));
-  app.post('/api/teacher/google-forms/preview', requireTeacher, previewForm('teacher'));
-  app.post('/api/teacher/google-forms/import', requireTeacher, importForm('teacher', assetStorage));
-  app.get('/api/teacher/google-forms/status', requireTeacher, connectionStatus('teacher'));
+  app.post('/api/teacher/google-forms/preview', requireTeacher, previewForm('teacher', googleFormsConfig, readDB, mutateDB));
+  app.post('/api/teacher/google-forms/import', requireTeacher, importForm('teacher', assetStorage, googleFormsConfig, readDB, mutateDB));
+  app.get('/api/teacher/google-forms/status', requireTeacher, connectionStatus('teacher', googleFormsConfig, readDB, mutateDB));
   app.get('/api/google-forms/callback', async (req, res) => {
     const state = oauthStates.get(req.query.state);
     oauthStates.delete(req.query.state);
@@ -115,6 +140,8 @@ function registerGoogleFormsRoutes(app, { requireAdmin, requireTeacher, googleFo
       if (!tokenResponse.ok || !payload.access_token) throw new Error('token exchange failed');
       const connectionId = token();
       connections.set(connectionId, { role: state.role, ownerId: state.ownerId, accessToken: payload.access_token, expiresAt: Date.now() + CONNECTION_TTL_MS });
+      const encryptedRefreshToken = encryptRefreshToken(payload.refresh_token, googleFormsConfig);
+      if (encryptedRefreshToken) await mutateDB(db => { db.settings = { ...(db.settings || {}), googleFormsRefreshTokens: { ...(db.settings?.googleFormsRefreshTokens || {}), [state.role === 'admin' ? 'admin' : `teacher:${state.ownerId}`]: { token: encryptedRefreshToken, updatedAt: new Date().toISOString() } } }; });
       completedConnections.set(req.query.state, { role: state.role, ownerId: state.ownerId, connectionId, expiresAt: Date.now() + OAUTH_STATE_TTL_MS });
       const safeToken = JSON.stringify(connectionId);
       res.type('html').send(`<!doctype html><title>เชื่อมต่อแล้ว</title><script nonce="${res.locals.cspNonce}">window.opener&&window.opener.postMessage({type:'google-forms-connected',connectionId:${safeToken}},window.location.origin);window.close()</script>เชื่อมต่อ Google สำเร็จ สามารถปิดหน้านี้ได้`);

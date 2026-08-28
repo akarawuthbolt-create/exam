@@ -67,7 +67,7 @@ async function apiPreviewQuestionFile(file){
   const response=await fetch('/api/admin/question-file/preview',{method:'POST',headers:{'x-admin-key':adminKey||'','Content-Type':file.type||'application/octet-stream','x-file-name':encodeURIComponent(file.name)},body:file});
   const body=await response.json().catch(()=>({}));if(response.status===401){showSessionExpiredDialog();throw new Error('หมดเวลาการเข้าสู่ระบบ');}if(!response.ok)throw new Error(body.message||'ไม่สามารถอ่านข้อสอบจากไฟล์นี้ได้');return body;
 }
-async function apiGoogleFormsStatus(requestId){ return apiFetch('/api/admin/google-forms/status?requestId='+encodeURIComponent(requestId), { admin:true }); }
+async function apiGoogleFormsStatus(requestId=''){ return apiFetch('/api/admin/google-forms/status?requestId='+encodeURIComponent(requestId), { admin:true }); }
 async function apiCreateSet(set){ return apiFetch('/api/sets', { method:'POST', body:set, admin:true }); }
 async function apiUpdateSet(key, set){ return apiFetch('/api/sets/'+encodeURIComponent(key), { method:'PUT', body:set, admin:true }); }
 async function apiQuickOpenSet(key, open){ return apiFetch('/api/sets/'+encodeURIComponent(key)+'/quick-open', { method:'POST', body:{open}, admin:true }); }
@@ -1278,10 +1278,11 @@ function updateGoogleFormsSetDialog(){
   document.getElementById('googleFormsConnectStep').classList.toggle('hidden',connected);
   document.getElementById('googleFormsImportStep').classList.toggle('hidden',!connected);
 }
-function openGoogleFormsSetDialog(){
+async function openGoogleFormsSetDialog(){
   googleFormsPreview=null;
   document.getElementById('googleFormsSetPreview').textContent='';
   document.getElementById('applyGoogleFormsSetBtn').disabled=true;
+  if(!googleFormsConnectionId){ try{ const status=await apiGoogleFormsStatus(); if(status.connected) googleFormsConnectionId=status.connectionId; }catch(_){} }
   updateGoogleFormsSetDialog();
   document.getElementById('googleFormsSetDialog').showModal();
 }

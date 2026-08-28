@@ -30,6 +30,7 @@ module.exports = {
   GOOGLE_FORMS_CLIENT_ID: process.env.GOOGLE_FORMS_CLIENT_ID || '',
   GOOGLE_FORMS_CLIENT_SECRET: process.env.GOOGLE_FORMS_CLIENT_SECRET || '',
   GOOGLE_FORMS_REDIRECT_URI: process.env.GOOGLE_FORMS_REDIRECT_URI || '',
+  GOOGLE_FORMS_TOKEN_ENCRYPTION_KEY: process.env.GOOGLE_FORMS_TOKEN_ENCRYPTION_KEY || process.env.BACKUP_ENCRYPTION_KEY || '',
   BACKUP_ENABLED: enabled(process.env.BACKUP_ENABLED),
   BACKUP_DIR: path.resolve(process.env.BACKUP_DIR || path.join(ROOT_DIR, 'data', 'backups')),
   BACKUP_INTERVAL_HOURS: positiveNumber(process.env.BACKUP_INTERVAL_HOURS, 24),
