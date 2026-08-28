@@ -1297,6 +1297,7 @@ function updateGoogleFormsSetDialog(){
 }
 async function openGoogleFormsSetDialog(){
   googleFormsPreview=null;
+  showGoogleFormsSetReview(false);
   document.getElementById('googleFormsSetPreview').textContent='';
   document.getElementById('applyGoogleFormsSetBtn').disabled=true;
   if(!googleFormsConnectionId){ try{ const status=await apiGoogleFormsStatus(); if(status.connected) googleFormsConnectionId=status.connectionId; }catch(_){} }
@@ -1317,9 +1318,14 @@ function googleFormsDraftSet(preview){
   applyGoogleQuestionsToSet(draft,preview);
   return draft;
 }
+function showGoogleFormsSetReview(show){
+  document.getElementById('googleFormsPickerView').classList.toggle('hidden',show);
+  document.getElementById('googleFormsReviewView').classList.toggle('hidden',!show);
+}
 function bindGoogleFormsSetImportEvents(){
   const dialog=document.getElementById('googleFormsSetDialog');
   document.getElementById('closeGoogleFormsSetDialog').addEventListener('click',()=>dialog.close());
+  document.getElementById('backToGoogleFormsPickerBtn').addEventListener('click',()=>showGoogleFormsSetReview(false));
   const reconnectGoogleForms=async()=>{
     try{const result=await apiStartGoogleForms();const popup=window.open(result.authorizationUrl,'googleFormsAuth','width=560,height=700');if(!popup)showToast('กรุณาอนุญาตให้เปิดหน้าต่างเชื่อมต่อ Google');else waitForGoogleFormsConnection(result.requestId);}catch(error){showToast(error.message);}
   };
@@ -1328,7 +1334,7 @@ function bindGoogleFormsSetImportEvents(){
     const output=document.getElementById('googleFormsSetPreview'); const formUrl=document.getElementById('googleFormsSetUrl').value.trim();
     if(!googleFormsConnectionId){showToast('กรุณาเชื่อมต่อ Google ก่อน');return;} if(!formUrl){showToast('กรุณาวางลิงก์ Google Forms');return;}
     output.textContent='กำลังตรวจสอบแบบฟอร์ม...';
-    try{googleFormsPreview=await apiPreviewGoogleForm(googleFormsConnectionId,formUrl);document.getElementById('applyGoogleFormsSetBtn').disabled=!googleFormsPreview.questions.length;output.innerHTML=googleFormsPreviewHtml(googleFormsPreview);}catch(error){googleFormsPreview=null;document.getElementById('applyGoogleFormsSetBtn').disabled=true;output.textContent=error.message;}
+    try{googleFormsPreview=await apiPreviewGoogleForm(googleFormsConnectionId,formUrl);document.getElementById('applyGoogleFormsSetBtn').disabled=!googleFormsPreview.questions.length;output.innerHTML=googleFormsPreviewHtml(googleFormsPreview);showGoogleFormsSetReview(true);}catch(error){googleFormsPreview=null;document.getElementById('applyGoogleFormsSetBtn').disabled=true;output.textContent=error.message;}
   });
   document.getElementById('listGoogleFormsSetBtn').addEventListener('click',async()=>{
     if(!googleFormsConnectionId){showToast('กรุณาเชื่อมต่อ Google ก่อน');return;}
