@@ -485,7 +485,7 @@ async function refreshSelectScreen(){
   document.getElementById('qgridWrap').innerHTML = '<div class="loading-note">กำลังโหลดรายวิชา...</div>';
   document.getElementById('selectScoreWrap').innerHTML = '<div class="loading-note">กำลังโหลดผลสอบ...</div>';
   try{ ELIGIBLE_SETS = await apiGetEligibleSets(); }
-  catch(e){ document.getElementById('qgridWrap').innerHTML = '<div class="empty-note">'+escapeHtml(e.message)+'</div>';selectRefreshInFlight=false;if(refreshButton){refreshButton.disabled=false;refreshButton.textContent='↻ ตรวจสอบข้อสอบใหม่';}return; }
+  catch(e){ document.getElementById('qgridWrap').innerHTML = '<div class="empty-note">'+escapeHtml(e.message)+'</div>';selectRefreshInFlight=false;if(refreshButton){refreshButton.disabled=false;refreshButton.textContent='↻ อัปเดต';}return; }
   ELIGIBLE_SETS_BY_KEY = {}; ELIGIBLE_SETS.forEach(s=>ELIGIBLE_SETS_BY_KEY[s.key]=s);
   try{
     const mine = await apiGetMyResults(app.studentId);
@@ -496,7 +496,7 @@ async function refreshSelectScreen(){
     document.getElementById('selectScoreWrap').innerHTML = `<div class="empty-note">โหลดผลสอบไม่สำเร็จ: ${escapeHtml(e.message)}</div>`;
   }
   renderQGrid();
-  selectRefreshInFlight=false;if(refreshButton){refreshButton.disabled=false;refreshButton.textContent='↻ ตรวจสอบข้อสอบใหม่';}
+  selectRefreshInFlight=false;if(refreshButton){refreshButton.disabled=false;refreshButton.textContent='↻ อัปเดต';}
 }
 document.getElementById('refreshEligibleSetsBtn').addEventListener('click',refreshSelectScreen);
 window.addEventListener('focus',()=>{if(!selectScreen.classList.contains('hidden')&&Date.now()-lastSelectRefreshAt>5000)refreshSelectScreen();});
