@@ -2,6 +2,7 @@ const fs = require('fs');
 const { DATABASE_URL, SQLITE_PATH } = require('../config');
 const { verificationSummary, verificationReport } = require('../score-verification');
 const { readinessSummary } = require('../exam-readiness');
+const { appendAuditLog } = require('../audit-log');
 
 function liveOperationsSnapshot(db, { submissions, jobs, requests }, now = Date.now()) {
   const activeStudentIds = new Set(db.drafts.filter(draft => draft.studentId && new Date(draft.lockUntil || 0).getTime() > now).map(draft => draft.studentId));
@@ -16,7 +17,27 @@ function liveOperationsSnapshot(db, { submissions, jobs, requests }, now = Date.
   };
 }
 
-function registerOperationsRoutes(app, { requireAdmin, readDB, assetStorage, runtimeMetrics, submissionGate, pingDatabase, readinessTimeoutMs, backupService, restoreDrill, enqueueRestoreDrill, systemMonitor, alertManager, jobQueue, sessionStore, scoreEmailService }) {
+function examPulseSnapshot(db, now = Date.now()) {
+  const students = new Map((db.students || []).map(student => [String(student.studentId), student]));
+  const sets = new Map((db.sets || []).map(set => [String(set.key), set]));
+  const rank = { offline: 0, ending: 1, active: 2, ended: 3 };
+  const entries = (db.drafts || []).map(draft => {
+    const savedAt = Date.parse(draft.savedAt || 0), endAt = Date.parse(draft.examEndTime || 0), lastSavedSeconds = Number.isFinite(savedAt) ? Math.max(0, Math.floor((now - savedAt) / 1000)) : null, remainingSeconds = Number.isFinite(endAt) ? Math.floor((endAt - now) / 1000) : null;
+    const student = students.get(String(draft.studentId)) || {}, set = sets.get(String(draft.questionKey)) || {};
+    const status = remainingSeconds !== null && remainingSeconds <= 0 ? 'ended' : lastSavedSeconds !== null && lastSavedSeconds > 90 ? 'offline' : remainingSeconds !== null && remainingSeconds <= 300 ? 'ending' : 'active';
+    return { draftKey: draft.draftKey, studentId: String(draft.studentId || ''), studentName: `${student.firstName || ''} ${student.lastName || ''}`.trim(), classRoom: student.classRoom || '', questionKey: draft.questionKey, examTitle: set.title || draft.questionKey, savedAt: draft.savedAt || null, lastSavedSeconds, remainingSeconds, status, canRescue: status !== 'ended' };
+  }).filter(entry => entry.remainingSeconds === null || entry.remainingSeconds > -15 * 60).sort((a, b) => rank[a.status] - rank[b.status] || (b.lastSavedSeconds || 0) - (a.lastSavedSeconds || 0));
+  return { generatedAt: new Date(now).toISOString(), summary: { active: entries.filter(item => item.status === 'active').length, ending: entries.filter(item => item.status === 'ending').length, offline: entries.filter(item => item.status === 'offline').length }, entries };
+}
+
+function registerOperationsRoutes(app, { requireAdmin, readDB, mutateDB, newId, assetStorage, runtimeMetrics, submissionGate, pingDatabase, readinessTimeoutMs, backupService, restoreDrill, enqueueRestoreDrill, systemMonitor, alertManager, jobQueue, sessionStore, scoreEmailService }) {
+  app.get('/api/admin/exam-pulse', requireAdmin, (req, res) => res.json(examPulseSnapshot(readDB())));
+  app.post('/api/admin/exam-pulse/:draftKey/rescue', requireAdmin, async (req, res) => {
+    const reason = String(req.body?.reason || '').trim(); if (!reason || reason.length > 300) return res.status(400).json({ error: 'invalid_reason', message: 'กรุณาระบุเหตุผลไม่เกิน 300 ตัวอักษร' });
+    let released = false;
+    await mutateDB(db => { const draft = (db.drafts || []).find(item => item.draftKey === req.params.draftKey); if (!draft) return; const before = { deviceId: draft.deviceId || null, lockUntil: draft.lockUntil || null }; draft.lockUntil = new Date().toISOString(); draft.rescuedAt = new Date().toISOString(); appendAuditLog(db, { newId, actorType: 'admin', actorId: 'admin', action: 'exam_pulse_release_device', targetType: 'exam_draft', targetId: draft.draftKey, questionKey: draft.questionKey, before, after: { deviceId: draft.deviceId || null, lockUntil: draft.lockUntil }, reason }); released = true; });
+    if (!released) return res.status(404).json({ error: 'not_found', message: 'ไม่พบสถานะการทำข้อสอบนี้' }); res.json({ ok: true });
+  });
   app.get('/api/admin/operations/score-verification', requireAdmin, (req, res) => {
     const db = readDB();
     res.json({ generatedAt: new Date().toISOString(), summary: verificationSummary(db), issues: verificationReport(db) });
@@ -103,4 +124,4 @@ function registerOperationsRoutes(app, { requireAdmin, readDB, assetStorage, run
   });
 }
 
-module.exports = { registerOperationsRoutes, liveOperationsSnapshot };
+module.exports = { registerOperationsRoutes, liveOperationsSnapshot, examPulseSnapshot };

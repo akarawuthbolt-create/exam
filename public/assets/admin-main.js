@@ -90,6 +90,8 @@ async function apiGetResults(setKey, examType, academicYear, semester){
 async function apiGetQuestionAnalysis(setKey){ return apiFetch('/api/question-analysis?setKey='+encodeURIComponent(setKey), { admin:true }); }
 async function apiGetAuditLogs(setKey){ return apiFetch('/api/audit-logs'+(setKey?('?setKey='+encodeURIComponent(setKey)):''), { admin:true }); }
 async function apiGetOperations(){ return apiFetch('/api/admin/operations', { admin:true }); }
+async function apiGetExamPulse(){ return apiFetch('/api/admin/exam-pulse', { admin:true }); }
+async function apiRescueExamDraft(key,reason){ return apiFetch('/api/admin/exam-pulse/'+encodeURIComponent(key)+'/rescue', { method:'POST', body:{reason}, admin:true }); }
 async function apiGetScoreVerificationIssues(){ return apiFetch('/api/admin/operations/score-verification', { admin:true }); }
 async function apiRunRestoreDrill(){ return apiFetch('/api/admin/operations/restore-drill', { method:'POST', admin:true }); }
 async function apiGetStudents(classRoom){ return apiFetch('/api/students'+(classRoom?('?classRoom='+encodeURIComponent(classRoom)):''), { admin:true }); }
@@ -306,6 +308,7 @@ function refreshCurrentPageData(){
   if(activeTab==='results') return refreshResults();
   if(activeTab==='score-emails') return refreshScoreEmails();
   if(activeTab==='operations') return refreshOperations();
+  if(activeTab==='exam-pulse') return refreshExamPulse();
   return initAdmin();
 }
 
@@ -315,11 +318,12 @@ function openAdminTab(tab, options={}){
     document.querySelectorAll('.admin-tab-btn').forEach(b=>b.classList.remove('active'));
     const activeButton=document.querySelector(`.admin-tab-btn[data-atab="${options.keepSettingsActive?'settings':tab}"]`);
     activeButton?.classList.add('active');
-    ['dashboard','sets','test-links','library','students','teachers','learning-plans','results','score-emails','operations','settings'].forEach(t=> document.getElementById('atab-'+t).classList.toggle('hidden', tab!==t));
+    ['dashboard','sets','test-links','library','students','teachers','learning-plans','results','score-emails','operations','exam-pulse','settings'].forEach(t=> document.getElementById('atab-'+t).classList.toggle('hidden', tab!==t));
     if(tab==='dashboard') refreshDashboard();
     if(tab==='library') renderLibrarySetList();
     if(tab==='test-links') renderTestLinkSelector();
     if(tab==='operations'){ refreshOperations(); startOperationsStream(); } else stopOperationsStream();
+    if(tab==='exam-pulse') startExamPulse(); else stopExamPulse();
     if(tab==='results') refreshResults();
     if(tab==='score-emails') refreshScoreEmails();
     if(tab==='students') refreshStudents();
@@ -416,6 +420,16 @@ async function refreshOperations(){
   }catch(error){ wrap.innerHTML='<div class="empty-note">ตรวจสอบระบบไม่สำเร็จ: '+escapeHtml(error.message)+'</div>'; }
 }
 document.getElementById('refreshOperationsBtn').addEventListener('click', refreshOperations);
+function pulseAge(seconds){if(seconds===null||seconds===undefined)return '-';return seconds<60?`${seconds} วินาที`:`${Math.floor(seconds/60)} นาที`}
+function pulseRemaining(seconds){if(seconds===null||seconds===undefined)return '-';if(seconds<=0)return 'หมดเวลาแล้ว';return `${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')} นาที`}
+let examPulseTimer=null;
+function startExamPulse(){stopExamPulse();refreshExamPulse();examPulseTimer=setInterval(refreshExamPulse,5000);}
+function stopExamPulse(){if(examPulseTimer){clearInterval(examPulseTimer);examPulseTimer=null;}}
+async function refreshExamPulse(){
+  const wrap=document.getElementById('examPulseWrap');wrap.innerHTML='<div class="loading-note">กำลังอ่านสัญญาณการสอบ...</div>';
+  try{const data=await apiGetExamPulse(),summary=data.summary||{},labels={active:['กำลังทำ','pulse-active'],ending:['ใกล้หมดเวลา','pulse-ending'],offline:['ไม่อัปเดต','pulse-offline'],ended:['หมดเวลา','pulse-ended']},entries=data.entries||[];wrap.innerHTML=`<div class="operations-count-grid"><div class="operations-card"><div class="label">กำลังทำข้อสอบ</div><div class="value operations-ok">${Number(summary.active)||0}</div></div><div class="operations-card"><div class="label">ใกล้หมดเวลา</div><div class="value operations-warn">${Number(summary.ending)||0}</div></div><div class="operations-card"><div class="label">ไม่อัปเดตเกิน 90 วินาที</div><div class="value ${summary.offline?'operations-warn':'operations-ok'}">${Number(summary.offline)||0}</div></div></div><div class="panel"><h3>สถานะรายคน</h3><p class="panel-sub">ไม่แสดงคำตอบ ข้อมูลจะอัปเดตเมื่อกดรีเฟช</p>${entries.length?`<div class="pulse-list">${entries.map(item=>{const [label,klass]=labels[item.status]||labels.active;return `<article class="pulse-row"><div><b>${escapeHtml(item.studentName||item.studentId)}</b><p>${escapeHtml(item.studentId)} · ${escapeHtml(item.classRoom||'-')} · ${escapeHtml(item.examTitle)}</p></div><div class="pulse-meta"><span class="pulse-status ${klass}">${label}</span><small>บันทึกล่าสุด ${pulseAge(item.lastSavedSeconds)} · เหลือ ${pulseRemaining(item.remainingSeconds)}</small></div>${item.canRescue?`<button class="btn btn-ghost btn-sm" data-pulse-rescue="${escapeAttr(item.draftKey)}" data-pulse-student="${escapeAttr(item.studentName||item.studentId)}">ปลดล็อกเครื่องใหม่</button>`:''}</article>`;}).join('')}</div>`:'<div class="empty-note">ไม่มีนักเรียนที่กำลังทำข้อสอบ</div>'}</div><div class="operations-meta">อัปเดต ${escapeHtml(new Date(data.generatedAt).toLocaleString('th-TH'))}</div>`;wrap.querySelectorAll('[data-pulse-rescue]').forEach(button=>button.addEventListener('click',async()=>{const who=button.dataset.pulseStudent;if(!confirm(`ปลดล็อกอุปกรณ์ของ ${who} เพื่อให้เข้าจากเครื่องใหม่ได้หรือไม่?\n\nการทำงานนี้ไม่ต่อเวลาสอบและไม่แก้ไขคำตอบ`))return;const reason=prompt('ระบุเหตุผลสำหรับบันทึกการช่วยเหลือ (เช่น เปลี่ยนเครื่อง/อินเทอร์เน็ตหลุด)');if(!reason?.trim())return;button.disabled=true;try{await apiRescueExamDraft(button.dataset.pulseRescue,reason.trim());showToast('ปลดล็อกอุปกรณ์แล้ว นักเรียนสามารถเข้าเครื่องใหม่ได้');refreshExamPulse();}catch(error){showToast(error.message);button.disabled=false;}}));}catch(error){wrap.innerHTML='<div class="empty-note">โหลด Exam Pulse ไม่สำเร็จ: '+escapeHtml(error.message)+'</div>';}
+}
+document.getElementById('refreshExamPulseBtn').addEventListener('click',refreshExamPulse);
 async function runRestoreDrill(){ try{ await apiRunRestoreDrill(); showToast('เพิ่มงาน Restore Drill เข้าคิวแล้ว','success'); setTimeout(refreshOperations,500); }catch(error){ showToast(error.message,'error'); } }
 const scoreSectionLabel={mc:'ปรนัย',matching:'จับคู่',written:'อัตนัย',overall:'รวม'};
 const scoreReasonLabel={score_components_mismatch:'คะแนนรายส่วนหรือคะแนนรวมไม่ตรง',score_mismatch:'คะแนนไม่ตรง',grading_snapshot_corrupt:'ข้อมูลสูตรตรวจขณะส่งข้อสอบถูกแก้ไข',missing_dfd_detail:'รายละเอียด DFD ไม่ครบ',missing_result_or_exam:'ไม่พบผลสอบหรือชุดข้อสอบ',missing_answers:'ไม่พบรายละเอียดคำตอบ'};

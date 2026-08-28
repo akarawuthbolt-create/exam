@@ -7,7 +7,7 @@
 <script src="/assets/admin-boot.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/admin.css?v=20260829-1">
+<link rel="stylesheet" href="/assets/admin.css?v=20260829-2">
 </head>
 <body>
 
@@ -48,6 +48,7 @@
     <button class="admin-tab-btn" data-atab="teachers">อาจารย์ผู้สอน</button>
     <button class="admin-tab-btn" data-atab="results">ผลสอบนักเรียน</button>
     <button class="admin-tab-btn" data-atab="operations">🩺 Operations</button>
+    <button class="admin-tab-btn" data-atab="exam-pulse">⚡ Exam Pulse</button>
     <button class="admin-tab-btn" data-atab="settings">⚙️ ตั้งค่า</button>
   </div>
   <div class="admin-body">
@@ -187,6 +188,7 @@
         <div class="toolbar-row"><div><h2>Operations</h2><p class="sub" style="margin:0;">ตรวจสุขภาพระบบ ฐานข้อมูล ทรัพยากร และกิจกรรมล่าสุด</p></div><button class="btn btn-primary btn-sm" id="refreshOperationsBtn">↻ ตรวจสอบอีกครั้ง</button></div>
         <div id="operationsWrap"><div class="loading-note">กำลังตรวจสอบระบบ...</div></div>
       </div>
+      <div id="atab-exam-pulse" class="hidden"><div class="toolbar-row"><div><h2>⚡ Exam Pulse</h2><p class="sub" style="margin:0;">ติดตามการทำข้อสอบแบบสด และช่วยปลดล็อกอุปกรณ์เมื่อนักเรียนเปลี่ยนเครื่อง</p></div><button class="btn btn-ghost btn-sm" id="refreshExamPulseBtn" type="button">↻ อัปเดต</button></div><div id="examPulseWrap"><div class="loading-note">กำลังโหลดสถานะการสอบ...</div></div></div>
 
       <!-- ============ SETTINGS TAB ============ -->
       <div id="atab-settings" class="hidden">
@@ -304,7 +306,7 @@
   </div>
 </div>
 
-<script src="/assets/admin-main.js?v=20260829-1"></script>
+<script src="/assets/admin-main.js?v=20260829-2"></script>
 <script src="/assets/learning-plan-import.js?v=20260727-1"></script>
 <script src="/assets/admin-learning-plans.js?v=20260727-1"></script>
 </body>
