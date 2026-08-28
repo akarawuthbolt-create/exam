@@ -1,6 +1,5 @@
 const { validateExamSetPayload, sendValidationError } = require('../validation');
 const { checkExamReadiness } = require('../exam-readiness');
-const crypto = require('crypto');
 const { normalizeExamDateTime, haveAllExamSchedulesEnded } = require('../grading');
 
 function normalizeSetSchedule(set) {
@@ -42,11 +41,6 @@ function registerTeacherSetRoutes(app, { readDB, writeDB, requireTeacher, examTy
     set.updatedAt = new Date().toISOString();
     await writeDB(db);
     res.json({ ok: true, quickOpen: set.quickOpen, quickOpenedAt: set.quickOpenedAt });
-  });
-  app.post('/api/teacher/sets/:key/test-link', requireTeacher, async (req, res) => {
-    const db = readDB(), set = owned(db, req.params.key, req.teacherId); if (!set) return res.status(404).json({ error: 'not_found' });
-    const token = crypto.randomBytes(24).toString('base64url'); set.testAccessHash = crypto.createHash('sha256').update(token).digest('hex'); set.updatedAt = new Date().toISOString(); await writeDB(db);
-    res.json({ url: `/test-exam.html?setKey=${encodeURIComponent(set.key)}&token=${encodeURIComponent(token)}` });
   });
   app.post('/api/teacher/sets/:key/open-absentees', requireTeacher, async (req, res) => {
     const db=readDB(),set=owned(db,req.params.key,req.teacherId);if(!set)return res.status(404).json({error:'not_found'});

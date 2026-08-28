@@ -42,6 +42,7 @@
   <div class="admin-tabs">
     <button class="admin-tab-btn" data-atab="dashboard">ภาพรวม</button>
     <button class="admin-tab-btn active" data-atab="sets">ชุดข้อสอบ</button>
+    <button class="admin-tab-btn" data-atab="test-links">🔗 ทดสอบข้อสอบ</button>
     <button class="admin-tab-btn" data-atab="library">🗃️ คลังข้อสอบเก่า</button>
     <button class="admin-tab-btn" data-atab="students">รายชื่อนักเรียน</button>
     <button class="admin-tab-btn" data-atab="teachers">อาจารย์ผู้สอน</button>
@@ -68,6 +69,11 @@
           <div class="editor-actions" style="margin:0;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" id="openExamImportDialogBtn">📥 นำเข้าข้อสอบ</button><button class="btn btn-ghost btn-sm" id="newDfdSetBtn">🧩 สร้างข้อสอบ DFD</button><button class="btn btn-primary btn-sm" id="newSetBtn">+ เพิ่มชุดข้อสอบใหม่</button></div>
         </div>
         <div id="setListWrap"><div class="loading-note">กำลังโหลด...</div></div>
+      </div>
+
+      <div id="atab-test-links" class="hidden">
+        <div class="toolbar-row"><div><h2>ลิงก์ทดสอบข้อสอบ</h2><p class="sub" style="margin:0;">เลือกชุดข้อสอบเพื่อสร้างลิงก์ลับสำหรับทดลองทำข้อสอบ โดยไม่บันทึกคำตอบหรือผลคะแนน</p></div></div>
+        <div class="panel"><div class="field"><label for="testLinkSetSelect">เลือกชุดข้อสอบ</label><select id="testLinkSetSelect" class="filter-select" style="width:100%;max-width:620px;"><option value="">-- เลือกชุดข้อสอบ --</option></select></div><div class="editor-actions" style="justify-content:flex-start;margin-top:14px;"><button id="createTestLinkBtn" type="button" class="btn btn-primary">สร้างและคัดลอกลิงก์ทดสอบ</button></div><p id="testLinkResult" class="panel-sub" style="margin:14px 0 0;"></p></div>
       </div>
 
       <div id="atab-library" class="hidden">

@@ -314,9 +314,10 @@ function openAdminTab(tab, options={}){
     document.querySelectorAll('.admin-tab-btn').forEach(b=>b.classList.remove('active'));
     const activeButton=document.querySelector(`.admin-tab-btn[data-atab="${options.keepSettingsActive?'settings':tab}"]`);
     activeButton?.classList.add('active');
-    ['dashboard','sets','library','students','teachers','learning-plans','results','score-emails','operations','settings'].forEach(t=> document.getElementById('atab-'+t).classList.toggle('hidden', tab!==t));
+    ['dashboard','sets','test-links','library','students','teachers','learning-plans','results','score-emails','operations','settings'].forEach(t=> document.getElementById('atab-'+t).classList.toggle('hidden', tab!==t));
     if(tab==='dashboard') refreshDashboard();
     if(tab==='library') renderLibrarySetList();
+    if(tab==='test-links') renderTestLinkSelector();
     if(tab==='operations'){ refreshOperations(); startOperationsStream(); } else stopOperationsStream();
     if(tab==='results') refreshResults();
     if(tab==='score-emails') refreshScoreEmails();
@@ -588,7 +589,7 @@ function renderSetList(){
         <p style="color:${total===20?'var(--green)':'var(--blue)'};">🎯 คะแนนเต็มรวม: ${total} คะแนน · ${total===20?'ข้อสอบปกติ':'บล็อกคอร์ส — แบ่งลงกลางภาค/ปลายภาค'}</p>
         <p style="color:var(--sub);font-size:11.5px;">${s.publishMode==='auto'?'⚡ ประกาศคะแนนอัตโนมัติ':'🔒 ต้องตรวจก่อนประกาศ'}${s.shuffleQuestions?' · 🔀 สุ่มโจทย์':''}${s.shuffleChoices?' · 🔀 สุ่มตัวเลือก':''}</p>
         <div class="set-actions set-actions-clear">
-          ${!actionsExpired?`<button class="btn ${s.quickOpen?'btn-danger':examFinished?'btn-ghost':'btn-primary'} btn-sm" data-quick-open="${s.key}" data-open="${s.quickOpen?'0':'1'}">${s.quickOpen?'ยกเลิกการเปิดทันที':'เปิดข้อสอบทันที'}</button><button class="btn btn-ghost btn-sm" data-edit="${s.key}">แก้ไขข้อสอบ</button><button class="btn btn-ghost btn-sm" data-test-link="${s.key}">🔗 ลิงก์ทดสอบ</button>`:''}
+          ${!actionsExpired?`<button class="btn ${s.quickOpen?'btn-danger':examFinished?'btn-ghost':'btn-primary'} btn-sm" data-quick-open="${s.key}" data-open="${s.quickOpen?'0':'1'}">${s.quickOpen?'ยกเลิกการเปิดทันที':'เปิดข้อสอบทันที'}</button><button class="btn btn-ghost btn-sm" data-edit="${s.key}">แก้ไขข้อสอบ</button>`:''}
           ${examFinished?`<button class="btn btn-primary btn-sm" data-open-absentees="${s.key}">เปิดสอบเฉพาะผู้ขาดสอบ</button>`:''}
           <button class="btn btn-ghost btn-sm" data-exam-pdf="${s.key}">ดาวน์โหลดข้อสอบ PDF</button>
           <button class="btn btn-ghost btn-sm" data-archive="${s.key}">เก็บข้อสอบเข้าคลัง</button>
@@ -607,7 +608,6 @@ function renderSetList(){
   wrap.querySelectorAll('[data-quick-open]').forEach(b=>b.addEventListener('click', ()=>toggleQuickOpen(b.dataset.quickOpen,b.dataset.open==='1',b)));
   wrap.querySelectorAll('[data-open-absentees]').forEach(b=>b.addEventListener('click', ()=>openForAbsentees(b.dataset.openAbsentees,b)));
   wrap.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', ()=>openEditor(b.dataset.edit)));
-  wrap.querySelectorAll('[data-test-link]').forEach(b=>b.addEventListener('click',()=>createTestLink(b.dataset.testLink)));
   wrap.querySelectorAll('[data-exam-pdf]').forEach(b=>b.addEventListener('click', ()=>downloadExamPdf(b.dataset.examPdf,b)));
   wrap.querySelectorAll('[data-archive]').forEach(b=>b.addEventListener('click', ()=>archiveSet(b.dataset.archive)));
   wrap.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click', ()=>deleteSet(b.dataset.del)));
@@ -615,7 +615,19 @@ function renderSetList(){
     head.nextElementSibling.classList.toggle('collapsed');
   }));
 }
-async function createTestLink(key){ try{const result=await apiCreateTestLink(key),url=location.origin+result.url;await navigator.clipboard.writeText(url);showToast('สร้างและคัดลอกลิงก์ทดสอบแล้ว — ลิงก์เก่าถูกยกเลิก');}catch(error){showToast(error.message);} }
+function renderTestLinkSelector(){
+  const select=document.getElementById('testLinkSetSelect'); if(!select)return;
+  const selected=select.value;
+  const sets=ADMIN_SETS.filter(set=>!set.archived&&!set.deletedAt).slice().sort((a,b)=>String(a.courseName||a.title).localeCompare(String(b.courseName||b.title),'th'));
+  select.innerHTML='<option value="">-- เลือกชุดข้อสอบ --</option>'+sets.map(set=>`<option value="${escapeAttr(set.key)}">${escapeHtml(set.courseName||set.title)} — ${escapeHtml(set.title)} (${escapeHtml(set.examType||'-')})</option>`).join('');
+  select.value=sets.some(set=>set.key===selected)?selected:'';
+}
+async function createSelectedTestLink(){
+  const select=document.getElementById('testLinkSetSelect'),resultEl=document.getElementById('testLinkResult'),key=select?.value;
+  if(!key){showToast('กรุณาเลือกชุดข้อสอบ');return;}
+  const button=document.getElementById('createTestLinkBtn'); button.disabled=true;
+  try{const result=await apiCreateTestLink(key),url=location.origin+result.url;await navigator.clipboard.writeText(url);resultEl.innerHTML=`สร้างลิงก์แล้ว: <a href="${escapeAttr(url)}" target="_blank" rel="noopener">เปิดหน้าทดสอบข้อสอบ</a>`;showToast('สร้างและคัดลอกลิงก์ทดสอบแล้ว — ลิงก์เก่าถูกยกเลิก');}catch(error){showToast(error.message);}finally{button.disabled=false;}
+}
 async function openForAbsentees(key,button){const value=prompt('เปิดข้อสอบให้ผู้ขาดสอบกี่ชั่วโมง? (1-72)','24');if(value===null)return;const hours=Number(value);if(!Number.isFinite(hours)||hours<1||hours>72){showToast('กรุณาระบุ 1-72 ชั่วโมง');return;}button.disabled=true;try{const result=await apiOpenAbsentees(key,hours);ADMIN_SETS=await apiGetAdminSets();renderSetList();showToast(result.count?`เปิดข้อสอบให้ผู้ขาดสอบ ${result.count} คนแล้ว`:'ไม่พบผู้ขาดสอบที่ต้องเปิดสิทธิ์');}catch(error){button.disabled=false;showToast(error.message);}}
 async function toggleQuickOpen(key,open,button){
   if(!open && !confirm('ยกเลิกการเปิดข้อสอบด่วน และกลับไปใช้ตารางสอบเดิม?')) return;
@@ -693,6 +705,7 @@ async function deleteSet(key){
   catch(e){ showToast(e.message); }
 }
 document.getElementById('newSetBtn').addEventListener('click', ()=> openEditor(null));
+document.getElementById('createTestLinkBtn').addEventListener('click', createSelectedTestLink);
 function dfdSetDraft(){ return { ...blankSet(), key:'object_analysis_design_dfd', title:'การวิเคราะห์และออกแบบเชิงวัตถุ: Data Flow Diagram', courseName:'การวิเคราะห์และออกแบบเชิงวัตถุ', tagline:'DFD Drawing Examination', desc:'ข้อสอบวาด Data Flow Diagram (Level 0, 1 และ 2)', delivery:'object-analysis-design', examType:'ปลายภาค', shuffleQuestions:false, shuffleChoices:false }; }
 document.getElementById('newDfdSetBtn').addEventListener('click', ()=>{ const existing=ADMIN_SETS.find(set=>set.key==='object_analysis_design_dfd'); openEditor(existing?.key||null, existing?null:dfdSetDraft()); });
 const examImportChoiceDialog=document.getElementById('examImportChoiceDialog');
