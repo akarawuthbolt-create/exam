@@ -415,6 +415,12 @@ test('teacher set management requires a teacher session', async () => {
   assert.equal(JSON.parse(response.body).error, 'unauthorized');
 });
 
+test('teacher question file import requires a teacher session', async () => {
+  const response = await request('/api/teacher/question-file/preview', { method: 'POST' });
+  assert.equal(response.status, 401);
+  assert.equal(JSON.parse(response.body).error, 'unauthorized');
+});
+
 test('result deletion requires administrator authentication', async () => {
   const response = await request('/api/results/does-not-matter', { method: 'DELETE' });
   assert.equal(response.status, 401);
