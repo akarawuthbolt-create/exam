@@ -32,7 +32,7 @@ function startAuth(config, role) {
     purgeExpired(oauthStates);
     const state = token();
     oauthStates.set(state, { role, ownerId: role === 'teacher' ? req.teacherId : null, expiresAt: Date.now() + OAUTH_STATE_TTL_MS });
-    const params = new URLSearchParams({ client_id: config.clientId, redirect_uri: config.redirectUri, response_type: 'code', scope: 'https://www.googleapis.com/auth/forms.body.readonly', access_type: 'offline', state, prompt: 'consent' });
+    const params = new URLSearchParams({ client_id: config.clientId, redirect_uri: config.redirectUri, response_type: 'code', scope: 'https://www.googleapis.com/auth/forms.body.readonly https://www.googleapis.com/auth/drive.metadata.readonly', access_type: 'offline', state, prompt: 'consent' });
     res.json({ authorizationUrl: `https://accounts.google.com/o/oauth2/v2/auth?${params}`, requestId: state });
   };
 }
@@ -71,6 +71,20 @@ function previewForm(role, config, readDB, mutateDB) {
     try {
       res.json((await fetchParsedForm(req, role, config, readDB, mutateDB)).parsed);
     } catch (error) { res.status(error.status || 502).json({ error: error.code || 'google_form_fetch_failed', message: error.status ? error.message : 'เชื่อมต่อ Google Forms ไม่สำเร็จ' }); }
+  };
+}
+
+function listForms(role, config, readDB, mutateDB) {
+  return async (req, res) => {
+    try {
+      const connection = await connectionFor(req, role, config, readDB, mutateDB);
+      if (!connection) throw Object.assign(new Error('กรุณาเชื่อมต่อ Google ก่อนนำเข้า'), { status: 401, code: 'google_connection_required' });
+      const params = new URLSearchParams({ q: "mimeType = 'application/vnd.google-apps.form' and trashed = false", orderBy: 'modifiedTime desc', pageSize: '100', fields: 'files(id,name,modifiedTime),nextPageToken' });
+      const response = await fetch(`https://www.googleapis.com/drive/v3/files?${params}`, { headers: { Authorization: `Bearer ${connection.accessToken}` } });
+      if (!response.ok) throw Object.assign(new Error(response.status === 403 ? 'กรุณาเชื่อมต่อ Google ใหม่เพื่ออนุญาตการแสดงรายการ Google Forms' : 'ไม่สามารถอ่านรายการ Google Forms ได้'), { status: response.status === 403 ? 403 : 502, code: 'google_forms_list_failed' });
+      const payload = await response.json();
+      res.json({ forms: (payload.files || []).map(file => ({ id: file.id, title: file.name || 'ไม่มีชื่อ', modifiedTime: file.modifiedTime || null, editUrl: `https://docs.google.com/forms/d/${encodeURIComponent(file.id)}/edit` })) });
+    } catch (error) { res.status(error.status || 502).json({ error: error.code || 'google_forms_list_failed', message: error.status ? error.message : 'เชื่อมต่อ Google Forms ไม่สำเร็จ' }); }
   };
 }
 
@@ -123,10 +137,12 @@ function registerGoogleFormsRoutes(app, { requireAdmin, requireTeacher, googleFo
   const closeScript = res => `<script nonce="${res.locals.cspNonce}">window.close()</script>`;
   app.post('/api/admin/google-forms/start', requireAdmin, startAuth(googleFormsConfig, 'admin'));
   app.post('/api/admin/google-forms/preview', requireAdmin, previewForm('admin', googleFormsConfig, readDB, mutateDB));
+  app.get('/api/admin/google-forms/list', requireAdmin, listForms('admin', googleFormsConfig, readDB, mutateDB));
   app.post('/api/admin/google-forms/import', requireAdmin, importForm('admin', assetStorage, googleFormsConfig, readDB, mutateDB));
   app.get('/api/admin/google-forms/status', requireAdmin, connectionStatus('admin', googleFormsConfig, readDB, mutateDB));
   app.post('/api/teacher/google-forms/start', requireTeacher, startAuth(googleFormsConfig, 'teacher'));
   app.post('/api/teacher/google-forms/preview', requireTeacher, previewForm('teacher', googleFormsConfig, readDB, mutateDB));
+  app.get('/api/teacher/google-forms/list', requireTeacher, listForms('teacher', googleFormsConfig, readDB, mutateDB));
   app.post('/api/teacher/google-forms/import', requireTeacher, importForm('teacher', assetStorage, googleFormsConfig, readDB, mutateDB));
   app.get('/api/teacher/google-forms/status', requireTeacher, connectionStatus('teacher', googleFormsConfig, readDB, mutateDB));
   app.get('/api/google-forms/callback', async (req, res) => {

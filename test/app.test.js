@@ -421,6 +421,15 @@ test('teacher question file import requires a teacher session', async () => {
   assert.equal(JSON.parse(response.body).error, 'unauthorized');
 });
 
+test('Google Forms list requires the staff role', async () => {
+  const [admin, teacher] = await Promise.all([
+    request('/api/admin/google-forms/list'),
+    request('/api/teacher/google-forms/list')
+  ]);
+  assert.equal(admin.status, 401);
+  assert.equal(teacher.status, 401);
+});
+
 test('result deletion requires administrator authentication', async () => {
   const response = await request('/api/results/does-not-matter', { method: 'DELETE' });
   assert.equal(response.status, 401);

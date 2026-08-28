@@ -58,6 +58,7 @@ async function apiUploadQuestionAsset(file){
 }
 async function apiStartGoogleForms(){ return apiFetch('/api/teacher/google-forms/start', { method:'POST', auth:true }); }
 async function apiPreviewGoogleForm(connectionId, formUrl){ return apiFetch('/api/teacher/google-forms/preview', { method:'POST', body:{formUrl}, headers:{'x-google-forms-connection':connectionId}, auth:true }); }
+async function apiListGoogleForms(){ return apiFetch('/api/teacher/google-forms/list', { headers:{'x-google-forms-connection':googleFormsConnectionId}, auth:true }); }
 async function apiImportGoogleForm(connectionId, formUrl){ return apiFetch('/api/teacher/google-forms/import', { method:'POST', body:{formUrl}, headers:{'x-google-forms-connection':connectionId}, auth:true }); }
 async function apiGoogleFormsStatus(requestId=''){ return apiFetch('/api/teacher/google-forms/status?requestId='+encodeURIComponent(requestId), { auth:true }); }
 async function apiPreviewQuestionFile(file){
@@ -991,6 +992,12 @@ function bindGoogleFormsSetImportEvents(){
     output.textContent='กำลังตรวจสอบแบบฟอร์ม...';
     try{googleFormsPreview=await apiPreviewGoogleForm(googleFormsConnectionId,formUrl);document.getElementById('applyGoogleFormsSetBtn').disabled=!googleFormsPreview.questions.length;output.innerHTML=googleFormsPreviewHtml(googleFormsPreview);}catch(error){googleFormsPreview=null;document.getElementById('applyGoogleFormsSetBtn').disabled=true;output.textContent=error.message;}
   });
+  document.getElementById('listGoogleFormsSetBtn').addEventListener('click',async()=>{
+    if(!googleFormsConnectionId){showToast('กรุณาเชื่อมต่อ Google ก่อน');return;}
+    const output=document.getElementById('googleFormsListPreview');output.textContent='กำลังโหลดรายการ Google Forms...';
+    try{const result=await apiListGoogleForms(),forms=result.forms||[];output.innerHTML=forms.length?forms.map(form=>`<button type="button" class="btn btn-ghost btn-sm" style="display:block;width:100%;text-align:left;margin:6px 0;" data-google-form-url="${escapeAttr(form.editUrl)}">📝 ${escapeHtml(form.title)}<small style="display:block;color:var(--sub);margin-top:3px;">แก้ไขล่าสุด ${form.modifiedTime?escapeHtml(new Date(form.modifiedTime).toLocaleString('th-TH')):'-'}</small></button>`).join(''):'ไม่พบ Google Forms ในบัญชีนี้';}catch(error){output.textContent=error.message;}
+  });
+  document.getElementById('googleFormsListPreview').addEventListener('click',event=>{const button=event.target.closest('[data-google-form-url]');if(!button)return;document.getElementById('googleFormsSetUrl').value=button.dataset.googleFormUrl;document.getElementById('previewGoogleFormsSetBtn').click();});
   document.getElementById('applyGoogleFormsSetBtn').addEventListener('click',async()=>{
     if(!googleFormsPreview?.questions.length)return;
     const button=document.getElementById('applyGoogleFormsSetBtn'),formUrl=document.getElementById('googleFormsSetUrl').value.trim();button.disabled=true;button.textContent='กำลังนำเข้าและเก็บรูป...';
