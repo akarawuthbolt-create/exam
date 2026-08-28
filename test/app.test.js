@@ -101,7 +101,7 @@ test('frontend pages load extracted CSS and JavaScript assets', async () => {
   assert.doesNotMatch(admin.body, /<style>/);
   const student = await request('/student');
   assert.equal(student.status, 200);
-  assert.match(student.body, /id="selectScoreWrap"/);
+  assert.doesNotMatch(student.body, /id="selectScoreWrap"/);
   assert.match(student.body, /id="studentIdentityConfirmModal"/);
   assert.match(student.body, /id="pinRecoveryScreen"/);
   assert.doesNotMatch(student.body, /id="pinSetupScreen"/);

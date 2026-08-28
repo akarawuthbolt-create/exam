@@ -300,6 +300,7 @@ document.getElementById('goLoginBtn').addEventListener('click', ()=>{
 document.getElementById('backToStartBtn').addEventListener('click', ()=>{ hideAllTopScreens(); startScreen.classList.remove('hidden'); });
 document.getElementById('backToLoginBtn').addEventListener('click', async ()=>{
   if(document.fullscreenElement) document.exitFullscreen?.().catch(()=>{});
+  stopSelectAutoRefresh();
   const token = app.studentToken;
   try{ if(token) await apiLogoutStudent(); }catch(e){}
   sessionStorage.removeItem('examStudentToken');
@@ -475,32 +476,33 @@ async function proceedToSelectScreen(){
   hideAllTopScreens(); selectScreen.classList.remove('hidden');
   document.getElementById('identityBox').innerHTML = `ยืนยันตัวตน: <b>${escapeHtml(app.studentName)}</b> &nbsp;|&nbsp; รหัส ${escapeHtml(app.studentId)} &nbsp;|&nbsp; ห้อง ${escapeHtml(app.classRoom)}`;
   await refreshSelectScreen();
+  startSelectAutoRefresh();
 }
 let pickedKey = null;
 let COMPLETED_KEYS = new Set();
-let selectRefreshInFlight=false,lastSelectRefreshAt=0;
-async function refreshSelectScreen(){
+let selectRefreshInFlight=false,lastSelectRefreshAt=0,selectAutoRefreshTimer=null;
+function startSelectAutoRefresh(){
+  if(selectAutoRefreshTimer) clearInterval(selectAutoRefreshTimer);
+  selectAutoRefreshTimer=setInterval(()=>{if(!selectScreen.classList.contains('hidden')) refreshSelectScreen({showLoading:false});},15000);
+}
+function stopSelectAutoRefresh(){if(selectAutoRefreshTimer){clearInterval(selectAutoRefreshTimer);selectAutoRefreshTimer=null;}}
+async function refreshSelectScreen({showLoading=true}={}){
   if(selectRefreshInFlight)return;
   selectRefreshInFlight=true;lastSelectRefreshAt=Date.now();
-  const refreshButton=document.getElementById('refreshEligibleSetsBtn');if(refreshButton){refreshButton.disabled=true;refreshButton.textContent='กำลังตรวจสอบ...';}
-  document.getElementById('qgridWrap').innerHTML = '<div class="loading-note">กำลังโหลดรายวิชา...</div>';
-  document.getElementById('selectScoreWrap').innerHTML = '<div class="loading-note">กำลังโหลดผลสอบ...</div>';
+  if(showLoading) document.getElementById('qgridWrap').innerHTML = '<div class="loading-note">กำลังโหลดรายวิชา...</div>';
   try{ ELIGIBLE_SETS = await apiGetEligibleSets(); }
-  catch(e){ document.getElementById('qgridWrap').innerHTML = '<div class="empty-note">'+escapeHtml(e.message)+'</div>';selectRefreshInFlight=false;if(refreshButton){refreshButton.disabled=false;refreshButton.textContent='↻ อัปเดต';}return; }
+  catch(e){ if(showLoading) document.getElementById('qgridWrap').innerHTML = '<div class="empty-note">'+escapeHtml(e.message)+'</div>';selectRefreshInFlight=false;return; }
   ELIGIBLE_SETS_BY_KEY = {}; ELIGIBLE_SETS.forEach(s=>ELIGIBLE_SETS_BY_KEY[s.key]=s);
   try{
     const mine = await apiGetMyResults(app.studentId);
     COMPLETED_KEYS = new Set(mine.filter(r=>r.attemptType!=='resit').map(r=>r.questionKey));
-    document.getElementById('selectScoreWrap').innerHTML = `<div class="panel" style="margin-top:22px;"><h2 style="margin-bottom:4px;">ผลสอบของฉัน</h2><p class="lead" style="margin:0 0 10px;">คะแนนจะแสดงเมื่ออาจารย์ประกาศผลแล้ว</p>${scoreResultsHtml(mine)}</div>`;
   }catch(e){
     COMPLETED_KEYS = new Set();
-    document.getElementById('selectScoreWrap').innerHTML = `<div class="empty-note">โหลดผลสอบไม่สำเร็จ: ${escapeHtml(e.message)}</div>`;
   }
   renderQGrid();
-  selectRefreshInFlight=false;if(refreshButton){refreshButton.disabled=false;refreshButton.textContent='↻ อัปเดต';}
+  selectRefreshInFlight=false;
 }
-document.getElementById('refreshEligibleSetsBtn').addEventListener('click',refreshSelectScreen);
-window.addEventListener('focus',()=>{if(!selectScreen.classList.contains('hidden')&&Date.now()-lastSelectRefreshAt>5000)refreshSelectScreen();});
+window.addEventListener('focus',()=>{if(!selectScreen.classList.contains('hidden')&&Date.now()-lastSelectRefreshAt>5000)refreshSelectScreen({showLoading:false});});
 let lateCodeVerified = {}; // {questionKey: code} once verified this session
 async function apiVerifyLateCode(key, code){ return apiFetch('/api/sets/'+encodeURIComponent(key)+'/verify-late-code', { method:'POST', body:{code} }); }
 
