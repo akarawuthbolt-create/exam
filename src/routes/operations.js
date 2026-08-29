@@ -10,8 +10,10 @@ function serverLoadSnapshot({ submissions = {}, jobs = {}, requests = {} }, memo
   const submissionQueuePercent = submissions.maxPending ? (submissions.pending / submissions.maxPending) * 100 : 0;
   const jobQueuePercent = jobs.maxPending ? (jobs.pending / jobs.maxPending) * 100 : 0;
   const inFlightPercent = Math.min(100, (requests.inFlight / 50) * 100);
-  const percent = Math.round(Math.min(100, heapPercent * .25 + submissionPercent * .3 + submissionQueuePercent * .2 + jobQueuePercent * .15 + inFlightPercent * .1));
-  return { percent, level: percent >= 85 ? 'critical' : percent >= 60 ? 'warning' : 'normal', components: { heapPercent: Math.round(heapPercent), submissionPercent: Math.round(submissionPercent), submissionQueuePercent: Math.round(submissionQueuePercent), jobQueuePercent: Math.round(jobQueuePercent), inFlightPercent: Math.round(inFlightPercent) } };
+  const eventLoopPercent = Math.min(100, (Number(requests.eventLoopDelayMs) / 500) * 100);
+  const weightedPercent = heapPercent * .2 + submissionPercent * .3 + submissionQueuePercent * .2 + jobQueuePercent * .15 + inFlightPercent * .05 + eventLoopPercent * .1;
+  const percent = Math.round(Math.min(100, Math.max(weightedPercent, eventLoopPercent)));
+  return { percent, level: percent >= 85 ? 'critical' : percent >= 60 ? 'warning' : 'normal', components: { heapPercent: Math.round(heapPercent), submissionPercent: Math.round(submissionPercent), submissionQueuePercent: Math.round(submissionQueuePercent), jobQueuePercent: Math.round(jobQueuePercent), inFlightPercent: Math.round(inFlightPercent), eventLoopDelayMs: Math.round(Number(requests.eventLoopDelayMs) || 0) } };
 }
 
 function liveOperationsSnapshot(db, { submissions, jobs, requests }, now = Date.now()) {

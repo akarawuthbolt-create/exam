@@ -35,10 +35,18 @@ function percentile(values, p) {
   return sorted[Math.min(sorted.length - 1, Math.ceil((p / 100) * sorted.length) - 1)];
 }
 
-async function phase(name, tasks) {
+async function phase(name, tasks, sampleServerLoad) {
   const started = performance.now();
   const results = new Array(tasks.length);
   let cursor = 0;
+  const loadSamples = [];
+  let sampling = true;
+  const sample = async () => {
+    try { const snapshot = await sampleServerLoad(); if (snapshot) loadSamples.push(snapshot); } catch {}
+  };
+  await sample();
+  const sampler = setInterval(() => { if (sampling) void sample(); }, 250);
+  sampler.unref?.();
   async function worker() {
     while (cursor < tasks.length) {
       const index = cursor++;
@@ -46,12 +54,15 @@ async function phase(name, tasks) {
     }
   }
   await Promise.all(Array.from({ length: Math.min(REQUEST_CONCURRENCY, tasks.length) }, worker));
+  sampling = false;
+  clearInterval(sampler);
   const elapsedMs = performance.now() - started;
   const latencies = results.map(result => result.ms);
   const statuses = {};
   const errors = {};
   for (const result of results) statuses[result.status] = (statuses[result.status] || 0) + 1;
   for (const result of results) if (result.error) errors[result.error] = (errors[result.error] || 0) + 1;
+  const peakLoad = loadSamples.reduce((peak, sample) => !peak || sample.percent > peak.percent ? sample : peak, null);
   return {
     name,
     requests: results.length,
@@ -64,7 +75,8 @@ async function phase(name, tasks) {
       max: +Math.max(...latencies).toFixed(1)
     },
     statuses,
-    ...(Object.keys(errors).length ? { errors } : {})
+    ...(Object.keys(errors).length ? { errors } : {}),
+    serverLoad: peakLoad ? { samples: loadSamples.length, peakPercent: peakLoad.percent, peakLevel: peakLoad.level, peakComponents: peakLoad.components } : null
   };
 }
 
@@ -93,6 +105,13 @@ async function main() {
     const instance = app.listen(0, '127.0.0.1', () => resolve(instance));
   });
   const baseUrl = `http://127.0.0.1:${server.address().port}`;
+  const adminKey = localEnv.ADMIN_KEY || 'changeme123';
+  const sampleServerLoad = async () => {
+    const response = await fetch(baseUrl + '/api/admin/operations', { headers: { 'x-admin-key': adminKey } });
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.serverLoad || null;
+  };
   const call = (index, route, options = {}) => async () => {
     const started = performance.now();
     const retries = Number(options.retries || 0);
@@ -114,24 +133,24 @@ async function main() {
   const report = [];
   report.push(await phase('session_and_exam_reads', students.flatMap((_, i) => [
     call(i, '/api/student/session'), call(i, '/api/sets')
-  ])));
+  ]), sampleServerLoad));
   report.push(await phase('claim_exam_device', students.map((_, i) => call(i, '/api/exam-drafts/load_exam/claim', {
     method: 'POST', body: JSON.stringify({ deviceId: `device_load_${String(i).padStart(12, '0')}` })
-  }))));
+  })), sampleServerLoad));
   for (let revision = 0; revision < AUTOSAVES; revision++) {
     report.push(await phase(`autosave_${revision + 1}`, students.map((_, i) => call(i, '/api/exam-drafts/load_exam', {
       method: 'PUT', body: JSON.stringify({ draft: {
         deviceId: `device_load_${String(i).padStart(12, '0')}`, revision,
         examEndTime: new Date(now + 3600000).toISOString(), draftAnswers: { mc: { mc1: 1 }, matching: {}, written: { w1: 'test' } }
       } })
-    }))));
+    })), sampleServerLoad));
   }
   report.push(await phase('final_submission', students.map((_, i) => call(i, '/api/results', {
     method: 'POST', retries: 2, body: JSON.stringify({
       questionKey: 'load_exam', deviceId: `device_load_${String(i).padStart(12, '0')}`,
       answers: { mc: { mc1: 1 }, matching: {}, written: { w1: 'test' } }
     })
-  }))));
+  })), sampleServerLoad));
 
   const memory = process.memoryUsage();
   const finalDatabase = readDB();
