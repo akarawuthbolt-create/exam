@@ -1022,6 +1022,7 @@ function bindQuestionFileImportEvents(){
   const dialog=document.getElementById('questionFileImportDialog'),input=document.getElementById('questionImportFile'),output=document.getElementById('questionFilePreview'),apply=document.getElementById('applyQuestionFileBtn');
   document.getElementById('chooseQuestionFileImportBtn').addEventListener('click',()=>{examImportChoiceDialog.close();questionFilePreview=null;input.value='';output.textContent='';apply.disabled=true;dialog.showModal();});
   document.getElementById('closeQuestionFileImportDialog').addEventListener('click',()=>dialog.close());
+  document.getElementById('backToExamImportChoiceBtn').addEventListener('click',()=>{dialog.close();examImportChoiceDialog.showModal();});
   document.getElementById('previewQuestionFileBtn').addEventListener('click',async()=>{const file=input.files?.[0];if(!file){showToast('กรุณาเลือกไฟล์ข้อสอบ');return;}output.textContent='กำลังอ่านข้อความและตรวจสอบรูปแบบ...';apply.disabled=true;try{questionFilePreview=await apiPreviewQuestionFile(file);output.innerHTML=questionFilePreviewHtml(questionFilePreview);apply.disabled=!questionFilePreview.questions.length;}catch(error){questionFilePreview=null;output.textContent=error.message;}});
   apply.addEventListener('click',()=>{if(!questionFilePreview?.questions.length)return;const draft=googleFormsDraftSet(questionFilePreview);dialog.close();openEditor(null,draft);showToast(`นำเข้าข้อสอบ ${questionFilePreview.questions.length} ข้อแล้ว กรุณาตรวจเฉลยและคะแนนก่อนบันทึก`);});
 }
