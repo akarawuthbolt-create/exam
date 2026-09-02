@@ -550,6 +550,11 @@ document.getElementById('downloadTeacherTemplateBtn').addEventListener('click',e
   const link=document.createElement('a');link.href='/api/teachers/import-template.xlsx';
   fetch(link.href,{headers:{'x-admin-key':adminKey||''}}).then(async response=>{if(!response.ok)throw new Error('ดาวน์โหลดไฟล์ตัวอย่างไม่สำเร็จ');const blob=await response.blob();link.href=URL.createObjectURL(blob);link.download='teacher-account-template.xlsx';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);}).catch(error=>showToast(error.message));
 });
+document.getElementById('downloadStudentTemplateBtn')?.addEventListener('click',event=>{
+  event.preventDefault();
+  const link=document.createElement('a');link.href='/api/students/import-template.xlsx';
+  fetch(link.href,{headers:{'x-admin-key':adminKey||''}}).then(async response=>{if(!response.ok)throw new Error('ดาวน์โหลดไฟล์ตัวอย่างไม่สำเร็จ');const blob=await response.blob();link.href=URL.createObjectURL(blob);link.download='student-import-template.xlsx';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);}).catch(error=>showToast(error.message));
+});
 document.getElementById('importTeachersExcelBtn').addEventListener('click',async()=>{
   const input=document.getElementById('teacherExcelFile'),file=input.files?.[0],button=document.getElementById('importTeachersExcelBtn'),report=document.getElementById('teacherImportReport');
   if(!file){showToast('กรุณาเลือกไฟล์ Excel');return;}

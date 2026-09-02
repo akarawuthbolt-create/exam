@@ -29,6 +29,45 @@ function registerStudentRoutes(app, { readDB, readDBView, writeDB, mutateDB, mut
   const educationRank = room => /\.\s*\d+\s*\//.test(String(room || '')) ? 0 : 1;
   const byRoomThenStudentId = (a, b) => educationRank(a.classRoom) - educationRank(b.classRoom) || String(a.classRoom ?? '').localeCompare(String(b.classRoom ?? ''), 'th', { numeric: true }) || String(a.studentId ?? '').localeCompare(String(b.studentId ?? ''), 'th', { numeric: true });
 
+  app.get('/api/students/import-template.xlsx', requireAdmin, async (req, res) => {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Exam System';
+    const sheet = workbook.addWorksheet('รายชื่อนักเรียน');
+    const headers = ['รหัสนักเรียน', 'ชื่อ', 'นามสกุล', 'ห้อง', 'รอบเรียน'];
+    sheet.addRow(headers);
+    sheet.addRow(['10001', 'สมชาย', 'ใจดี', 'ม.3/1', 'เช้า']);
+    sheet.addRow(['10002', 'สมหญิง', 'รักเรียน', 'ม.3/1', '']);
+    sheet.columns = [{ width: 16 }, { width: 18 }, { width: 18 }, { width: 14 }, { width: 12 }];
+    sheet.views = [{ state: 'frozen', ySplit: 1 }];
+    sheet.autoFilter = 'A1:E1';
+    sheet.getRow(1).eachCell(cell => {
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+      cell.alignment = { vertical: 'middle', horizontal: 'center' };
+    });
+    sheet.getRow(1).height = 24;
+
+    const help = workbook.addWorksheet('คำอธิบาย');
+    help.addRows([
+      ['คอลัมน์', 'จำเป็น', 'รูปแบบข้อมูล'],
+      ['รหัสนักเรียน', 'จำเป็น', 'ตัวเลข/ตัวอักษรไม่ซ้ำกัน ใช้ล็อกอินเข้าสอบ — รหัสซ้ำจะอัปเดตข้อมูลเดิมแทนการเพิ่มซ้ำโดยไม่ลบ PIN'],
+      ['ชื่อ', 'จำเป็น', 'ชื่อนักเรียน'],
+      ['นามสกุล', 'จำเป็น', 'นามสกุลนักเรียน'],
+      ['ห้อง', 'จำเป็น', 'เช่น ม.3/1, ปวช.1/2'],
+      ['รอบเรียน', 'ไม่บังคับ', 'เช้า หรือ บ่าย — เว้นว่างได้หากยังไม่กำหนด'],
+      ['', '', 'กรอกข้อมูลต่อจากแถวตัวอย่างในชีต “รายชื่อนักเรียน” หรือลบแถวตัวอย่างก่อนนำเข้า']
+    ]);
+    help.columns = [{ width: 16 }, { width: 14 }, { width: 78 }];
+    help.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    help.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F766E' } };
+    help.getColumn(3).alignment = { wrapText: true, vertical: 'top' };
+
+    const output = await workbookBuffer(workbook);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="student-import-template.xlsx"');
+    res.send(output);
+  });
+
   app.get('/api/students/export.xlsx', requireAdmin, async (req, res) => {
     const rows = readDB().students
       .sort(byRoomThenStudentId)
