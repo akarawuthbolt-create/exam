@@ -600,6 +600,7 @@
     'ส่งออกไฟล์รวมคะแนนไม่สำเร็จ': 'Failed to export the combined score file',
     'กำลังสร้าง PDF...': 'Generating PDF...',
     'สร้าง PDF ไม่สำเร็จ': 'Failed to generate PDF',
+    '🧩 แก้ไขชุดข้อสอบ': '🧩 Edit exam set',
   };
 
   var lang = 'th';

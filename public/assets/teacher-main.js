@@ -481,7 +481,7 @@ function openEditor(key, draftSet=null){
   wizardStep = 'info';
   adminScreen.classList.add('hidden');
   document.getElementById('setWizardScreen').classList.remove('hidden');
-  document.getElementById('wizardTitleBar').textContent = editingIsNew ? '🧩 สร้างชุดข้อสอบใหม่' : ('🧩 แก้ไขชุดข้อสอบ: ' + (editingSet.title||''));
+  { const tr9 = window.I18N ? window.I18N.t : (s=>s); document.getElementById('wizardTitleBar').textContent = editingIsNew ? tr9('🧩 สร้างชุดข้อสอบใหม่') : (tr9('🧩 แก้ไขชุดข้อสอบ')+': ' + (editingSet.title||'')); }
   renderWizard();
   // Let the browser paint the editor before requesting values used by later steps.
   const targetSet = editingSet;
@@ -1843,7 +1843,11 @@ document.getElementById('absenceSummaryBtn').addEventListener('click',async()=>{
 
 document.addEventListener('i18nchange', ()=>{
   if(!adminScreen.classList.contains('hidden')) refreshCurrentPageData();
-  if(editingSet && !document.getElementById('setWizardScreen').classList.contains('hidden')) renderWizard();
+  if(editingSet && !document.getElementById('setWizardScreen').classList.contains('hidden')){
+    const tr9 = window.I18N ? window.I18N.t : (s=>s);
+    document.getElementById('wizardTitleBar').textContent = editingIsNew ? tr9('🧩 สร้างชุดข้อสอบใหม่') : (tr9('🧩 แก้ไขชุดข้อสอบ')+': ' + (editingSet.title||''));
+    renderWizard();
+  }
 });
 
 })();
