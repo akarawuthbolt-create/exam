@@ -1880,13 +1880,12 @@ async function updateRosterClassOptions(reset=true){
   const select=document.getElementById('rosterClassSelect'); if(!select) return;
   if(reset){selectedRosterClasses=[];renderSelectedRosterClasses();}
   select.disabled=true;
-  if(!set){select.innerHTML='<option value="">เลือกห้อง</option>';document.getElementById('addRosterClassBtn').disabled=true;return;}
+  if(!set){select.innerHTML='<option value="">เลือกห้อง</option>';return;}
   let source=set.assignedClasses||[];
   if(!source.length){try{source=await apiGetClasses();}catch(error){showToast(error.message);source=[];}}
   const classes=[...new Set(source)].sort((a,b)=>String(a).localeCompare(String(b),'th',{numeric:true}));
   select.innerHTML='<option value="">เลือกห้อง</option>'+classes.filter(room=>!selectedRosterClasses.includes(room)).map(room=>`<option value="${escapeAttr(room)}">${escapeHtml(room)}</option>`).join('');
   select.disabled=!classes.length;
-  document.getElementById('addRosterClassBtn').disabled=true;
 }
 function initRosterTab(){
   populateRosterSetOptions();
@@ -1908,8 +1907,28 @@ function compactRosterRoomNames(rooms){
   groups.forEach((prefixes,suffix)=>result.push(`${prefixes.join('.')}.${suffix}`));
   return result.join(', ');
 }
+function rosterRoomSuffix(room){
+  const text=String(room||''),match=text.match(/^([^.]+)\.(.+)$/);
+  return match ? match[2] : text;
+}
+// Rooms that share the same trailing number (e.g. "สม.151" and "สช.151") print
+// together as one combined roster; rooms whose number differs (e.g. "สม.151"
+// vs "สม.141") always stay on separate pages/sections.
+function groupRostersBySuffix(rosters){
+  const groups=new Map();
+  rosters.forEach(data=>{
+    const suffix=rosterRoomSuffix(data.classRoom);
+    if(!groups.has(suffix)) groups.set(suffix,[]);
+    groups.get(suffix).push(data);
+  });
+  return [...groups.values()].map(group=>{
+    if(group.length===1) return group[0];
+    const students=group.flatMap(data=>data.students||[]).map((student,index)=>({...student, number:index+1}));
+    return {...group[0], classRoom:group.map(data=>data.classRoom).join(', '), students};
+  });
+}
 function buildRosterPrintHtml(rosters,options){
-  const list=Array.isArray(rosters)?rosters:[rosters],first=list[0]||{},exam=first.exam||{},totalRows=list.reduce((sum,data)=>sum+(data.students||[]).length,0),units=totalRows+(list.length*9)+8,scale=Math.max(.55,Math.min(1,44/Math.max(1,units))),documentHeight=274/scale;
+  const list=groupRostersBySuffix(Array.isArray(rosters)?rosters:[rosters]),first=list[0]||{},exam=first.exam||{},totalRows=list.reduce((sum,data)=>sum+(data.students||[]).length,0),units=totalRows+(list.length*9)+8,scale=Math.max(.55,Math.min(1,44/Math.max(1,units))),documentHeight=274/scale;
   const sections=list.map(data=>{const students=data.students||[],blankRows=list.length===1?Math.max(5,18-students.length):1,rows=students.map(student=>{const studentId=String(student.studentId||'');return `<tr><td>${student.number}</td><td class="student-id${studentId.length>8?' student-id-long':''}">${escapeHtml(studentId)}</td><td class="student-name">${escapeHtml(`${student.firstName||''} ${student.lastName||''}`.trim())}</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;}).join('')+Array.from({length:blankRows},()=>'<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>').join(''),period=data.examPeriod?`รอบ ${data.examPeriod}`:'';return `<section class="roster-block"><header class="header"><div class="school"><img class="school-logo" src="/assets/college-logo.jpg" alt="ตราวิทยาลัย"><div><h1>วิทยาลัยเทคโนโลยีจรัลสนิทวงศ์</h1><p>18 ซอย จรัญสนิทวงศ์ 41 แขวงอรุณอมรินทร์ เขตบางกอกน้อย กรุงเทพมหานคร 10700</p><p class="class-line">${escapeHtml(data.educationLevel||'-')} ${escapeHtml(data.classRoom)} &nbsp; ${escapeHtml(period)}</p></div></div><div class="exam-head"><h2>ห้องสอบที่ ${escapeHtml(options.examRoom||'-')}</h2><strong>ใบรายชื่อสอบ${escapeHtml(data.exam?.examType||'')}</strong><p>ปีการศึกษา ${escapeHtml(data.exam?.academicYear||'-')}</p><p>สาขาวิชา ${escapeHtml(data.program||'-')}</p></div></header><table><thead><tr><th>เลขที่</th><th>รหัสนักศึกษา</th><th>ชื่อ - นามสกุล</th><th>เก็บ</th><th>กลาง</th><th>ปลาย</th><th>รวม</th><th>เกรด</th><th>ลายเซ็น</th></tr></thead><tbody>${rows}</tbody></table></section>`;}).join('');
   const scheduleGroups=new Map();list.forEach(data=>{const item=data.exam||{},key=`${item.availableFrom||''}|${item.availableUntil||''}|${options.examRoom||''}`;if(!scheduleGroups.has(key))scheduleGroups.set(key,{exam:item,rooms:[]});scheduleGroups.get(key).rooms.push(data.classRoom);});
   const scheduleLines=[...scheduleGroups.values()].map(group=>{const item=group.exam,time=(item.availableFrom||item.availableUntil)?`${rosterTime(item.availableFrom)} - ${rosterTime(item.availableUntil)}`:'ไม่กำหนดเวลา',roomLabel=list.length>1?compactRosterRoomNames(group.rooms):'';return `<p><span class="label">วันสอบ ${escapeHtml(roomLabel)}</span> ${escapeHtml(thaiRosterDate(item.availableFrom))} &nbsp; เวลา ${escapeHtml(time)} &nbsp; ห้องสอบ ${escapeHtml(options.examRoom||'-')}</p>`;}).join('');
@@ -1919,8 +1938,7 @@ function buildRosterPrintHtml(rosters,options){
   </style></head><body onload="Promise.resolve(document.fonts&&document.fonts.ready).then(function(){setTimeout(function(){window.focus();window.print()},100)})"><div class="print-tools"><span>หากหน้าต่างพิมพ์ไม่เปิดอัตโนมัติ ให้กดปุ่มนี้ หรือกด Ctrl+P</span><button type="button" onclick="window.focus();window.print()">เปิดหน้าพิมพ์</button></div><main class="document">${sections}<section class="details">${scheduleLines}<p><span class="label">อาจารย์ผู้สอน</span> ${escapeHtml(exam.teacherName||'-')}</p><p><span class="label">รายวิชา</span> ${escapeHtml(exam.courseName||exam.title||'-')}</p><p><span class="label">ลิงก์สอบ</span> <span class="exam-link">${escapeHtml(options.examLink||exam.examLink||'-')}</span></p></section></main></body></html>`;
 }
 document.getElementById('rosterSetSelect').addEventListener('change',updateRosterClassOptions);
-document.getElementById('rosterClassSelect').addEventListener('change',event=>{document.getElementById('addRosterClassBtn').disabled=!event.target.value;});
-document.getElementById('addRosterClassBtn').addEventListener('click',()=>{const select=document.getElementById('rosterClassSelect'),room=select.value;if(!room||selectedRosterClasses.includes(room))return;selectedRosterClasses.push(room);renderSelectedRosterClasses();updateRosterClassOptions(false);});
+document.getElementById('rosterClassSelect').addEventListener('change',event=>{const room=event.target.value;if(!room||selectedRosterClasses.includes(room))return;selectedRosterClasses.push(room);renderSelectedRosterClasses();updateRosterClassOptions(false);});
 document.getElementById('printRosterBtn').addEventListener('click',async()=>{
   const setKey=document.getElementById('rosterSetSelect').value;
   if(!setKey||!selectedRosterClasses.length){showToast('กรุณาเลือกชุดข้อสอบและเพิ่มห้องอย่างน้อย 1 ห้อง');return;}
