@@ -365,5 +365,13 @@
     initLangToggle: initLangToggle
   };
 
-  document.addEventListener('DOMContentLoaded', function () { applyTranslations(); });
+  document.addEventListener('DOMContentLoaded', function () {
+    applyTranslations();
+    document.querySelectorAll('.lang-toggle').forEach(function (btn) {
+      function render() { btn.textContent = lang === 'th' ? '🌐 EN' : '🌐 TH'; }
+      render();
+      btn.addEventListener('click', function () { toggleLang(); render(); });
+      onChange(render);
+    });
+  });
 })(window);
