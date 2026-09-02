@@ -1,6 +1,8 @@
 /* Production full-flow benchmark. Requires explicit operator approval and cleans only its prefixed records. */
 const { performance } = require('perf_hooks');
-const base = 'https://examz.up.railway.app';
+const APPROVED_URLS = ['https://examz.up.railway.app', 'https://examkub.com'];
+const base = String(process.env.RAILWAY_LOAD_URL || 'https://examz.up.railway.app').replace(/\/$/, '');
+if (!APPROVED_URLS.includes(base)) throw new Error('This benchmark is restricted to the approved Railway production URLs.');
 const total = 1000, concurrent = 50, run = `load_${Date.now()}`, room = `LOAD_${run}`, setKey = `load_${run}`;
 const adminKey = process.env.RAILWAY_ADMIN_KEY;
 if (!adminKey) throw new Error('RAILWAY_ADMIN_KEY is required');
