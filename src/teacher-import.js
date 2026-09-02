@@ -2,7 +2,7 @@ const { ExcelJS, workbookBuffer, worksheetMatrix } = require('./excel-workbook')
 const { validateTeacherPayload } = require('./validation');
 
 const TEMPLATE_HEADERS = ['ชื่อ', 'นามสกุล', 'Username', 'Password', 'สาขาวิชา', 'อีเมล'];
-const EXPORT_HEADERS = ['ลำดับ', 'ชื่อ', 'นามสกุล', 'Username', 'สาขาวิชา', 'อีเมล', 'วันที่สร้างบัญชี'];
+const EXPORT_HEADERS = ['ลำดับ', 'ชื่อ', 'นามสกุล', 'Username', 'รหัสผ่าน', 'สาขาวิชา', 'อีเมล', 'วันที่สร้างบัญชี'];
 const HEADER_ALIASES = {
   firstName: ['ชื่อ', 'firstname', 'first_name'],
   lastName: ['นามสกุล', 'lastname', 'last_name'],
@@ -63,6 +63,7 @@ async function buildTeacherExport(teachers = []) {
         teacher.firstName || '',
         teacher.lastName || '',
         teacher.username || '',
+        'ไม่แสดง (เข้ารหัส)',
         teacher.department || '',
         teacher.email || '',
         createdAt && !Number.isNaN(createdAt.getTime()) ? createdAt : ''
@@ -70,10 +71,10 @@ async function buildTeacherExport(teachers = []) {
     });
   sheet.columns = [
     { width: 9 }, { width: 20 }, { width: 22 }, { width: 22 },
-    { width: 30 }, { width: 34 }, { width: 20 }
+    { width: 24 }, { width: 30 }, { width: 34 }, { width: 20 }
   ];
   sheet.views = [{ state: 'frozen', ySplit: 1 }];
-  sheet.autoFilter = `A1:G${Math.max(sheet.rowCount, 1)}`;
+  sheet.autoFilter = `A1:H${Math.max(sheet.rowCount, 1)}`;
   sheet.getRow(1).eachCell(cell => {
     cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
@@ -81,7 +82,7 @@ async function buildTeacherExport(teachers = []) {
   });
   sheet.getRow(1).height = 24;
   sheet.getColumn(1).alignment = { horizontal: 'center' };
-  sheet.getColumn(7).numFmt = 'yyyy-mm-dd hh:mm';
+  sheet.getColumn(8).numFmt = 'yyyy-mm-dd hh:mm';
   return workbookBuffer(workbook);
 }
 

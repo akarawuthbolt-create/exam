@@ -31,6 +31,6 @@ test('teacher export excludes passwords and formats teacher list columns', async
   const sheet = workbook.worksheets[0];
   assert.equal(sheet.name, 'รายชื่ออาจารย์');
   assert.deepEqual(sheet.getRow(1).values.slice(1), EXPORT_HEADERS);
-  assert.deepEqual(sheet.getRow(2).values.slice(1, 7), [1, 'สมชาย', 'ใจดี', 'somchai', 'เทคโนโลยีสารสนเทศ', 'somchai@school.ac.th']);
+  assert.deepEqual(sheet.getRow(2).values.slice(1, 8), [1, 'สมชาย', 'ใจดี', 'somchai', 'ไม่แสดง (เข้ารหัส)', 'เทคโนโลยีสารสนเทศ', 'somchai@school.ac.th']);
   assert.doesNotMatch(JSON.stringify(sheet.getRow(2).values), /must-not-export/);
 });
