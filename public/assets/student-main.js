@@ -87,6 +87,7 @@ let app = {
 };
 let state = { tabSwitches: 0, tabWarningAcknowledged: 0, fullscreenExitAttempts: 0, rightClickAttempts: 0, copyAttempts: 0, sessionRecoveries: 0, integrityEvents: [] };
 let draftAnswers = { mc:{}, matching:{}, written:{} };
+let mcAnswerAdvancing = false;
 let ELIGIBLE_SETS = [];
 function setStudentSession(result){
   app.studentToken = result.token;
@@ -116,6 +117,9 @@ function initMcStateIfNeeded(){
     choiceOrder[qq.id] = idxs;
   });
   app.mcState = { forKey: app.questionKey, order, choiceOrder, currentIndex: 0 };
+}
+function firstUnansweredMcIndex(){
+  return app.mcState.order.findIndex(qid=>draftAnswers.mc[qid]===undefined);
 }
 
 /* ============ SESSION PERSISTENCE (localStorage, per-browser) ============ */
@@ -832,6 +836,7 @@ function renderMcSection(){
   const answeredCount = s.questions.filter(x=>draftAnswers.mc[x.id]!==undefined).length;
   const total = s.questions.length;
   const isLast = idx === total-1;
+  const canSubmit = total > 0 && answeredCount === total;
 
   const paletteHtml = app.mcState.order.map((oid,i)=>{
     const answered = draftAnswers.mc[oid]!==undefined;
@@ -871,11 +876,12 @@ function renderMcSection(){
       <div class="choice-list">${choicesHtml}</div>
     </div>
     ${idx>0 ? `<div class="mc-nav-row"><button class="btn btn-ghost" id="mcPrevBtn">← ข้อก่อนหน้า</button></div>` : ''}
-    ${isLast ? `<div class="section-actions mc-submit-row"><button class="btn btn-primary" id="submitSectionBtn">${isOnlyMcSection()?'ส่งข้อสอบ':'บันทึกคำตอบส่วนนี้'}</button></div>` : ''}
+    ${canSubmit ? `<div class="section-actions mc-submit-row"><button class="btn btn-primary" id="submitSectionBtn">${isOnlyMcSection()?'ส่งข้อสอบ':'บันทึกคำตอบส่วนนี้'}</button></div>` : ''}
   `;
 
   inner.querySelectorAll('.choice-item').forEach(item=>{
     item.addEventListener('click', (e)=>{
+      if(mcAnswerAdvancing) return;
       if(e.target.closest('[data-clear]')){
         e.preventDefault(); e.stopPropagation();
         delete draftAnswers.mc[qid];
@@ -887,8 +893,20 @@ function renderMcSection(){
       e.preventDefault();
       draftAnswers.mc[qid] = parseInt(item.dataset.origidx,10);
       scheduleSave();
-      if(app.mcState.currentIndex < s.questions.length-1) app.mcState.currentIndex++;
-      renderMcSection();
+      mcAnswerAdvancing = true;
+      item.classList.add('choice-confirmed');
+      item.querySelector('input').checked = true;
+      inner.classList.add('mc-answer-pending');
+      setTimeout(()=>{
+        if(isLast){
+          const incompleteIndex = firstUnansweredMcIndex();
+          if(incompleteIndex >= 0) app.mcState.currentIndex = incompleteIndex;
+        } else {
+          app.mcState.currentIndex++;
+        }
+        mcAnswerAdvancing = false;
+        renderMcSection();
+      }, 320);
     });
   });
   inner.querySelectorAll('.mc-pal-btn').forEach(btn=>{

@@ -131,6 +131,9 @@ html.restoring-session #startScreen{visibility:hidden;}html.restoring-session bo
 .choice-item{display:flex;align-items:center;gap:12px;background:color-mix(in srgb,var(--grid) 82%,var(--surface));border:1.5px solid var(--line);border-radius:14px;padding:13px 15px;font-size:14px;transition:border-color .15s,background .15s,transform .15s;}
 .choice-item:hover{border-color:var(--blue);transform:translateX(2px);}
 .choice-item.picked{border-color:var(--blue);background:rgba(37,99,235,.10);box-shadow:0 0 0 3px rgba(37,99,235,.10);}
+.choice-item.choice-confirmed{border-color:var(--green);background:rgba(22,163,74,.13);box-shadow:0 0 0 5px rgba(22,163,74,.13);animation:choice-confirmed .32s ease-out;}
+.mc-answer-pending .choice-list,.mc-answer-pending .mc-palette,.mc-answer-pending .mc-nav-row{pointer-events:none;}
+@keyframes choice-confirmed{0%{transform:scale(1);}45%{transform:scale(1.018);}100%{transform:scale(1);}}
 .choice-item input{width:17px;height:17px;accent-color:var(--blue);flex:none;}
 .written-textarea{width:100%;min-height:130px;padding:14px 16px;border:1.5px solid var(--line);border-radius:12px;font-family:inherit;font-size:14.5px;resize:vertical;line-height:1.7;background:var(--surface);color:var(--ink);}
 .written-textarea:focus{outline:none;border-color:var(--blue);}
