@@ -617,6 +617,13 @@
     'เลือกแล้ว': 'Selected',
     'เพิ่มจากคลัง': 'Added from bank',
     'ข้อแล้ว': 'question(s)',
+
+    // ---- teacher-main.js: MC choice pool (more than 4 choices) ----
+    'มีตัวเลือกมากกว่า': 'This question has more than',
+    'ข้อ — ระบบจะสุ่มเลือกมาแสดงคนละ': 'choices — the system will randomly show',
+    'ข้อ (รวมเฉลยเสมอ) ให้นักเรียนแต่ละคน': 'to each student (always including the correct one)',
+    'ลบตัวเลือกนี้': 'Remove this choice',
+    '+ เพิ่มตัวเลือก': '+ Add choice',
   };
 
   var lang = 'th';

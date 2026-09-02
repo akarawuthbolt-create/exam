@@ -2,7 +2,7 @@ function sanitizeQuestion(question, newId, ownerId) {
   const text = String(question?.text || '').trim();
   const choices = Array.isArray(question?.choices) ? question.choices.map(choice => String(choice || '').trim()) : [];
   const answer = Number(question?.answer);
-  if (!text || choices.length !== 4 || choices.some(choice => !choice) || !Number.isInteger(answer) || answer < 0 || answer > 3) return null;
+  if (!text || choices.length < 4 || choices.length > 8 || choices.some(choice => !choice) || !Number.isInteger(answer) || answer < 0 || answer >= choices.length) return null;
   const sourceResources = question?.resources && typeof question.resources === 'object' ? question.resources : {};
   const attachments = Array.isArray(sourceResources.attachments) ? sourceResources.attachments.slice(0, 8).map(item => ({
     name: String(item?.name || 'ไฟล์แนบ').slice(0, 180), type: String(item?.type || '').slice(0, 100),

@@ -112,6 +112,10 @@ function initMcStateIfNeeded(){
   if(q.shuffleQuestions) order = shuffleArray(order);
   const choiceOrder = {};
   qs.forEach(qq=>{
+    // The server may only send a subset of a larger choice pool to display (always
+    // including the correct one) — when it does, use that order as-is; it's already
+    // randomized per student, so there's nothing left for the client to shuffle.
+    if(Array.isArray(qq.displayIndexes)){ choiceOrder[qq.id] = qq.displayIndexes; return; }
     let idxs = qq.choices.map((_,i)=>i);
     if(q.shuffleChoices) idxs = shuffleArray(idxs);
     choiceOrder[qq.id] = idxs;

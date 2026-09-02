@@ -884,7 +884,7 @@ function bindEditorPanelEvents(section, index){
     else if(section==='matching') saveMatchingPairFromEditor(index);
     else if(section==='written') saveWrittenQuestionFromEditor(index);
   });
-  if(section==='mc') bindMcResourceUpload();
+  if(section==='mc'){ bindMcResourceUpload(); bindMcChoiceEditingEvents(); }
   if(section==='written') { bindWrittenResourceUpload(); document.getElementById('qeWAnswerType')?.addEventListener('change',event=>{const isCode=event.target.value==='code';document.getElementById('qeWKeywordsWrap').style.display=isCode?'none':'';document.getElementById('qeWCodeAnswerWrap').style.display=isCode?'':'none';document.getElementById('qeWAttachmentWrap').style.display=isCode?'none':'';}); }
 }
 
@@ -1193,25 +1193,61 @@ function renderMcCompactList(){
     renderMcPanel();
   }));
 }
+const MC_MIN_CHOICES = 4;
+const MC_MAX_CHOICES = 8;
+const MC_DISPLAY_CHOICES = 4;
 function mcEditorPanelHtml(index){
   const tr = window.I18N ? window.I18N.t : (s=>s);
   const s = editingSet.sections.mc;
   const isNew = index===null;
-  const q = isNew ? {text:'', choices:['','','',''], answer:0} : s.questions[index];
+  const q = isNew ? {text:''} : s.questions[index];
+  if(!Array.isArray(openQEditor.draftMcChoices)) openQEditor.draftMcChoices = isNew ? ['','','',''] : s.questions[index].choices.slice();
+  if(!Number.isInteger(openQEditor.draftAnswer)) openQEditor.draftAnswer = isNew ? 0 : s.questions[index].answer;
+  const choices = openQEditor.draftMcChoices;
+  const answer = openQEditor.draftAnswer;
+  const extraNote = choices.length > MC_DISPLAY_CHOICES
+    ? `<p class="panel-sub" style="margin:8px 0 0;">${tr('มีตัวเลือกมากกว่า')} ${MC_DISPLAY_CHOICES} ${tr('ข้อ — ระบบจะสุ่มเลือกมาแสดงคนละ')} ${MC_DISPLAY_CHOICES} ${tr('ข้อ (รวมเฉลยเสมอ) ให้นักเรียนแต่ละคน')}</p>`
+    : '';
   return `<div class="q-editor-panel">
     <div class="q-editor-title">${isNew?tr('เพิ่มข้อปรนัยใหม่'):tr('แก้ไขข้อที่')+' '+(index+1)}</div>
     <div class="field"><label>${tr('โจทย์')}</label><textarea id="qeMcText" placeholder="${tr('พิมพ์คำถาม...')}">${escapeHtml(q.text)}</textarea></div>
     ${mcResourceEditorHtml(q,isNew)}
-    ${q.choices.map((c,ci)=>`
+    ${choices.map((c,ci)=>`
       <div class="choice-edit-row">
-        <input type="radio" name="qeMcAns" data-ci="${ci}" ${q.answer===ci?'checked':''} title="${tr('ทำเครื่องหมายคำตอบที่ถูกต้อง')}">
+        <input type="radio" name="qeMcAns" data-ci="${ci}" ${answer===ci?'checked':''} title="${tr('ทำเครื่องหมายคำตอบที่ถูกต้อง')}">
         <input type="text" class="qeMcChoice" data-ci="${ci}" value="${escapeAttr(c)}" placeholder="${tr('ตัวเลือกที่')} ${ci+1}">
+        ${choices.length>MC_MIN_CHOICES?`<button type="button" class="btn btn-ghost btn-sm" data-remove-choice="${ci}" title="${tr('ลบตัวเลือกนี้')}">✕</button>`:''}
       </div>`).join('')}
+    ${choices.length<MC_MAX_CHOICES?`<button class="add-row-btn" id="qeAddChoiceBtn" type="button">${tr('+ เพิ่มตัวเลือก')}</button>`:''}
+    ${extraNote}
     <div class="editor-actions">
       <button class="btn btn-ghost btn-sm" id="qeCancelBtn" type="button">${tr('ยกเลิก')}</button>
       <button class="btn btn-primary btn-sm" id="qeSaveBtn" type="button">${isNew?tr('เพิ่มข้อนี้'):tr('บันทึกการแก้ไข')}</button>
     </div>
   </div>`;
+}
+function syncMcDraftChoicesFromDom(){
+  const inputs = document.querySelectorAll('.qeMcChoice');
+  if(!inputs.length) return;
+  openQEditor.draftMcChoices = Array.from(inputs).map(input=>input.value);
+  const checked = document.querySelector('input[name="qeMcAns"]:checked');
+  openQEditor.draftAnswer = checked ? parseInt(checked.dataset.ci,10) : 0;
+}
+function bindMcChoiceEditingEvents(){
+  const addBtn = document.getElementById('qeAddChoiceBtn');
+  if(addBtn) addBtn.addEventListener('click', ()=>{
+    syncMcDraftChoicesFromDom();
+    openQEditor.draftMcChoices.push('');
+    renderOpenEditorIfNeeded('mc');
+  });
+  document.querySelectorAll('[data-remove-choice]').forEach(button=>button.addEventListener('click', ()=>{
+    syncMcDraftChoicesFromDom();
+    const removeIndex = parseInt(button.dataset.removeChoice,10);
+    openQEditor.draftMcChoices.splice(removeIndex,1);
+    if(openQEditor.draftAnswer===removeIndex) openQEditor.draftAnswer=0;
+    else if(openQEditor.draftAnswer>removeIndex) openQEditor.draftAnswer -= 1;
+    renderOpenEditorIfNeeded('mc');
+  }));
 }
 function mcResourceEditorHtml(q,isNew){
   const tr = window.I18N ? window.I18N.t : (s=>s);
