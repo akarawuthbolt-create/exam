@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คู่มือการใช้งาน — ExamKub สำหรับอาจารย์</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F6FB; --surface:#fff; --ink:#0F172A; --sub:#64748B; --line:#E2E8F0;
+    --blue:#2563EB; --blue-light:#EFF6FF; --green:#16A34A; --amber:#D97706; --red:#DC2626;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Sarabun',sans-serif;font-size:15px;line-height:1.7;}
+  h1,h2,h3,h4{font-family:'Prompt',sans-serif;font-weight:600;color:var(--ink);}
+  a{color:var(--blue);}
+  .topbar{position:sticky;top:0;z-index:30;background:var(--surface);border-bottom:1px solid var(--line);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Prompt',sans-serif;font-weight:700;font-size:18px;}
+  .brand .badge{background:var(--blue);color:#fff;border-radius:8px;padding:3px 9px;font-size:12px;letter-spacing:.03em;}
+  .topbar nav a{color:var(--sub);text-decoration:none;font-size:13.5px;margin-left:18px;}
+  .topbar nav a:hover{color:var(--blue);}
+  .layout{display:flex;max-width:1180px;margin:0 auto;align-items:flex-start;gap:32px;padding:32px 24px 80px;}
+  .sidebar{position:sticky;top:74px;flex:0 0 240px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;max-height:calc(100vh - 100px);overflow-y:auto;}
+  .sidebar h4{margin:0 0 10px;font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.06em;}
+  .sidebar ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;}
+  .sidebar a{display:block;padding:7px 10px;border-radius:8px;color:var(--ink);text-decoration:none;font-size:13.5px;}
+  .sidebar a:hover{background:var(--blue-light);color:var(--blue);}
+  .content{flex:1;min-width:0;}
+  .hero{background:linear-gradient(135deg,#1E3A8A,#2563EB);color:#fff;border-radius:20px;padding:36px 32px;margin-bottom:28px;}
+  .hero span{display:inline-block;background:rgba(255,255,255,.18);padding:4px 12px;border-radius:999px;font-size:12px;letter-spacing:.04em;margin-bottom:10px;}
+  .hero h1{color:#fff;margin:0 0 10px;font-size:26px;}
+  .hero p{margin:0;opacity:.92;max-width:640px;}
+  section{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:26px 28px;margin-bottom:20px;scroll-margin-top:88px;}
+  section h2{font-size:19px;margin:0 0 6px;display:flex;align-items:center;gap:10px;}
+  section h2 .num{background:var(--blue-light);color:var(--blue);width:30px;height:30px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;}
+  section .lead{color:var(--sub);margin:0 0 18px;font-size:13.5px;}
+  section h3{font-size:15px;margin:22px 0 8px;}
+  section h3:first-of-type{margin-top:6px;}
+  section p{margin:0 0 12px;}
+  section ol,section ul{margin:0 0 14px;padding-left:22px;}
+  section li{margin-bottom:6px;}
+  .steps{list-style:none;margin:0 0 14px;padding:0;counter-reset:step;}
+  .steps li{counter-increment:step;position:relative;padding:10px 14px 10px 44px;margin-bottom:8px;background:var(--bg);border-radius:10px;border:1px solid var(--line);}
+  .steps li::before{content:counter(step);position:absolute;left:12px;top:9px;width:22px;height:22px;border-radius:7px;background:var(--blue);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  .tip{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:12px 16px;margin:14px 0;font-size:13.5px;}
+  .tip b{color:var(--green);}
+  .warn{background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:12px 16px;margin:14px 0;font-size:13.5px;}
+  .warn b{color:var(--amber);}
+  .danger{background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:12px 16px;margin:14px 0;font-size:13.5px;}
+  .danger b{color:var(--red);}
+  code{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12.5px;font-family:ui-monospace,Consolas,monospace;}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px;}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top;}
+  th{background:var(--bg);font-weight:600;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:14px 0;}
+  .card{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px 16px;}
+  .card h4{margin:0 0 6px;font-size:14px;}
+  .card p{margin:0;font-size:13px;color:var(--sub);}
+  .faq details{border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:8px;background:var(--bg);}
+  .faq summary{cursor:pointer;font-weight:600;font-size:13.5px;}
+  .faq details p{margin-top:8px;}
+  .back-top{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--sub);text-decoration:none;margin-top:6px;}
+  footer{max-width:1180px;margin:0 auto;padding:0 24px 60px;color:var(--sub);font-size:12.5px;text-align:center;}
+  @media(max-width:900px){
+    .layout{flex-direction:column;}
+    .sidebar{position:static;width:100%;flex:none;max-height:none;}
+    .grid2{grid-template-columns:1fr;}
+    .topbar nav{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="badge">📘 GUIDE</span> ExamKub</div>
+  <nav>
+    <a href="https://examkub.com/teacher.html">ไปที่ระบบสำหรับอาจารย์ →</a>
+  </nav>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <h4>สารบัญ</h4>
+    <ol>
+      <li><a href="#start">1. เริ่มต้นใช้งาน</a></li>
+      <li><a href="#create">2. สร้างชุดข้อสอบใหม่</a></li>
+      <li><a href="#import">3. นำเข้าข้อสอบ</a></li>
+      <li><a href="#manage">4. จัดการชุดข้อสอบ</a></li>
+      <li><a href="#library">5. คลังข้อสอบเก่า</a></li>
+      <li><a href="#results">6. ผลสอบนักเรียน</a></li>
+      <li><a href="#roster">7. พิมพ์รายชื่อเข้าห้องสอบ</a></li>
+      <li><a href="#settings">8. ตั้งค่าบัญชี</a></li>
+      <li><a href="#faq">9. คำถามที่พบบ่อย</a></li>
+    </ol>
+  </aside>
+
+  <main class="content">
+    <div class="hero">
+      <span>คู่มือสำหรับอาจารย์ผู้สอน</span>
+      <h1>วิธีใช้งานระบบข้อสอบออนไลน์ ExamKub</h1>
+      <p>คู่มือนี้อธิบายขั้นตอนการสร้างชุดข้อสอบ นำเข้าข้อสอบ ตรวจและประกาศผลคะแนน ไปจนถึงการพิมพ์รายชื่อเข้าห้องสอบ — ครบทุกฟังก์ชันที่อาจารย์ต้องใช้งาน</p>
+    </div>
+
+    <section id="start">
+      <h2><span class="num">1</span> เริ่มต้นใช้งาน</h2>
+      <p class="lead">เข้าสู่ระบบ จัดการรหัสผ่าน และปรับการแสดงผลให้เหมาะกับตัวเอง</p>
+
+      <h3>เข้าสู่ระบบ</h3>
+      <ol class="steps">
+        <li>เปิด <code>examkub.com</code> แล้วกดไปที่หน้า “สำหรับอาจารย์” หรือเข้าตรงที่ <code>examkub.com/teacher.html</code></li>
+        <li>กรอก <b>Username</b> และ <b>Password</b> ที่ผู้ดูแลระบบตั้งให้</li>
+        <li>กด “เข้าสู่ระบบ →” — ระบบจะแสดงเฉพาะข้อสอบและผลสอบของวิชาที่ท่านสอนเท่านั้น</li>
+      </ol>
+      <div class="tip"><b>เคล็ดลับ:</b> เมื่อกรอกรหัสผ่านครั้งแรก เบราว์เซอร์จะถามว่า “บันทึกรหัสผ่านหรือไม่” กด “บันทึก” เพื่อให้ครั้งต่อไปกรอกอัตโนมัติ ไม่ต้องพิมพ์ใหม่ทุกครั้ง</div>
+
+      <h3>สลับภาษาไทย / อังกฤษ</h3>
+      <p>กดปุ่ม <b>🌐 EN</b> มุมบนขวาของทุกหน้าจอ เพื่อสลับข้อความในระบบเป็นภาษาอังกฤษ กดซ้ำเพื่อกลับเป็นไทย ระบบจะจำภาษาที่เลือกไว้ในเครื่องนั้นๆ</p>
+
+      <h3>โหมดมืด</h3>
+      <p>กดปุ่ม <b>🌙 โหมดมืด</b> ข้าง 🌐 เพื่อสลับธีมสีเข้ม เหมาะกับการใช้งานตอนกลางคืนหรือห้องแสงน้อย</p>
+
+      <h3>เปลี่ยนรหัสผ่าน</h3>
+      <ol class="steps">
+        <li>ไปที่แท็บ <b>⚙️ ตั้งค่า</b></li>
+        <li>กด <b>🔐 เปลี่ยนรหัสผ่าน</b></li>
+        <li>กรอกรหัสผ่านเดิม และรหัสผ่านใหม่ (อย่างน้อย 8 ตัวอักษร) 2 ครั้งให้ตรงกัน แล้วกดบันทึก</li>
+      </ol>
+      <div class="warn"><b>ข้อควรทราบ:</b> เมื่อเปลี่ยนรหัสผ่านสำเร็จ ระบบจะออกจากระบบในอุปกรณ์อื่นทั้งหมดเพื่อความปลอดภัย ต้องเข้าสู่ระบบใหม่ในอุปกรณ์นั้น</div>
+    </section>
+
+    <section id="create">
+      <h2><span class="num">2</span> สร้างชุดข้อสอบใหม่</h2>
+      <p class="lead">ตัวช่วยสร้างข้อสอบ (Wizard) มี 4 ขั้นตอนหลัก ทำตามลำดับได้เลย</p>
+
+      <h3>ขั้นที่ 1 — ข้อมูลชุดข้อสอบ</h3>
+      <ol class="steps">
+        <li>ไปที่แท็บ <b>ชุดข้อสอบของฉัน</b> แล้วกด <b>+ เพิ่มชุดข้อสอบใหม่</b></li>
+        <li>กรอก <b>ชื่อวิชา</b> (ใช้จัดกลุ่มข้อสอบกลางภาค/ปลายภาคของวิชาเดียวกันไว้ด้วยกัน) และเลือก <b>ประเภทข้อสอบ</b> (กลางภาค/ปลายภาค)</li>
+        <li>กรอก <b>ชื่อชุดข้อสอบ</b> ที่นักเรียนจะเห็น และเลือก <b>ระดับ</b> (ปวช./ปวส.) — จำเป็นต้องเลือก</li>
+        <li>ใส่คำอธิบายสั้นๆ (ถ้ามี) แล้วกด “ถัดไป →”</li>
+      </ol>
+
+      <h3>ขั้นที่ 2 — ห้องที่มีสิทธิ์สอบ และข้อมูลอาจารย์</h3>
+      <ul>
+        <li>ถ้า <b>ไม่เพิ่มห้องใดเลย</b> ระบบจะเปิดให้ทุกห้องสอบวิชานี้ได้เป็นค่าเริ่มต้น</li>
+        <li>เพิ่มห้องได้จากช่อง “เลือกห้องจากกลุ่ม” หรือพิมพ์ชื่อห้องเอง — ระบบจะแยกห้องเป็น “รอบสอบ” ให้อัตโนมัติตามรอบเรียน (เช้า/บ่าย/ทวิภาคี)</li>
+        <li>แต่ละรอบสอบสามารถกำหนด <b>วัน-เวลาเริ่ม/สิ้นสุด</b> เฉพาะรอบนั้นได้ ถ้าเว้นว่างไว้ = เปิดสอบได้ตลอดเวลา</li>
+        <li>ตั้ง <b>รหัสเข้าสอบย้อนหลัง</b> ได้ ถ้าต้องการให้เข้าสอบได้แม้เลยเวลาที่กำหนด</li>
+        <li>เพิ่ม <b>สิทธิ์สอบรายบุคคล</b> ให้นักเรียนบางคนนอกเหนือจากห้องที่กำหนดได้ในแต่ละรอบ</li>
+      </ul>
+      <p>ข้อมูลอาจารย์ประจำวิชาจะดึงจากบัญชีที่ล็อกอินอยู่โดยอัตโนมัติ</p>
+
+      <h3>ขั้นที่ 3 — เลือกส่วนของข้อสอบ</h3>
+      <p>ข้อสอบมีได้สูงสุด 3 ส่วน เลือกใช้ส่วนใดก็ได้อย่างอิสระ ไม่จำเป็นต้องมีครบทุกส่วน:</p>
+      <div class="grid2">
+        <div class="card"><h4>📝 ปรนัย</h4><p>เลือกคำตอบที่ถูกต้องที่สุด ระบบตรวจให้อัตโนมัติ</p></div>
+        <div class="card"><h4>🔗 จับคู่</h4><p>จับคู่รายการซ้าย-ขวา ระบบตรวจให้อัตโนมัติ</p></div>
+        <div class="card"><h4>✍️ อัตนัย</h4><p>เขียนตอบด้วยคำพูดของตนเอง หรือแก้โค้ด — ต้องตรวจ/ให้คะแนนเองบางส่วน</p></div>
+      </div>
+
+      <h3>ขั้นที่ 4 — เพิ่มคำถามในแต่ละส่วน</h3>
+      <p>หลังเลือกส่วนแล้ว จะเข้าสู่ “รายการส่วนข้อสอบ” คลิกการ์ดแต่ละส่วนเพื่อเพิ่ม/แก้ไขคำถาม:</p>
+      <ul>
+        <li><b>ปรนัย:</b> กด “+ เพิ่มข้อปรนัย” พิมพ์โจทย์ ใส่ตัวเลือก แล้วทำเครื่องหมายคำตอบที่ถูกต้อง แนบรูปภาพหรือไฟล์ประกอบได้ (ไม่เกิน 5 MB) สามารถกำหนด <b>คะแนนรวมของส่วนนี้</b> แล้วระบบจะหารคะแนนให้เท่ากันทุกข้อโดยอัตโนมัติ</li>
+        <li><b>จับคู่:</b> กด “+ เพิ่มคู่จับคู่” กรอกรายการฝั่งซ้าย (โจทย์) และฝั่งขวา (คำตอบ) ทีละคู่</li>
+        <li><b>อัตนัย:</b> กด “+ เพิ่มข้ออัตนัย” เลือกรูปแบบคำตอบเป็น “ตรวจคำสำคัญ” (กรอกคำสำคัญคั่นด้วยจุลภาค) หรือ “แก้ไขโค้ด” (ระบบเทียบกับเฉลยโค้ดที่กำหนด) แนบไฟล์/รูปประกอบโจทย์ได้เช่นกัน</li>
+      </ul>
+      <p>สำหรับส่วนปรนัย มีตัวเลือก <b>⚙️ การประกาศผลและการสุ่มข้อสอบ</b> อยู่ด้านบน:</p>
+      <ul>
+        <li><b>โหมดประกาศผล:</b> “ต้องให้อาจารย์ตรวจสอบก่อน” (ค่าเริ่มต้น) หรือ “ประกาศคะแนนทันทีที่ส่งคำตอบ”</li>
+        <li><b>สุ่มลำดับโจทย์ / สุ่มลำดับตัวเลือก:</b> ป้องกันการลอกข้อสอบระหว่างนักเรียน</li>
+      </ul>
+      <p>เมื่อกรอกครบแล้ว กด <b>💾 บันทึกชุดข้อสอบ</b> ที่มุมบนขวาได้ทุกเมื่อ — นักเรียนในห้องที่กำหนดจะเห็นวิชานี้ทันทีที่บันทึก</p>
+      <div class="danger"><b>ข้อควรระวัง:</b> การกด “✕ ออกโดยไม่บันทึก” จะทำให้ข้อมูลที่ยังไม่ได้บันทึกหายไปทั้งหมด</div>
+    </section>
+
+    <section id="import">
+      <h2><span class="num">3</span> นำเข้าข้อสอบ</h2>
+      <p class="lead">ไม่จำเป็นต้องพิมพ์ข้อสอบทีละข้อเสมอไป เลือกนำเข้าจากแหล่งอื่นได้ที่ปุ่ม <b>📥 นำเข้าข้อสอบ</b> ในแท็บ “ชุดข้อสอบของฉัน”</p>
+
+      <h3>📄 นำเข้าจากไฟล์ (Word / PDF / Excel / TXT)</h3>
+      <p>รูปแบบข้อความที่ระบบอ่านได้ (Word/PDF/TXT):</p>
+      <table>
+        <tr><th>ตัวอย่างรูปแบบ</th><th>คำอธิบาย</th></tr>
+        <tr><td><code>1. คำถาม...<br>ก. ตัวเลือก 1<br>ข. ตัวเลือก 2<br>ค. ตัวเลือก 3<br>ง. ตัวเลือก 4<br>เฉลย: ก</code></td><td>ตัวเลือกต้องอยู่คนละบรรทัด ห้ามจัดเป็น 2 คอลัมน์ ข้อที่ไม่มีตัวเลือกจะถูกจัดเป็นข้ออัตนัยอัตโนมัติ</td></tr>
+      </table>
+      <p>สำหรับไฟล์ Excel (.xlsx) ใช้หัวคอลัมน์ <code>คำถาม</code>, <code>ก</code>, <code>ข</code>, <code>ค</code>, <code>ง</code>, <code>เฉลย</code></p>
+      <ol class="steps">
+        <li>เลือกไฟล์ที่ต้องการ</li>
+        <li>กด <b>“ตรวจสอบไฟล์”</b> เพื่อดูตัวอย่างก่อนนำเข้าจริง</li>
+        <li>ตรวจสอบความถูกต้องแล้วกด <b>“นำเข้าและตั้งค่าชุดข้อสอบ”</b></li>
+      </ol>
+
+      <h3>🟢 นำเข้าจาก Google Forms</h3>
+      <ol class="steps">
+        <li>กด “เชื่อมต่อ Google” แล้วล็อกอินด้วยบัญชีที่เป็นเจ้าของหรือมีสิทธิ์แก้ไขฟอร์มนั้น</li>
+        <li>เลือกฟอร์มจากรายการ หรือวางลิงก์หน้าแก้ไขของฟอร์ม</li>
+        <li>ระบบจะจำแนกข้อปรนัย/อัตนัยให้อัตโนมัติ พร้อมนำเข้ารูปประกอบและเฉลย</li>
+        <li>ตรวจสอบตัวอย่างแล้วกด “นำเข้าและตั้งค่าชุดข้อสอบ”</li>
+      </ol>
+
+      <h3>✨ สร้างข้อสอบด้วย ChatGPT</h3>
+      <p>ในหน้าแก้ไขส่วนปรนัย มีปุ่ม “✨ นำเข้าข้อปรนัยจาก ChatGPT” กดเพื่อคัดลอก Prompt สำเร็จรูปไปวางใน ChatGPT จากนั้นคัดลอกข้อสอบที่ ChatGPT สร้างกลับมาวางในระบบ แล้วกด “ตรวจรูปแบบ” ก่อนเพิ่มจริง</p>
+    </section>
+
+    <section id="manage">
+      <h2><span class="num">4</span> จัดการชุดข้อสอบ</h2>
+      <p class="lead">ปุ่มจัดการที่การ์ดชุดข้อสอบแต่ละใบในแท็บ “ชุดข้อสอบของฉัน”</p>
+      <table>
+        <tr><th>ปุ่ม</th><th>ใช้ทำอะไร</th></tr>
+        <tr><td><b>เปิดข้อสอบทันที</b></td><td>เปิดให้สอบได้ทันทีโดยไม่ต้องรอตารางสอบที่ตั้งไว้ (ใช้เมื่อมีเหตุฉุกเฉินหรือทดสอบระบบ)</td></tr>
+        <tr><td><b>แก้ไขข้อสอบ</b></td><td>กลับเข้า Wizard เพื่อแก้ไขข้อมูล/คำถาม/ตารางสอบ</td></tr>
+        <tr><td><b>เปิดสอบเฉพาะผู้ขาดสอบ</b></td><td>ปรากฏหลังหมดเวลาสอบ ใช้เปิดสิทธิ์สอบเพิ่มเฉพาะคนที่ยังไม่ได้สอบ (ระบุจำนวนชั่วโมง 1–72)</td></tr>
+        <tr><td><b>ดาวน์โหลดข้อสอบ PDF</b></td><td>ดาวน์โหลดต้นฉบับข้อสอบเป็นไฟล์ PDF สำหรับเก็บ/พิมพ์สำรอง</td></tr>
+        <tr><td><b>เก็บข้อสอบเข้าคลัง</b></td><td>ย้ายไปแท็บ “คลังข้อสอบเก่า” ไม่แสดงในรายการหลักอีก แต่ยังทำสำเนาใช้ซ้ำได้</td></tr>
+        <tr><td><b>ย้ายไปถังขยะ</b></td><td>ลบชุดข้อสอบออกจากรายการ (ผลสอบที่มีอยู่แล้วจะยังคงอยู่ในระบบ)</td></tr>
+      </table>
+      <p>ใช้ช่องค้นหาด้านบนแท็บเพื่อค้นหาชื่อวิชาหรือชุดข้อสอบได้อย่างรวดเร็ว</p>
+    </section>
+
+    <section id="library">
+      <h2><span class="num">5</span> คลังข้อสอบเก่า</h2>
+      <p class="lead">เก็บต้นแบบข้อสอบจากปีก่อนๆ ไว้ทำสำเนาใช้ซ้ำ โดยไม่ปะปนกับชุดข้อสอบที่กำลังใช้งานอยู่</p>
+      <ul>
+        <li>ชุดในคลังจะไม่แสดงในแท็บ “ชุดข้อสอบของฉัน” และนักเรียนจะไม่เห็น</li>
+        <li>ทำสำเนาชุดข้อสอบจากคลังเพื่อใช้ในเทอมใหม่ได้ — ระบบจะให้ตั้งห้องและวันสอบใหม่ทุกครั้งที่ทำสำเนา</li>
+        <li>สามารถนำชุดข้อสอบกลับไปยังรายการหลักได้ทุกเมื่อ</li>
+      </ul>
+    </section>
+
+    <section id="results">
+      <h2><span class="num">6</span> ผลสอบนักเรียน</h2>
+      <p class="lead">คะแนนทุกฉบับเป็นความลับจนกว่าอาจารย์จะกด “ประกาศผล” — นักเรียนจะไม่มีทางเห็นคะแนนในระบบไม่ว่ากรณีใด ต้องแจ้งผลเองนอกระบบเสมอ</p>
+
+      <h3>ดูและตรวจผลสอบ</h3>
+      <ol class="steps">
+        <li>ไปที่แท็บ <b>ผลสอบนักเรียน</b> ใช้ตัวกรองด้านบน (ประเภทข้อสอบ / ปีการศึกษา / ภาคเรียน / รายวิชา) เพื่อจำกัดรายการ</li>
+        <li>ผลสอบจะจัดกลุ่มตามรายวิชา คลิกที่หัวกลุ่มเพื่อดูตารางคะแนนรายคน</li>
+        <li>กด <b>“ดูรายละเอียด”</b> ในแต่ละแถวเพื่อดูคำตอบเป็นรายข้อ พร้อมสถานะถูก/ผิด และเฉลย</li>
+      </ol>
+
+      <h3>ให้คะแนนข้ออัตนัย / งาน DFD</h3>
+      <p>ข้ออัตนัยแบบเขียนตอบ ระบบให้คะแนนเบื้องต้นจากคำสำคัญ อาจารย์สามารถปรับคะแนนแต่ละข้อได้เองในหน้า “ดูรายละเอียด” แล้วกด “บันทึกคะแนนอัตนัย” ส่วนข้อสอบวาด Data Flow Diagram (DFD) จะมีหน้าตรวจแยกให้ปรับคะแนนแต่ละ Level (0–2) และดูภาพแผนภาพที่นักเรียนวาด</p>
+
+      <h3>ประกาศผลคะแนน</h3>
+      <ol class="steps">
+        <li>ที่หัวกลุ่มรายวิชา กด <b>“📣 ประกาศผล”</b></li>
+        <li>ยืนยันการประกาศ — คะแนนของนักเรียนทุกคนที่ส่งข้อสอบแล้วในวิชานั้นจะถูกปลดล็อกให้ตรวจสอบได้ทันที</li>
+      </ol>
+      <div class="tip"><b>เคล็ดลับ:</b> ถ้าตั้งค่า “ประกาศคะแนนอัตโนมัติ” ไว้ตอนสร้างข้อสอบ ไม่ต้องกดประกาศผลเอง ระบบจะปลดล็อกให้ทันทีที่นักเรียนส่งคำตอบ</div>
+
+      <h3>อนุมัติสอบซ่อม</h3>
+      <ol class="steps">
+        <li>กด <b>“🛠️ เปิดสอบซ่อม”</b> ที่แถวของนักเรียนคนนั้น</li>
+        <li>กำหนดวัน-เวลาเริ่ม/สิ้นสุดสำหรับรอบสอบซ่อม และคะแนนเต็มหลังแปลง (ระบบคำนวณ: คะแนนสอบซ่อม ÷ 20 × คะแนนเต็มที่กำหนด)</li>
+        <li>กด “อนุมัติเปิดสอบซ่อม”</li>
+      </ol>
+
+      <h3>ส่งออกและวิเคราะห์</h3>
+      <ul>
+        <li><b>⬇ ส่งออก Excel</b> ที่มุมบนขวาแท็บ — ส่งออกผลสอบทั้งหมดตามตัวกรองปัจจุบัน</li>
+        <li><b>📊 Excel รวมคะแนน</b> ที่หัวกลุ่มวิชา — สำหรับวิชาที่เปิดใช้สมุดคะแนนรวม</li>
+        <li><b>📊 วิเคราะห์ข้อสอบ</b> — ดูสถิติความยากง่ายของแต่ละข้อ อัตราการตอบถูก และดาวน์โหลดตารางวิเคราะห์</li>
+      </ul>
+    </section>
+
+    <section id="roster">
+      <h2><span class="num">7</span> พิมพ์รายชื่อเข้าห้องสอบ</h2>
+      <p class="lead">จัดทำใบรายชื่อนักเรียนพร้อมวันสอบ ผู้สอน รายวิชา และลิงก์สอบ สำหรับติดหน้าห้องสอบ</p>
+      <ol class="steps">
+        <li>ไปที่แท็บ <b>🖨️ พิมพ์รายชื่อสอบ</b></li>
+        <li>เลือก <b>ชุดข้อสอบ / รายวิชา</b> แล้วเลือก <b>ห้อง</b> ที่ต้องการ (เพิ่มได้หลายห้อง)</li>
+        <li>กรอก <b>ห้องสอบ</b> จริง (เช่น COM.4) และ <b>ลิงก์สอบ</b> ที่จะให้นักเรียนเข้าใช้งาน</li>
+        <li>กด <b>“🖨️ เปิดตัวอย่างและพิมพ์”</b> ระบบจะเปิดหน้าต่างใหม่พร้อมสั่งพิมพ์ให้อัตโนมัติ</li>
+      </ol>
+      <p>กด <b>“📋 สรุปผู้ขาดสอบ”</b> เพื่อดูสรุปจำนวนคนที่ส่งแล้ว/กำลังสอบ/ขาดสอบของห้องที่เลือกไว้แบบเรียลไทม์</p>
+    </section>
+
+    <section id="settings">
+      <h2><span class="num">8</span> ตั้งค่าบัญชี</h2>
+      <p class="lead">จัดการบัญชีของตนเองได้ที่แท็บ <b>⚙️ ตั้งค่า</b></p>
+      <ul>
+        <li><b>🔐 เปลี่ยนรหัสผ่าน</b> — ดูวิธีในหัวข้อ “เริ่มต้นใช้งาน” ด้านบน</li>
+        <li><b>ออกจากระบบ</b> — ใช้เมื่อเลิกใช้งานเครื่องสาธารณะหรือเครื่องที่ใช้ร่วมกับผู้อื่น</li>
+        <li><b>↻ รีเฟรชข้อมูล</b> (มุมบนขวาของหน้า Dashboard) — โหลดข้อมูลล่าสุดโดยไม่ต้องออกจากระบบใหม่</li>
+      </ul>
+    </section>
+
+    <section id="faq">
+      <h2><span class="num">9</span> คำถามที่พบบ่อย</h2>
+      <div class="faq">
+        <details>
+          <summary>นักเรียนแจ้งว่าเข้าสอบไม่ได้ ต้องทำอย่างไร</summary>
+          <p>ตรวจสอบว่าห้องเรียนของนักเรียนอยู่ในรายชื่อห้องที่กำหนดสิทธิ์ไว้ในขั้นตอนที่ 2 ของ Wizard และช่วงเวลาปัจจุบันอยู่ในรอบสอบที่ตั้งไว้หรือไม่ หากต้องการเปิดให้สอบทันที ใช้ปุ่ม “เปิดข้อสอบทันที” ที่การ์ดชุดข้อสอบ</p>
+        </details>
+        <details>
+          <summary>ลืมประกาศผลคะแนน นักเรียนจะเห็นคะแนนได้อย่างไร</summary>
+          <p>นักเรียนจะไม่มีทางเห็นคะแนนในระบบจนกว่าอาจารย์จะกด “ประกาศผล” ที่หัวกลุ่มรายวิชานั้นในแท็บผลสอบนักเรียน</p>
+        </details>
+        <details>
+          <summary>ต้องการให้ข้อสอบเปิดสอบซ้ำสำหรับคนขาดสอบ ทำได้ไหม</summary>
+          <p>ได้ ใช้ปุ่ม “เปิดสอบเฉพาะผู้ขาดสอบ” ที่การ์ดชุดข้อสอบ (จะปรากฏหลังหมดเวลาสอบ) หรือใช้ “เปิดสอบซ่อม” เป็นรายบุคคลจากแท็บผลสอบนักเรียนก็ได้เช่นกัน</p>
+        </details>
+        <details>
+          <summary>แก้ไขคะแนนข้ออัตนัยหลังประกาศผลไปแล้วได้ไหม</summary>
+          <p>ได้ เข้าไปที่ “ดูรายละเอียด” ของนักเรียนคนนั้นแล้วปรับคะแนนได้ตามปกติ ระบบจะคำนวณคะแนนรวมใหม่ให้ทันที</p>
+        </details>
+        <details>
+          <summary>ลบชุดข้อสอบไปแล้ว ผลสอบที่มีอยู่จะหายไปด้วยหรือไม่</summary>
+          <p>ไม่หาย การย้ายชุดข้อสอบไปถังขยะจะไม่ลบผลสอบที่นักเรียนส่งไว้แล้ว ผลสอบยังคงอยู่ในระบบและดูได้ตามปกติ</p>
+        </details>
+        <details>
+          <summary>ต้องการใช้งานเป็นภาษาอังกฤษได้หรือไม่</summary>
+          <p>ได้ กดปุ่ม 🌐 EN ที่มุมบนขวาของทุกหน้าจอเพื่อสลับภาษา ระบบจะจำการตั้งค่าไว้ในเบราว์เซอร์นั้นๆ</p>
+        </details>
+      </div>
+      <p style="margin-top:18px;">หากพบปัญหาอื่นที่ไม่ครอบคลุมในคู่มือนี้ กรุณาติดต่อผู้ดูแลระบบของสถานศึกษา</p>
+    </section>
+
+    <a class="back-top" href="#">↑ กลับไปด้านบน</a>
+  </main>
+</div>
+
+<footer>คู่มือการใช้งาน ExamKub สำหรับอาจารย์ · <a href="https://examkub.com">examkub.com</a></footer>
+
+</body>
+</html>
