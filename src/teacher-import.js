@@ -2,6 +2,7 @@ const { ExcelJS, workbookBuffer, worksheetMatrix } = require('./excel-workbook')
 const { validateTeacherPayload } = require('./validation');
 
 const TEMPLATE_HEADERS = ['ชื่อ', 'นามสกุล', 'Username', 'Password', 'สาขาวิชา', 'อีเมล'];
+const EXPORT_HEADERS = ['ลำดับ', 'ชื่อ', 'นามสกุล', 'Username', 'สาขาวิชา', 'อีเมล', 'วันที่สร้างบัญชี'];
 const HEADER_ALIASES = {
   firstName: ['ชื่อ', 'firstname', 'first_name'],
   lastName: ['นามสกุล', 'lastname', 'last_name'],
@@ -47,6 +48,43 @@ async function buildTeacherImportTemplate() {
   return workbookBuffer(workbook);
 }
 
+async function buildTeacherExport(teachers = []) {
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = 'Exam System';
+  workbook.created = new Date();
+  const sheet = workbook.addWorksheet('รายชื่ออาจารย์');
+  sheet.addRow(EXPORT_HEADERS);
+  [...teachers]
+    .sort((a, b) => `${a.firstName || ''} ${a.lastName || ''}`.localeCompare(`${b.firstName || ''} ${b.lastName || ''}`, 'th'))
+    .forEach((teacher, index) => {
+      const createdAt = teacher.createdAt ? new Date(teacher.createdAt) : null;
+      sheet.addRow([
+        index + 1,
+        teacher.firstName || '',
+        teacher.lastName || '',
+        teacher.username || '',
+        teacher.department || '',
+        teacher.email || '',
+        createdAt && !Number.isNaN(createdAt.getTime()) ? createdAt : ''
+      ]);
+    });
+  sheet.columns = [
+    { width: 9 }, { width: 20 }, { width: 22 }, { width: 22 },
+    { width: 30 }, { width: 34 }, { width: 20 }
+  ];
+  sheet.views = [{ state: 'frozen', ySplit: 1 }];
+  sheet.autoFilter = `A1:G${Math.max(sheet.rowCount, 1)}`;
+  sheet.getRow(1).eachCell(cell => {
+    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+  });
+  sheet.getRow(1).height = 24;
+  sheet.getColumn(1).alignment = { horizontal: 'center' };
+  sheet.getColumn(7).numFmt = 'yyyy-mm-dd hh:mm';
+  return workbookBuffer(workbook);
+}
+
 async function parseTeacherImport(buffer) {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer);
@@ -79,4 +117,4 @@ function validateTeacherImportRows(rows, existingUsernames = []) {
   return { accepted, errors };
 }
 
-module.exports = { TEMPLATE_HEADERS, buildTeacherImportTemplate, parseTeacherImport, validateTeacherImportRows };
+module.exports = { TEMPLATE_HEADERS, EXPORT_HEADERS, buildTeacherImportTemplate, buildTeacherExport, parseTeacherImport, validateTeacherImportRows };

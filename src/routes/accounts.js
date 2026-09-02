@@ -3,7 +3,7 @@ const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const express = require('express');
 const { validateTeacherPayload, sendValidationError } = require('../validation');
 const { validateRestoredBackup } = require('../restore-drill');
-const { buildTeacherImportTemplate, parseTeacherImport, validateTeacherImportRows } = require('../teacher-import');
+const { buildTeacherImportTemplate, buildTeacherExport, parseTeacherImport, validateTeacherImportRows } = require('../teacher-import');
 
 function purgeExpiredLoginFailures(store, now = Date.now()) {
   let removed = 0;
@@ -119,6 +119,13 @@ function registerAccountRoutes(app, dependencies) {
     const buffer = await buildTeacherImportTemplate();
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename="teacher-account-template.xlsx"');
+    res.send(buffer);
+  });
+
+  app.get('/api/teachers/export.xlsx', requireAdmin, async (req, res) => {
+    const buffer = await buildTeacherExport(readDB().teachers);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="teacher-list-${new Date().toISOString().slice(0, 10)}.xlsx"`);
     res.send(buffer);
   });
 

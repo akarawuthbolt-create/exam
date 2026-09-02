@@ -480,6 +480,13 @@ async function refreshTeachers(){
     </div>`).join('');
   wrap.querySelectorAll('[data-manageteacher]').forEach(button=>button.addEventListener('click',()=>openManageTeacher(button.dataset.manageteacher)));
 }
+document.getElementById('exportTeachersBtn').addEventListener('click',async event=>{
+  const button=event.currentTarget, original=button.textContent;
+  button.disabled=true;button.textContent='กำลังสร้างไฟล์...';
+  try{await downloadAdminAsset('/api/teachers/export.xlsx','รายชื่ออาจารย์.xlsx');showToast('ดาวน์โหลดรายชื่ออาจารย์ Excel แล้ว');}
+  catch(error){showToast(error.message);}
+  finally{button.disabled=false;button.textContent=original;}
+});
 let manageTeacherId='';
 function openManageTeacher(id){
   const teacher=TEACHERS_LIST.find(item=>item.id===id);if(!teacher)return;
