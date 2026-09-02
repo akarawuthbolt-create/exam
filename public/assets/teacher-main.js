@@ -522,62 +522,65 @@ function renderWizard(){
   document.getElementById('setWizardScreen').scrollTop = 0;
 }
 function renderWizardStepsBar(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const bar = document.getElementById('wizardStepsBar');
   const stepOrder = editingSet?.delivery==='object-analysis-design' ? ['info','access'] : WIZARD_STEP_ORDER;
   const currentTop = wizardStep.startsWith('section:') ? 'hub' : wizardStep;
   const curIdx = stepOrder.indexOf(currentTop);
   bar.innerHTML = stepOrder.map((key,idx)=>{
     const cls = key===currentTop ? 'active' : (idx<curIdx ? 'done' : '');
-    return `<span class="wizard-step-chip ${cls}">${WIZARD_STEP_LABELS[key]}</span>`;
+    return `<span class="wizard-step-chip ${cls}">${tr(WIZARD_STEP_LABELS[key])}</span>`;
   }).join('<span class="wizard-step-arrow">→</span>');
 }
 
 /* ---------- Step 1: basic info ---------- */
 function wizardInfoStepHtml(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const s = editingSet;
   return `<div class="panel">
-    <h3>ข้อมูลชุดข้อสอบ</h3>
+    <h3>${tr('ข้อมูลชุดข้อสอบ')}</h3>
     <div class="field-row">
-      <div class="field"><label>ชื่อวิชา (ใช้จัดกลุ่มข้อสอบกลางภาค/ปลายภาคเข้าด้วยกัน)</label><input type="text" id="fCourseName" value="${escapeAttr(s.courseName||'')}" placeholder="เช่น คณิตศาสตร์ ม.3"></div>
-      <div class="field"><label>ประเภทข้อสอบ</label><select id="fExamType">${EXAM_TYPES.map(t=>`<option value="${escapeAttr(t)}" ${s.examType===t?'selected':''}>${escapeHtml(t)}</option>`).join('')}</select></div>
+      <div class="field"><label>${tr('ชื่อวิชา (ใช้จัดกลุ่มข้อสอบกลางภาค/ปลายภาคเข้าด้วยกัน)')}</label><input type="text" id="fCourseName" value="${escapeAttr(s.courseName||'')}" placeholder="เช่น คณิตศาสตร์ ม.3"></div>
+      <div class="field"><label>${tr('ประเภทข้อสอบ')}</label><select id="fExamType">${EXAM_TYPES.map(t=>`<option value="${escapeAttr(t)}" ${s.examType===t?'selected':''}>${escapeHtml(t)}</option>`).join('')}</select></div>
     </div>
     <div class="field-row">
-      <div class="field"><label>ชื่อชุดข้อสอบ (แสดงให้นักเรียนเห็น)</label><input type="text" id="fTitle" value="${escapeAttr(s.title)}" placeholder="เช่น คณิตศาสตร์ ม.3 - กลางภาค"></div>
-      <div class="field"><label>ระดับ <span style="color:#DC2626;">*</span></label><select id="fEducationLevel" required><option value="" ${s.educationLevel?'':'selected'} disabled>เลือกระดับ</option><option value="ปวช." ${s.educationLevel==='ปวช.'?'selected':''}>ปวช.</option><option value="ปวส." ${s.educationLevel==='ปวส.'?'selected':''}>ปวส.</option></select></div>
+      <div class="field"><label>${tr('ชื่อชุดข้อสอบ (แสดงให้นักเรียนเห็น)')}</label><input type="text" id="fTitle" value="${escapeAttr(s.title)}" placeholder="เช่น คณิตศาสตร์ ม.3 - กลางภาค"></div>
+      <div class="field"><label>${tr('ระดับ')} <span style="color:#DC2626;">*</span></label><select id="fEducationLevel" required><option value="" ${s.educationLevel?'':'selected'} disabled>${tr('เลือกระดับ')}</option><option value="ปวช." ${s.educationLevel==='ปวช.'?'selected':''}>ปวช.</option><option value="ปวส." ${s.educationLevel==='ปวส.'?'selected':''}>ปวส.</option></select></div>
     </div>
-    <div class="field"><label>คำอธิบายชุดข้อสอบ</label><textarea id="fDesc" placeholder="อธิบายเนื้อหาโดยย่อ">${escapeHtml(s.desc)}</textarea></div>
+    <div class="field"><label>${tr('คำอธิบายชุดข้อสอบ')}</label><textarea id="fDesc" placeholder="${tr('อธิบายเนื้อหาโดยย่อ')}">${escapeHtml(s.desc)}</textarea></div>
   </div>
   <div class="wizard-nav-row">
-    <button class="btn btn-ghost" id="wizCancelBtn" type="button">ยกเลิก</button>
-    <button class="btn btn-primary" id="wizNextBtn" type="button">ถัดไป →</button>
+    <button class="btn btn-ghost" id="wizCancelBtn" type="button">${tr('ยกเลิก')}</button>
+    <button class="btn btn-primary" id="wizNextBtn" type="button">${tr('ถัดไป →')}</button>
   </div>`;
 }
 
 /* ---------- Step 2: classes + teacher ---------- */
 function wizardAccessStepHtml(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const s = editingSet;
   return `<div class="panel">
-    <h3>🏫 ห้องที่มีสิทธิสอบวิชานี้</h3>
-    <p class="panel-sub">ถ้าไม่เพิ่มห้องใดเลย ระบบจะเปิดให้ทุกห้องสอบวิชานี้ได้ (ค่าเริ่มต้น)</p>
+    <h3>${tr('🏫 ห้องที่มีสิทธิสอบวิชานี้')}</h3>
+    <p class="panel-sub">${tr('ถ้าไม่เพิ่มห้องใดเลย ระบบจะเปิดให้ทุกห้องสอบวิชานี้ได้ (ค่าเริ่มต้น)')}</p>
     <div class="chip-row" id="classChipRow"></div><div id="examSchedulesWrap"></div>
     <div class="add-chip-row">
-      <select id="schedulePeriodFilter" class="filter-select" aria-label="กรองรอบเรียน"><option value="">ทุกรอบเรียน</option><option value="เช้า">รอบเช้า</option><option value="บ่าย">รอบบ่าย</option><option value="ทวิภาคี">รอบทวิภาคี</option></select>
-      <select id="classGroupSelect" class="filter-select" aria-label="เลือกห้องจากกลุ่ม">
+      <select id="schedulePeriodFilter" class="filter-select" aria-label="${tr('กรองรอบเรียน')}"><option value="">${tr('ทุกรอบเรียน')}</option><option value="เช้า">${tr('รอบเช้า')}</option><option value="บ่าย">${tr('รอบบ่าย')}</option><option value="ทวิภาคี">${tr('รอบทวิภาคี')}</option></select>
+      <select id="classGroupSelect" class="filter-select" aria-label="${tr('เลือกห้องจากกลุ่ม')}">
         ${buildGroupedClassOptions(knownClasses)}
       </select>
-      <input type="text" id="addClassInput" list="knownClassesList" placeholder="พิมพ์ชื่อห้อง เช่น ม.3/1 แล้วกดเพิ่ม">
+      <input type="text" id="addClassInput" list="knownClassesList" placeholder="${tr('พิมพ์ชื่อห้อง เช่น ม.3/1 แล้วกดเพิ่ม')}">
       <datalist id="knownClassesList">${knownClasses.map(c=>`<option value="${escapeAttr(c)}">`).join('')}</datalist>
-      <button class="btn btn-ghost btn-sm" id="addClassBtn" type="button">+ เพิ่มห้อง</button>
+      <button class="btn btn-ghost btn-sm" id="addClassBtn" type="button">${tr('+ เพิ่มห้อง')}</button>
     </div>
   </div>
   <div class="panel">
-    <h3>👤 ข้อมูลอาจารย์ประจำวิชา</h3>
-    <p class="panel-sub">ระบบดึงจากบัญชีอาจารย์ที่กำลังเข้าสู่ระบบ และจะบันทึกข้อมูลนี้ลงในรายงานโดยอัตโนมัติ</p>
-    <div class="mini-card"><b>👤 ${escapeHtml(s.subjectTeacherName || `${teacherInfo?.firstName||''} ${teacherInfo?.lastName||''}`.trim())}</b><br><span style="font-size:12px;color:var(--sub);">ข้อมูลผู้สอนจากบัญชีที่ล็อกอิน</span></div>
+    <h3>${tr('👤 ข้อมูลอาจารย์ประจำวิชา')}</h3>
+    <p class="panel-sub">${tr('ระบบดึงจากบัญชีอาจารย์ที่กำลังเข้าสู่ระบบ และจะบันทึกข้อมูลนี้ลงในรายงานโดยอัตโนมัติ')}</p>
+    <div class="mini-card"><b>👤 ${escapeHtml(s.subjectTeacherName || `${teacherInfo?.firstName||''} ${teacherInfo?.lastName||''}`.trim())}</b><br><span style="font-size:12px;color:var(--sub);">${tr('ข้อมูลผู้สอนจากบัญชีที่ล็อกอิน')}</span></div>
   </div>
   <div class="wizard-nav-row">
-    <button class="btn btn-ghost" id="wizBackBtn" type="button">← ย้อนกลับ</button>
-    <button class="btn btn-primary" id="wizNextBtn" type="button">${s.delivery==='object-analysis-design'?'💾 บันทึกข้อสอบ DFD':'ถัดไป →'}</button>
+    <button class="btn btn-ghost" id="wizBackBtn" type="button">${tr('← ย้อนกลับ')}</button>
+    <button class="btn btn-primary" id="wizNextBtn" type="button">${s.delivery==='object-analysis-design'?tr('💾 บันทึกข้อสอบ DFD'):tr('ถัดไป →')}</button>
   </div>`;
 }
 
@@ -628,7 +631,7 @@ function buildGroupedClassOptions(classes){
   [...new Set(classes||[])].sort(compareClassRooms).forEach(className=>{
     groups.get(classGroupForName(className)).push(className);
   });
-  return '<option value="">เลือกห้องจากกลุ่ม</option>'+order.map(group=>{
+  return `<option value="">${(window.I18N?window.I18N.t:s2=>s2)('เลือกห้องจากกลุ่ม')}</option>`+order.map(group=>{
     const rooms=groups.get(group);
     if(!rooms.length) return '';
     return `<optgroup label="${escapeAttr(group)}">${rooms.map(room=>`<option value="${escapeAttr(room)}">${escapeHtml(room)}</option>`).join('')}</optgroup>`;
@@ -637,68 +640,72 @@ function buildGroupedClassOptions(classes){
 
 /* ---------- Step 3: choose sections ---------- */
 function wizardSectionsStepHtml(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   return `<div class="panel">
-    <h3>เลือกส่วนของข้อสอบ</h3>
-    <p class="panel-sub">เลือกเฉพาะส่วนที่ต้องการใช้ได้อย่างอิสระ — หากไม่เพิ่มส่วนนั้น นักเรียนจะไม่เห็นส่วนนั้นตอนสอบ</p>
+    <h3>${tr('เลือกส่วนของข้อสอบ')}</h3>
+    <p class="panel-sub">${tr('เลือกเฉพาะส่วนที่ต้องการใช้ได้อย่างอิสระ — หากไม่เพิ่มส่วนนั้น นักเรียนจะไม่เห็นส่วนนั้นตอนสอบ')}</p>
     <div class="section-manager-row" id="sectionManagerRow"></div>
   </div>
   <div class="wizard-nav-row">
-    <button class="btn btn-ghost" id="wizBackBtn" type="button">← ย้อนกลับ</button>
-    <button class="btn btn-primary" id="wizNextBtn" type="button">ถัดไป → ไปยังรายการส่วนข้อสอบ</button>
+    <button class="btn btn-ghost" id="wizBackBtn" type="button">${tr('← ย้อนกลับ')}</button>
+    <button class="btn btn-primary" id="wizNextBtn" type="button">${tr('ถัดไป → ไปยังรายการส่วนข้อสอบ')}</button>
   </div>`;
 }
 
 /* ---------- Step 4: hub (mirrors the student's exam hub) ---------- */
 function wizardHubStepHtml(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const s = editingSet;
   const total = computeSetTotal(s);
   const ok = total>0;
-  const labels = {mc:'📝 ปรนัย', matching:'🔗 จับคู่', written:'✍️ อัตนัย'};
-  const descBy = {mc:'เลือกคำตอบที่ถูกต้องที่สุดในแต่ละข้อ', matching:'จับคู่รายการซ้าย-ขวาให้สัมพันธ์กัน', written:'เขียนตอบด้วยคำพูดของตนเอง'};
+  const labels = {mc:tr('📝 ปรนัย'), matching:tr('🔗 จับคู่'), written:tr('✍️ อัตนัย')};
+  const descBy = {mc:tr('เลือกคำตอบที่ถูกต้องที่สุดในแต่ละข้อ'), matching:tr('จับคู่รายการซ้าย-ขวาให้สัมพันธ์กัน'), written:tr('เขียนตอบด้วยคำพูดของตนเอง')};
   const cards = ['mc','matching','written'].filter(sec=>editingUiEnabled[sec]).map(sec=>{
     const count = sec==='mc' ? s.sections.mc.questions.length : sec==='matching' ? s.sections.matching.left.length : s.sections.written.questions.length;
     return `<div class="lv-card">
       <h3>${labels[sec]}</h3>
-      <div class="lv-desc">${descBy[sec]}<br><b>${count} ${sec==='matching'?'คู่':'ข้อ'}</b></div>
-      <button class="btn btn-primary" data-entersec="${sec}" type="button">${count>0?'แก้ไขส่วนนี้':'เพิ่มข้อสอบส่วนนี้'}</button>
+      <div class="lv-desc">${descBy[sec]}<br><b>${count} ${sec==='matching'?tr('คู่'):tr('ข้อ')}</b></div>
+      <button class="btn btn-primary" data-entersec="${sec}" type="button">${count>0?tr('แก้ไขส่วนนี้'):tr('เพิ่มข้อสอบส่วนนี้')}</button>
     </div>`;
   }).join('');
   return `<div class="hub-inner" style="max-width:none;padding:0;">
-    <h2>รายการส่วนข้อสอบ</h2>
-    <p class="sub">คลิกเข้าไปเพิ่ม/แก้ไขคำถามในแต่ละส่วน — เหมือนหน้าที่นักเรียนเห็นตอนทำข้อสอบ</p>
-    <div class="total-indicator ${ok?'ok':'warn'}" style="margin-bottom:16px;">🎯 คะแนนเต็มรวมขณะนี้: ${total} คะแนน · ${total>0?scoreModeSummary(total):'⚠️ กรุณากำหนดคะแนน'}</div>
+    <h2>${tr('รายการส่วนข้อสอบ')}</h2>
+    <p class="sub">${tr('คลิกเข้าไปเพิ่ม/แก้ไขคำถามในแต่ละส่วน — เหมือนหน้าที่นักเรียนเห็นตอนทำข้อสอบ')}</p>
+    <div class="total-indicator ${ok?'ok':'warn'}" style="margin-bottom:16px;">🎯 ${tr('คะแนนเต็มรวมขณะนี้')}: ${total} ${tr('คะแนน')} · ${total>0?scoreModeSummary(total):tr('⚠️ กรุณากำหนดคะแนน')}</div>
     <div class="lv-grid">${cards}</div>
   </div>
   <div class="wizard-nav-row">
-    <button class="btn btn-ghost" id="wizBackBtn" type="button">← ย้อนกลับไปเลือกส่วน</button>
+    <button class="btn btn-ghost" id="wizBackBtn" type="button">${tr('← ย้อนกลับไปเลือกส่วน')}</button>
   </div>`;
 }
 
 /* ---------- Section detail step ---------- */
 function wizardSectionDetailHtml(sec){
-  let html = `<button class="btn btn-ghost btn-sm" id="wizBackToHubBtn" type="button" style="margin-bottom:16px;">← กลับไปยังรายการส่วนข้อสอบ</button>`;
+  const tr = window.I18N ? window.I18N.t : (s=>s);
+  let html = `<button class="btn btn-ghost btn-sm" id="wizBackToHubBtn" type="button" style="margin-bottom:16px;">${tr('← กลับไปยังรายการส่วนข้อสอบ')}</button>`;
   if(sec==='mc') html += mcSettingsHeaderHtml();
   html += `<div id="sectionDetailBody"></div>`;
   return html;
 }
 function mcSettingsHeaderHtml(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const s = editingSet;
   return `<div class="panel">
-    <h3>⚙️ การประกาศผลและการสุ่มข้อสอบ</h3>
+    <h3>${tr('⚙️ การประกาศผลและการสุ่มข้อสอบ')}</h3>
     <div class="field-row">
       <div class="field">
-        <label>โหมดประกาศผล</label>
+        <label>${tr('โหมดประกาศผล')}</label>
         <select id="fPublishMode">
-          <option value="manual" ${s.publishMode!=='auto'?'selected':''}>ต้องให้อาจารย์ตรวจสอบก่อนจึงประกาศ (ค่าเริ่มต้น)</option>
-          <option value="auto" ${s.publishMode==='auto'?'selected':''}>ประกาศคะแนนให้นักเรียนทันทีที่ส่งคำตอบ</option>
+          <option value="manual" ${s.publishMode!=='auto'?'selected':''}>${tr('ต้องให้อาจารย์ตรวจสอบก่อนจึงประกาศ (ค่าเริ่มต้น)')}</option>
+          <option value="auto" ${s.publishMode==='auto'?'selected':''}>${tr('ประกาศคะแนนให้นักเรียนทันทีที่ส่งคำตอบ')}</option>
         </select>
       </div>
     </div>
     <div class="field-row">
-      <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:normal;color:var(--ink);"><input type="checkbox" id="fShuffleQuestions" ${s.shuffleQuestions?'checked':''} style="width:16px;height:16px;"> สุ่มลำดับโจทย์ (แต่ละคนเห็นข้อสอบเรียงไม่เหมือนกัน)</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:normal;color:var(--ink);"><input type="checkbox" id="fShuffleQuestions" ${s.shuffleQuestions?'checked':''} style="width:16px;height:16px;"> ${tr('สุ่มลำดับโจทย์ (แต่ละคนเห็นข้อสอบเรียงไม่เหมือนกัน)')}</label>
     </div>
     <div class="field-row">
-      <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:normal;color:var(--ink);"><input type="checkbox" id="fShuffleChoices" ${s.shuffleChoices?'checked':''} style="width:16px;height:16px;"> สุ่มลำดับตัวเลือกปรนัย (แต่ละคนเห็นตัวเลือกเรียงไม่เหมือนกัน)</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:normal;color:var(--ink);"><input type="checkbox" id="fShuffleChoices" ${s.shuffleChoices?'checked':''} style="width:16px;height:16px;"> ${tr('สุ่มลำดับตัวเลือกปรนัย (แต่ละคนเห็นตัวเลือกเรียงไม่เหมือนกัน)')}</label>
     </div>
   </div>`;
 }
@@ -712,11 +719,11 @@ function bindWizardStepEvents(){
     document.getElementById('fEducationLevel').addEventListener('change', e=>{ s.educationLevel = e.target.value; });
     document.getElementById('fDesc').addEventListener('input', e=>{ s.desc = e.target.value; });
     document.getElementById('wizCancelBtn').addEventListener('click', ()=>{
-      if(confirm('ยกเลิกการแก้ไข? การเปลี่ยนแปลงที่ยังไม่บันทึกจะหายไป')) closeEditor();
+      if(confirm(window.I18N?window.I18N.t('ยกเลิกการแก้ไข? การเปลี่ยนแปลงที่ยังไม่บันทึกจะหายไป'):'ยกเลิกการแก้ไข? การเปลี่ยนแปลงที่ยังไม่บันทึกจะหายไป')) closeEditor();
     });
     document.getElementById('wizNextBtn').addEventListener('click', ()=>{
-      if(!s.title || !s.title.trim()){ alert('กรุณากรอกชื่อชุดข้อสอบ'); return; }
-      if(!['ปวช.','ปวส.'].includes(s.educationLevel)){ alert('กรุณาเลือกระดับ ปวช. หรือ ปวส.'); return; }
+      if(!s.title || !s.title.trim()){ alert(window.I18N?window.I18N.t('กรุณากรอกชื่อชุดข้อสอบ'):'กรุณากรอกชื่อชุดข้อสอบ'); return; }
+      if(!['ปวช.','ปวส.'].includes(s.educationLevel)){ alert(window.I18N?window.I18N.t('กรุณาเลือกระดับ ปวช. หรือ ปวส.'):'กรุณาเลือกระดับ ปวช. หรือ ปวส.'); return; }
       if(!s.courseName || !s.courseName.trim()) s.courseName = s.title;
       wizardStep = 'access'; renderWizard();
     });
@@ -728,10 +735,11 @@ function bindWizardStepEvents(){
       const inp = document.getElementById('addClassInput');
       const picker = document.getElementById('classGroupSelect');
       const val = picker.value || inp.value.trim();
-      if(val && !classPeriods[val]){ showToast('ห้อง '+val+' ยังไม่ได้กำหนดรอบเรียน กรุณาตั้งรอบเรียนของห้องก่อน'); return; }
-      if(val && classEducationLevelForName(val)!==s.educationLevel){ showToast('กรุณาเลือกห้องระดับ '+s.educationLevel+' ให้ตรงกับชุดข้อสอบ'); return; }
+      const trw = window.I18N ? window.I18N.t : (s2=>s2);
+      if(val && !classPeriods[val]){ showToast(trw('ห้อง')+' '+val+' '+trw('ยังไม่ได้กำหนดรอบเรียน กรุณาตั้งรอบเรียนของห้องก่อน')); return; }
+      if(val && classEducationLevelForName(val)!==s.educationLevel){ showToast(trw('กรุณาเลือกห้องระดับ')+' '+s.educationLevel+' '+trw('ให้ตรงกับชุดข้อสอบ')); return; }
       const selectedPeriod=document.getElementById('schedulePeriodFilter').value;
-      if(val && selectedPeriod && classPeriods[val]!==selectedPeriod){ showToast('ห้อง '+val+' ไม่ได้อยู่ในรอบที่กรองไว้'); return; }
+      if(val && selectedPeriod && classPeriods[val]!==selectedPeriod){ showToast(trw('ห้อง')+' '+val+' '+trw('ไม่ได้อยู่ในรอบที่กรองไว้')); return; }
       if(val && !s.assignedClasses.includes(val)){ s.assignedClasses.push(val); syncExamSchedulesFromAssignedClasses(); renderExamSchedules(); }
       inp.value=''; picker.value=''; renderClassChips();
     });
@@ -768,7 +776,7 @@ function bindWizardStepEvents(){
 
 function updateTotalIndicator(){
   // in the wizard, the running total is only shown on the hub step; safe no-op elsewhere
-  if(wizardStep==='hub'){ const el = document.querySelector('.total-indicator'); if(el){ const total = computeSetTotal(editingSet); const ok = total>0; el.className = 'total-indicator '+(ok?'ok':'warn'); el.textContent = `🎯 คะแนนเต็มรวมขณะนี้: ${total} คะแนน · ${ok?scoreModeSummary(total):'⚠️ กรุณากำหนดคะแนน'}`; } }
+  if(wizardStep==='hub'){ const tr = window.I18N ? window.I18N.t : (s=>s); const el = document.querySelector('.total-indicator'); if(el){ const total = computeSetTotal(editingSet); const ok = total>0; el.className = 'total-indicator '+(ok?'ok':'warn'); el.textContent = `🎯 ${tr('คะแนนเต็มรวมขณะนี้')}: ${total} ${tr('คะแนน')} · ${ok?scoreModeSummary(total):tr('⚠️ กรุณากำหนดคะแนน')}`; } }
 }
 
 function scheduleNameForPeriod(period){ return ({เช้า:'รอบเช้า',บ่าย:'รอบบ่าย',ทวิภาคี:'รอบทวิภาคี'})[period]||''; }
@@ -778,32 +786,34 @@ function syncExamSchedulesFromAssignedClasses(){
   s.examSchedules=[...groups.entries()].map(([name,classes])=>Object.assign({name,classes,studentIds:[],availableFrom:'',availableUntil:'',lateAccessCode:''},previous.get(name)||{}, {name,classes})).concat(absenceSchedules);
 }
 function renderExamSchedules(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const host=document.getElementById('examSchedulesWrap'); if(!host) return; const s=editingSet;
   const picker=document.getElementById('classGroupSelect'); const selectedPeriod=document.getElementById('schedulePeriodFilter')?.value||'';
   if(picker){picker.innerHTML=buildGroupedClassOptions(knownClasses.filter(room=>!s.assignedClasses.includes(room)&&classEducationLevelForName(room)===s.educationLevel&&(!selectedPeriod||classPeriods[room]===selectedPeriod)));}
-  if(!s.examSchedules.length){host.innerHTML='<div class="mini-card" style="margin:14px 0;"><h3 style="margin:0 0 4px;">🗓️ รอบสอบแยกตามห้อง</h3><p class="panel-sub">เลือกห้องด้านล่างก่อน ระบบจะแยกห้องเข้ารอบตามรอบเรียนที่ตั้งไว้ให้ทันที</p></div>';return;}
-  host.innerHTML=`<div class="mini-card" style="margin:14px 0;"><h3 style="margin:0 0 4px;">🗓️ รอบสอบแยกตามห้อง</h3><p class="panel-sub">ระบบจัดกลุ่มตามรอบเรียนของห้องอัตโนมัติ กำหนดวันและเวลาเฉพาะเมื่อจำเป็น — เว้นว่างไว้เพื่อเปิดสอบตลอดเวลา</p>${s.examSchedules.map((item,index)=>{const period=classPeriods[item.classes[0]],kind=period==='บ่าย'?'afternoon':period==='ทวิภาคี'?'cooperative':'';return `<div class="exam-schedule-card ${kind}"><div class="schedule-card-head"><div><h4>${escapeHtml(item.name)}</h4><p>แสดงจากรอบเรียนที่กำหนดให้ห้อง</p></div></div><div class="field schedule-room-field"><label>ห้องในรอบนี้</label><div class="chip-row">${item.classes.map((room,roomIndex)=>`<span class="chip">${escapeHtml(room)}<button type="button" data-remove-schedule-room="${index}:${roomIndex}">✕</button></span>`).join('')}</div></div><div class="schedule-time-grid"><div class="field"><label>วันเริ่มสอบ</label><input type="text" data-schedule-start-date="${index}" value="${formatExamDate(item.availableFrom)}" placeholder="dd/mm/yyyy"></div><div class="field"><label>เวลาเริ่มสอบ</label><input type="text" data-schedule-start-time="${index}" value="${formatExamTime(item.availableFrom)}" placeholder="09.00"></div><div class="field"><label>วันสิ้นสุด</label><input type="text" data-schedule-end-date="${index}" value="${formatExamDate(item.availableUntil)}" placeholder="dd/mm/yyyy"></div><div class="field"><label>เวลาสิ้นสุด</label><input type="text" data-schedule-end-time="${index}" value="${formatExamTime(item.availableUntil)}" placeholder="10.00"></div></div></div>`;}).join('')}</div>`;
-  host.querySelectorAll('.exam-schedule-card').forEach((card,index)=>{const item=s.examSchedules[index];const field=document.createElement('div');field.className='field schedule-late-code-field';field.innerHTML=`<label>รหัสเข้าสอบหลังเกินเวลาทำข้อสอบหรือเข้าสอบย้อนหลัง (ถ้ามี)</label><input type="text" data-schedule-late-code="${index}" value="${escapeAttr(item.lateAccessCode||'')}" placeholder="เช่น LATE2569">`;card.append(field);});
+  if(!s.examSchedules.length){host.innerHTML=`<div class="mini-card" style="margin:14px 0;"><h3 style="margin:0 0 4px;">🗓️ ${tr('รอบสอบแยกตามห้อง')}</h3><p class="panel-sub">${tr('เลือกห้องด้านล่างก่อน ระบบจะแยกห้องเข้ารอบตามรอบเรียนที่ตั้งไว้ให้ทันที')}</p></div>`;return;}
+  host.innerHTML=`<div class="mini-card" style="margin:14px 0;"><h3 style="margin:0 0 4px;">🗓️ ${tr('รอบสอบแยกตามห้อง')}</h3><p class="panel-sub">${tr('ระบบจัดกลุ่มตามรอบเรียนของห้องอัตโนมัติ กำหนดวันและเวลาเฉพาะเมื่อจำเป็น — เว้นว่างไว้เพื่อเปิดสอบตลอดเวลา')}</p>${s.examSchedules.map((item,index)=>{const period=classPeriods[item.classes[0]],kind=period==='บ่าย'?'afternoon':period==='ทวิภาคี'?'cooperative':'';return `<div class="exam-schedule-card ${kind}"><div class="schedule-card-head"><div><h4>${escapeHtml(tr(item.name))}</h4><p>${tr('แสดงจากรอบเรียนที่กำหนดให้ห้อง')}</p></div></div><div class="field schedule-room-field"><label>${tr('ห้องในรอบนี้')}</label><div class="chip-row">${item.classes.map((room,roomIndex)=>`<span class="chip">${escapeHtml(room)}<button type="button" data-remove-schedule-room="${index}:${roomIndex}">✕</button></span>`).join('')}</div></div><div class="schedule-time-grid"><div class="field"><label>${tr('วันเริ่มสอบ')}</label><input type="text" data-schedule-start-date="${index}" value="${formatExamDate(item.availableFrom)}" placeholder="dd/mm/yyyy"></div><div class="field"><label>${tr('เวลาเริ่มสอบ')}</label><input type="text" data-schedule-start-time="${index}" value="${formatExamTime(item.availableFrom)}" placeholder="09.00"></div><div class="field"><label>${tr('วันสิ้นสุด')}</label><input type="text" data-schedule-end-date="${index}" value="${formatExamDate(item.availableUntil)}" placeholder="dd/mm/yyyy"></div><div class="field"><label>${tr('เวลาสิ้นสุด')}</label><input type="text" data-schedule-end-time="${index}" value="${formatExamTime(item.availableUntil)}" placeholder="10.00"></div></div></div>`;}).join('')}</div>`;
+  host.querySelectorAll('.exam-schedule-card').forEach((card,index)=>{const item=s.examSchedules[index];const field=document.createElement('div');field.className='field schedule-late-code-field';field.innerHTML=`<label>${tr('รหัสเข้าสอบหลังเกินเวลาทำข้อสอบหรือเข้าสอบย้อนหลัง (ถ้ามี)')}</label><input type="text" data-schedule-late-code="${index}" value="${escapeAttr(item.lateAccessCode||'')}" placeholder="เช่น LATE2569">`;card.append(field);});
   host.querySelectorAll('.exam-schedule-card').forEach((card,index)=>{
     const item=s.examSchedules[index]; item.studentIds=Array.isArray(item.studentIds)?item.studentIds:[];
     const field=document.createElement('div'); field.className='schedule-student-access';
-    field.innerHTML=`<label>นักเรียนที่มีสิทธิ์สอบเพิ่มเติม (รายคน)</label><div class="chip-row">${item.studentIds.map((id,studentIndex)=>{const student=knownStudents.find(value=>value.studentId===id);return `<span class="chip">${escapeHtml(student?`${student.studentId} ${student.firstName} ${student.lastName} · ${student.classRoom}`:id)}<button type="button" data-remove-schedule-student="${index}:${studentIndex}">✕</button></span>`;}).join('')}</div><div class="schedule-student-picker"><input type="text" data-schedule-student-input="${index}" autocomplete="off" placeholder="พิมพ์รหัสหรือชื่ออย่างน้อย 5 ตัว"><button type="button" class="btn secondary" data-add-schedule-student="${index}">+ เพิ่มรายคน</button></div><div class="schedule-student-results" data-schedule-student-results="${index}"></div><small>ระบบจะเริ่มค้นหาเมื่อพิมพ์ครบ 5 ตัว โดยใช้วันและเวลาของรอบนี้</small>`;
+    field.innerHTML=`<label>${tr('นักเรียนที่มีสิทธิ์สอบเพิ่มเติม (รายคน)')}</label><div class="chip-row">${item.studentIds.map((id,studentIndex)=>{const student=knownStudents.find(value=>value.studentId===id);return `<span class="chip">${escapeHtml(student?`${student.studentId} ${student.firstName} ${student.lastName} · ${student.classRoom}`:id)}<button type="button" data-remove-schedule-student="${index}:${studentIndex}">✕</button></span>`;}).join('')}</div><div class="schedule-student-picker"><input type="text" data-schedule-student-input="${index}" autocomplete="off" placeholder="${tr('พิมพ์รหัสหรือชื่ออย่างน้อย 5 ตัว')}"><button type="button" class="btn secondary" data-add-schedule-student="${index}">${tr('+ เพิ่มรายคน')}</button></div><div class="schedule-student-results" data-schedule-student-results="${index}"></div><small>${tr('ระบบจะเริ่มค้นหาเมื่อพิมพ์ครบ 5 ตัว โดยใช้วันและเวลาของรอบนี้')}</small>`;
     card.append(field);
   });
   const sync=index=>{const item=s.examSchedules[index];item.availableFrom=parseExamDateTime(host.querySelector(`[data-schedule-start-date="${index}"]`).value,host.querySelector(`[data-schedule-start-time="${index}"]`).value);item.availableUntil=parseExamDateTime(host.querySelector(`[data-schedule-end-date="${index}"]`).value,host.querySelector(`[data-schedule-end-time="${index}"]`).value);item.lateAccessCode=host.querySelector(`[data-schedule-late-code="${index}"]`).value.trim();};
   host.querySelectorAll('[data-schedule-start-date],[data-schedule-start-time],[data-schedule-end-date],[data-schedule-end-time],[data-schedule-late-code]').forEach(input=>input.addEventListener('change',()=>sync(Number(input.dataset.scheduleStartDate??input.dataset.scheduleStartTime??input.dataset.scheduleEndDate??input.dataset.scheduleEndTime??input.dataset.scheduleLateCode))));
   host.querySelectorAll('[data-schedule-late-code]').forEach(input=>input.addEventListener('input',()=>{s.examSchedules[Number(input.dataset.scheduleLateCode)].lateAccessCode=input.value.trim();}));
   host.querySelectorAll('[data-remove-schedule-room]').forEach(button=>button.addEventListener('click',()=>{const [index,room]=button.dataset.removeScheduleRoom.split(':').map(Number),name=s.examSchedules[index].classes[room];s.assignedClasses=s.assignedClasses.filter(item=>item!==name);syncExamSchedulesFromAssignedClasses();renderExamSchedules();renderClassChips();}));
-  host.querySelectorAll('[data-add-schedule-student]').forEach(button=>button.addEventListener('click',()=>{const index=Number(button.dataset.addScheduleStudent),input=host.querySelector(`[data-schedule-student-input="${index}"]`),value=input.value.trim();const student=knownStudents.find(item=>item.studentId===value);if(!student){showToast('ไม่พบรหัสนักเรียนนี้');return;}const prior=s.examSchedules.find(item=>(item.studentIds||[]).includes(student.studentId));if(prior){showToast(`เพิ่มนักเรียนคนนี้ไว้ใน ${prior.name} แล้ว`);return;}s.examSchedules[index].studentIds.push(student.studentId);renderExamSchedules();}));
-  host.querySelectorAll('[data-schedule-student-input]').forEach(input=>{let timer;input.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{const term=input.value.trim().toLocaleLowerCase('th-TH'),index=input.dataset.scheduleStudentInput,list=host.querySelector(`[data-schedule-student-results="${index}"]`);if(term.length<5){list.innerHTML='';return;}const matches=knownStudents.filter(student=>`${student.studentId} ${student.firstName} ${student.lastName} ${student.classRoom}`.toLocaleLowerCase('th-TH').includes(term)).slice(0,20);list.innerHTML=matches.length?matches.map(student=>`<button type="button" class="schedule-student-result" data-student-result="${escapeAttr(student.studentId)}"><b>${escapeHtml(student.studentId)}</b><span>${escapeHtml(`${student.firstName} ${student.lastName}`)}</span><em>${escapeHtml(student.classRoom)}</em></button>`).join(''):'<div class="schedule-student-empty">ไม่พบนักเรียนที่ตรงกับคำค้นหา</div>';list.querySelectorAll('[data-student-result]').forEach(option=>option.addEventListener('click',()=>{input.value=option.dataset.studentResult;list.innerHTML='';input.focus();}));},180);});input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();host.querySelector(`[data-add-schedule-student="${input.dataset.scheduleStudentInput}"]`)?.click();}});});
+  host.querySelectorAll('[data-add-schedule-student]').forEach(button=>button.addEventListener('click',()=>{const index=Number(button.dataset.addScheduleStudent),input=host.querySelector(`[data-schedule-student-input="${index}"]`),value=input.value.trim();const student=knownStudents.find(item=>item.studentId===value);if(!student){showToast('ไม่พบรหัสนักเรียนนี้');return;}const prior=s.examSchedules.find(item=>(item.studentIds||[]).includes(student.studentId));if(prior){showToast(tr('เพิ่มนักเรียนคนนี้ไว้ใน')+` ${tr(prior.name)} `+tr('แล้ว'));return;}s.examSchedules[index].studentIds.push(student.studentId);renderExamSchedules();}));
+  host.querySelectorAll('[data-schedule-student-input]').forEach(input=>{let timer;input.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{const term=input.value.trim().toLocaleLowerCase('th-TH'),index=input.dataset.scheduleStudentInput,list=host.querySelector(`[data-schedule-student-results="${index}"]`);if(term.length<5){list.innerHTML='';return;}const matches=knownStudents.filter(student=>`${student.studentId} ${student.firstName} ${student.lastName} ${student.classRoom}`.toLocaleLowerCase('th-TH').includes(term)).slice(0,20);list.innerHTML=matches.length?matches.map(student=>`<button type="button" class="schedule-student-result" data-student-result="${escapeAttr(student.studentId)}"><b>${escapeHtml(student.studentId)}</b><span>${escapeHtml(`${student.firstName} ${student.lastName}`)}</span><em>${escapeHtml(student.classRoom)}</em></button>`).join(''):`<div class="schedule-student-empty">${tr('ไม่พบนักเรียนที่ตรงกับคำค้นหา')}</div>`;list.querySelectorAll('[data-student-result]').forEach(option=>option.addEventListener('click',()=>{input.value=option.dataset.studentResult;list.innerHTML='';input.focus();}));},180);});input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();host.querySelector(`[data-add-schedule-student="${input.dataset.scheduleStudentInput}"]`)?.click();}});});
   host.querySelectorAll('[data-remove-schedule-student]').forEach(button=>button.addEventListener('click',()=>{const [index,studentIndex]=button.dataset.removeScheduleStudent.split(':').map(Number);s.examSchedules[index].studentIds.splice(studentIndex,1);renderExamSchedules();}));
 }
 function renderClassChips(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const s = editingSet;
   const row = document.getElementById('classChipRow');
   if(!row) return;
   if(!s.assignedClasses.length){
-    row.innerHTML = `<div class="chip-empty-note">ยังไม่ได้จำกัดห้อง — ตอนนี้ทุกห้องสอบวิชานี้ได้</div>`;
+    row.innerHTML = `<div class="chip-empty-note">${tr('ยังไม่ได้จำกัดห้อง — ตอนนี้ทุกห้องสอบวิชานี้ได้')}</div>`;
     return;
   }
   row.innerHTML = s.assignedClasses.map((c,i)=>`<span class="chip">${escapeHtml(c)}<button type="button" data-rmclass="${i}">✕</button></span>`).join('');
@@ -812,26 +822,27 @@ function renderClassChips(){
 
 /* ---------- section manager (add/remove matching & written sections) ---------- */
 function renderSectionManager(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const row = document.getElementById('sectionManagerRow');
-  const labels = {mc:'📝 ปรนัย', matching:'🔗 จับคู่', written:'✍️ อัตนัย'};
+  const labels = {mc:tr('📝 ปรนัย'), matching:tr('🔗 จับคู่'), written:tr('✍️ อัตนัย')};
   let html = '';
   ['mc','matching','written'].forEach(sec=>{
     if(!editingUiEnabled[sec]) return;
-    html += `<span class="section-tag">${labels[sec]}<button type="button" data-rmsection="${sec}" title="ลบส่วนนี้">✕</button></span>`;
+    html += `<span class="section-tag">${labels[sec]}<button type="button" data-rmsection="${sec}" title="${tr('ลบส่วนนี้')}">✕</button></span>`;
   });
   const missing = ['mc','matching','written'].filter(sec=>!editingUiEnabled[sec]);
   if(missing.length){
     html += `<div class="add-section-dropdown">
-      <button class="btn btn-ghost btn-sm" id="addSectionBtn" type="button">+ เพิ่มส่วน</button>
+      <button class="btn btn-ghost btn-sm" id="addSectionBtn" type="button">${tr('+ เพิ่มส่วน')}</button>
       <div class="add-section-menu hidden" id="addSectionMenu">
-        ${missing.map(sec=>`<button type="button" data-addsection="${sec}">${sec==='mc'?'📝 เพิ่มส่วนปรนัย':sec==='matching'?'🔗 เพิ่มส่วนจับคู่':'✍️ เพิ่มส่วนอัตนัย'}</button>`).join('')}
+        ${missing.map(sec=>`<button type="button" data-addsection="${sec}">${sec==='mc'?tr('📝 เพิ่มส่วนปรนัย'):sec==='matching'?tr('🔗 เพิ่มส่วนจับคู่'):tr('✍️ เพิ่มส่วนอัตนัย')}</button>`).join('')}
       </div>
     </div>`;
   }
   row.innerHTML = html;
   row.querySelectorAll('[data-rmsection]').forEach(b=>b.addEventListener('click', ()=>{
     const sec = b.dataset.rmsection;
-    if(!confirm('ลบส่วนนี้? ข้อสอบทั้งหมดในส่วนนี้จะถูกลบไปด้วย')) return;
+    if(!confirm(tr('ลบส่วนนี้? ข้อสอบทั้งหมดในส่วนนี้จะถูกลบไปด้วย'))) return;
     editingUiEnabled[sec] = false;
     if(sec==='mc'){ Object.assign(editingSet.sections.mc, {questions:[], sectionPointsTotal:0}); }
     if(sec==='matching'){ Object.assign(editingSet.sections.matching, {left:[], right:[], correctMap:{}, pointsEach:0, sectionPointsTotal:0}); }
@@ -880,27 +891,28 @@ function bindEditorPanelEvents(section, index){
 
 /* ---------- MC section ---------- */
 function renderMcPanel(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const wrap = document.getElementById('sectionDetailBody');
   if(!wrap) return;
   const s = editingSet.sections.mc;
   wrap.innerHTML = `<div class="panel">
-    <div class="section-hero-card"><div><h3>📝 ปรนัย</h3><p>เลือกคำตอบที่ถูกต้องที่สุดในแต่ละข้อ</p></div><span class="section-count-badge">${s.questions.length} ข้อ</span></div>
+    <div class="section-hero-card"><div><h3>${tr('📝 ปรนัย')}</h3><p>${tr('เลือกคำตอบที่ถูกต้องที่สุดในแต่ละข้อ')}</p></div><span class="section-count-badge">${s.questions.length} ${tr('ข้อ')}</span></div>
     <div class="field-row">
-      <div class="field" style="max-width:260px;"><label>คะแนนรวมส่วนนี้ (หารเท่ากันทุกข้อ)</label><input type="number" step="0.5" id="mcSectionPoints" value="${s.sectionPointsTotal||0}" min="0"></div>
+      <div class="field" style="max-width:260px;"><label>${tr('คะแนนรวมส่วนนี้ (หารเท่ากันทุกข้อ)')}</label><input type="number" step="0.5" id="mcSectionPoints" value="${s.sectionPointsTotal||0}" min="0"></div>
     </div>
     <div class="compact-list" id="mcCompactList"></div>
-    <button class="add-row-btn" id="addMcBtn" type="button">+ เพิ่มข้อปรนัย</button>
-    <button class="add-row-btn" id="toggleMcImportBtn" type="button" style="margin-top:8px;border-color:#A78BFA;color:var(--indigo);">✨ นำเข้าข้อปรนัยจาก ChatGPT</button>
+    <button class="add-row-btn" id="addMcBtn" type="button">${tr('+ เพิ่มข้อปรนัย')}</button>
+    <button class="add-row-btn" id="toggleMcImportBtn" type="button" style="margin-top:8px;border-color:#A78BFA;color:var(--indigo);">${tr('✨ นำเข้าข้อปรนัยจาก ChatGPT')}</button>
     <div class="mc-import-box hidden" id="mcImportBox">
-      <h4>1. สร้างข้อสอบด้วย ChatGPT</h4><p>คัดลอก Prompt นี้ไปวางใน ChatGPT แล้วแก้ไขหัวข้อหรือจำนวนข้อได้ตามต้องการ</p>
+      <h4>${tr('1. สร้างข้อสอบด้วย ChatGPT')}</h4><p>${tr('คัดลอก Prompt นี้ไปวางใน ChatGPT แล้วแก้ไขหัวข้อหรือจำนวนข้อได้ตามต้องการ')}</p>
       <textarea id="mcPromptText" readonly>${escapeHtml(buildChatGptMcPrompt())}</textarea>
-      <div class="editor-actions"><button class="btn btn-ghost btn-sm" id="copyMcPromptBtn" type="button">📋 คัดลอก Prompt</button></div>
-      <h4 style="margin-top:16px;">2. วางข้อสอบที่ ChatGPT สร้าง</h4><p>รองรับรูปแบบ: 1. คำถาม / ก. ข. ค. ง. / เฉลย: ข — ตรวจสอบก่อนเพิ่มจริง</p>
+      <div class="editor-actions"><button class="btn btn-ghost btn-sm" id="copyMcPromptBtn" type="button">${tr('📋 คัดลอก Prompt')}</button></div>
+      <h4 style="margin-top:16px;">${tr('2. วางข้อสอบที่ ChatGPT สร้าง')}</h4><p>${tr('รองรับรูปแบบ: 1. คำถาม / ก. ข. ค. ง. / เฉลย: ข — ตรวจสอบก่อนเพิ่มจริง')}</p>
       <textarea id="mcImportText" placeholder="1. CPU มีหน้าที่อะไร&#10;ก. แสดงผล&#10;ข. ประมวลผล&#10;ค. เก็บข้อมูล&#10;ง. พิมพ์เอกสาร&#10;เฉลย: ข"></textarea>
-      <div class="editor-actions"><button class="btn btn-ghost btn-sm" id="previewMcImportBtn" type="button">ตรวจรูปแบบ</button><button class="btn btn-primary btn-sm" id="applyMcImportBtn" type="button" disabled>เพิ่มข้อที่ตรวจแล้ว</button></div>
+      <div class="editor-actions"><button class="btn btn-ghost btn-sm" id="previewMcImportBtn" type="button">${tr('ตรวจรูปแบบ')}</button><button class="btn btn-primary btn-sm" id="applyMcImportBtn" type="button" disabled>${tr('เพิ่มข้อที่ตรวจแล้ว')}</button></div>
       <div class="mc-import-preview" id="mcImportPreview"></div>
     </div>
-    <div class="editor-actions"><button class="btn btn-primary" id="saveSetFromMcBtn" type="button">💾 บันทึกชุดข้อสอบ</button></div>
+    <div class="editor-actions"><button class="btn btn-primary" id="saveSetFromMcBtn" type="button">${tr('💾 บันทึกชุดข้อสอบ')}</button></div>
     <div id="mcEditorSlot"></div>
   </div>`;
   renderMcCompactList();
@@ -1098,21 +1110,22 @@ function bindMcImportEvents(){
   });
 }
 function renderMcCompactList(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const s = editingSet.sections.mc;
   const wrap = document.getElementById('mcCompactList');
   if(!wrap) return;
   wrap.innerHTML = s.questions.map((q,i)=>`
     <div class="compact-row">
       <span class="compact-idx">${i+1}.</span>
-      <span class="compact-text">${escapeHtml(truncateText(q.text||'(ยังไม่ได้กรอกคำถาม)',70))}</span>
-      <span class="compact-meta">${q.points||0} คะแนน</span>
-      <button class="btn btn-ghost btn-sm" data-editq="${i}" type="button">แก้ไข</button>
-      <button class="btn btn-danger btn-sm" data-delq="${i}" type="button">ลบ</button>
-    </div>`).join('') || `<p class="muted-note">ยังไม่มีข้อปรนัย</p>`;
+      <span class="compact-text">${escapeHtml(truncateText(q.text||tr('(ยังไม่ได้กรอกคำถาม)'),70))}</span>
+      <span class="compact-meta">${q.points||0} ${tr('คะแนน')}</span>
+      <button class="btn btn-ghost btn-sm" data-editq="${i}" type="button">${tr('แก้ไข')}</button>
+      <button class="btn btn-danger btn-sm" data-delq="${i}" type="button">${tr('ลบ')}</button>
+    </div>`).join('') || `<p class="muted-note">${tr('ยังไม่มีข้อปรนัย')}</p>`;
   wrap.querySelectorAll('[data-editq]').forEach(b=>b.addEventListener('click', ()=> openQuestionEditor('mc', parseInt(b.dataset.editq,10))));
   wrap.querySelectorAll('[data-delq]').forEach(b=>b.addEventListener('click', ()=>{
     const i = parseInt(b.dataset.delq,10);
-    if(!confirm('ลบข้อนี้?')) return;
+    if(!confirm(tr('ลบข้อนี้?'))) return;
     s.questions.splice(i,1);
     applyPointDistribution('mc');
     if(openQEditor && openQEditor.section==='mc' && openQEditor.index===i) openQEditor=null;
@@ -1120,28 +1133,30 @@ function renderMcCompactList(){
   }));
 }
 function mcEditorPanelHtml(index){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const s = editingSet.sections.mc;
   const isNew = index===null;
   const q = isNew ? {text:'', choices:['','','',''], answer:0} : s.questions[index];
   return `<div class="q-editor-panel">
-    <div class="q-editor-title">${isNew?'เพิ่มข้อปรนัยใหม่':'แก้ไขข้อที่ '+(index+1)}</div>
-    <div class="field"><label>โจทย์</label><textarea id="qeMcText" placeholder="พิมพ์คำถาม...">${escapeHtml(q.text)}</textarea></div>
+    <div class="q-editor-title">${isNew?tr('เพิ่มข้อปรนัยใหม่'):tr('แก้ไขข้อที่')+' '+(index+1)}</div>
+    <div class="field"><label>${tr('โจทย์')}</label><textarea id="qeMcText" placeholder="${tr('พิมพ์คำถาม...')}">${escapeHtml(q.text)}</textarea></div>
     ${mcResourceEditorHtml(q,isNew)}
     ${q.choices.map((c,ci)=>`
       <div class="choice-edit-row">
-        <input type="radio" name="qeMcAns" data-ci="${ci}" ${q.answer===ci?'checked':''} title="ทำเครื่องหมายคำตอบที่ถูกต้อง">
-        <input type="text" class="qeMcChoice" data-ci="${ci}" value="${escapeAttr(c)}" placeholder="ตัวเลือกที่ ${ci+1}">
+        <input type="radio" name="qeMcAns" data-ci="${ci}" ${q.answer===ci?'checked':''} title="${tr('ทำเครื่องหมายคำตอบที่ถูกต้อง')}">
+        <input type="text" class="qeMcChoice" data-ci="${ci}" value="${escapeAttr(c)}" placeholder="${tr('ตัวเลือกที่')} ${ci+1}">
       </div>`).join('')}
     <div class="editor-actions">
-      <button class="btn btn-ghost btn-sm" id="qeCancelBtn" type="button">ยกเลิก</button>
-      <button class="btn btn-primary btn-sm" id="qeSaveBtn" type="button">${isNew?'เพิ่มข้อนี้':'บันทึกการแก้ไข'}</button>
+      <button class="btn btn-ghost btn-sm" id="qeCancelBtn" type="button">${tr('ยกเลิก')}</button>
+      <button class="btn btn-primary btn-sm" id="qeSaveBtn" type="button">${isNew?tr('เพิ่มข้อนี้'):tr('บันทึกการแก้ไข')}</button>
     </div>
   </div>`;
 }
 function mcResourceEditorHtml(q,isNew){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const resources=isNew?(openQEditor.resources||(openQEditor.resources={attachments:[]})):(q.resources||(q.resources={attachments:[]}));
-  const attachments=(resources.attachments||[]).map(item=>`<li>${escapeHtml(item.name||'ไฟล์แนบ')}</li>`).join('')||'<li>ยังไม่มีไฟล์แนบ</li>';
-  return `<div class="field"><label>รูปภาพหรือไฟล์แนบ (ไม่เกิน 5 MB)</label><input id="qeMcAsset" type="file" accept="image/*,.pdf,.docx,.pptx,.zip"><ul id="qeMcAssetList">${attachments}</ul></div>`;
+  const attachments=(resources.attachments||[]).map(item=>`<li>${escapeHtml(item.name||tr('ไฟล์แนบ'))}</li>`).join('')||`<li>${tr('ยังไม่มีไฟล์แนบ')}</li>`;
+  return `<div class="field"><label>${tr('รูปภาพหรือไฟล์แนบ (ไม่เกิน 5 MB)')}</label><input id="qeMcAsset" type="file" accept="image/*,.pdf,.docx,.pptx,.zip"><ul id="qeMcAssetList">${attachments}</ul></div>`;
 }
 function bindMcResourceUpload(){
   const input=document.getElementById('qeMcAsset');
@@ -1155,11 +1170,12 @@ function bindMcResourceUpload(){
   });
 }
 function writtenResourceEditorHtml(q,isNew){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const resources=isNew?(openQEditor.resources||(openQEditor.resources={attachments:[]})):(q.resources||(q.resources={attachments:[]}));
-  const attachments=(resources.attachments||[]).map(item=>`<li>${escapeHtml(item.name||'ไฟล์แนบ')}</li>`).join('')||'<li>ยังไม่มีไฟล์แนบ</li>';
-  return `<div class="field"><label>รูปภาพหรือไฟล์แนบ (ไม่เกิน 5 MB)</label><input id="qeWAsset" type="file" accept="image/*,.pdf,.docx,.pptx,.zip"><ul id="qeWAssetList">${attachments}</ul></div>`;
+  const attachments=(resources.attachments||[]).map(item=>`<li>${escapeHtml(item.name||tr('ไฟล์แนบ'))}</li>`).join('')||`<li>${tr('ยังไม่มีไฟล์แนบ')}</li>`;
+  return `<div class="field"><label>${tr('รูปภาพหรือไฟล์แนบ (ไม่เกิน 5 MB)')}</label><input id="qeWAsset" type="file" accept="image/*,.pdf,.docx,.pptx,.zip"><ul id="qeWAssetList">${attachments}</ul></div>`;
 }
-function writtenCodeResourceEditorHtml(q,isNew){ const resources=isNew?(openQEditor.resources||(openQEditor.resources={attachments:[]})):(q.resources||(q.resources={attachments:[]})); return `<div class="field"><label>โค้ดตั้งต้น/โค้ดประกอบโจทย์ (ถ้ามี)</label><select id="qeWCodeLanguage"><option value="">เลือกภาษา</option>${['C','C++','Java','HTML','SQL','อื่น ๆ'].map(x=>`<option ${resources.language===x?'selected':''}>${x}</option>`).join('')}</select><textarea id="qeWCode" placeholder="วางโค้ดที่ต้องการแสดงในโจทย์">${escapeHtml(resources.code||'')}</textarea></div>`; }
+function writtenCodeResourceEditorHtml(q,isNew){ const tr = window.I18N ? window.I18N.t : (s=>s); const resources=isNew?(openQEditor.resources||(openQEditor.resources={attachments:[]})):(q.resources||(q.resources={attachments:[]})); return `<div class="field"><label>${tr('โค้ดตั้งต้น/โค้ดประกอบโจทย์ (ถ้ามี)')}</label><select id="qeWCodeLanguage"><option value="">${tr('เลือกภาษา')}</option>${['C','C++','Java','HTML','SQL','อื่น ๆ'].map(x=>`<option ${resources.language===x?'selected':''}>${tr(x)}</option>`).join('')}</select><textarea id="qeWCode" placeholder="${tr('วางโค้ดที่ต้องการแสดงในโจทย์')}">${escapeHtml(resources.code||'')}</textarea></div>`; }
 function bindWrittenResourceUpload(){
   const input=document.getElementById('qeWAsset');
   if(!input) return;
@@ -1173,9 +1189,9 @@ function bindWrittenResourceUpload(){
 }
 function saveMcQuestionFromEditor(index){
   const text = document.getElementById('qeMcText').value.trim();
-  if(!text){ alert('กรุณากรอกคำถาม'); return; }
+  if(!text){ alert(window.I18N?window.I18N.t('กรุณากรอกคำถาม'):'กรุณากรอกคำถาม'); return; }
   const choices = Array.from(document.querySelectorAll('.qeMcChoice')).map(el=>el.value.trim());
-  if(choices.some(c=>!c)){ alert('กรุณากรอกตัวเลือกให้ครบทุกช่อง'); return; }
+  if(choices.some(c=>!c)){ alert(window.I18N?window.I18N.t('กรุณากรอกตัวเลือกให้ครบทุกช่อง'):'กรุณากรอกตัวเลือกให้ครบทุกช่อง'); return; }
   const answerRadio = document.querySelector('input[name="qeMcAns"]:checked');
   const answer = answerRadio ? parseInt(answerRadio.dataset.ci,10) : 0;
   const s = editingSet.sections.mc;
@@ -1189,16 +1205,17 @@ function saveMcQuestionFromEditor(index){
 
 /* ---------- Matching section ---------- */
 function renderMatchingPanel(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const wrap = document.getElementById('sectionDetailBody');
   if(!wrap) return;
   const m = editingSet.sections.matching;
   wrap.innerHTML = `<div class="panel">
-    <h3>🔗 ส่วนที่ 2 — จับคู่ <span style="font-weight:400;color:var(--sub);font-size:12px;">(${m.left.length} คู่)</span></h3>
+    <h3>${tr('🔗 ส่วนที่ 2 — จับคู่')} <span style="font-weight:400;color:var(--sub);font-size:12px;">(${m.left.length} ${tr('คู่')})</span></h3>
     <div class="field-row">
-      <div class="field" style="max-width:260px;"><label>คะแนนรวมส่วนนี้ (หารเท่ากันทุกคู่)</label><input type="number" step="0.5" id="matchSectionPoints" value="${m.sectionPointsTotal||0}" min="0"></div>
+      <div class="field" style="max-width:260px;"><label>${tr('คะแนนรวมส่วนนี้ (หารเท่ากันทุกคู่)')}</label><input type="number" step="0.5" id="matchSectionPoints" value="${m.sectionPointsTotal||0}" min="0"></div>
     </div>
     <div class="compact-list" id="matchCompactList"></div>
-    <button class="add-row-btn" id="addMatchBtn" type="button">+ เพิ่มคู่จับคู่</button>
+    <button class="add-row-btn" id="addMatchBtn" type="button">${tr('+ เพิ่มคู่จับคู่')}</button>
     <div id="matchingEditorSlot"></div>
   </div>`;
   renderMatchCompactList();
@@ -1210,21 +1227,22 @@ function renderMatchingPanel(){
   renderOpenEditorIfNeeded('matching');
 }
 function renderMatchCompactList(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const m = editingSet.sections.matching;
   const wrap = document.getElementById('matchCompactList');
   if(!wrap) return;
   wrap.innerHTML = m.left.map((item,i)=>`
     <div class="compact-row">
       <span class="compact-idx">${i+1}.</span>
-      <span class="compact-text">${escapeHtml(truncateText(item.text||'(ว่าง)',30))} ↔ ${escapeHtml(truncateText(m.right[i].text||'(ว่าง)',30))}</span>
-      <span class="compact-meta">${m.pointsEach||0} คะแนน</span>
-      <button class="btn btn-ghost btn-sm" data-editq="${i}" type="button">แก้ไข</button>
-      <button class="btn btn-danger btn-sm" data-delq="${i}" type="button">ลบ</button>
-    </div>`).join('') || `<p class="muted-note">ยังไม่มีคู่จับคู่</p>`;
+      <span class="compact-text">${escapeHtml(truncateText(item.text||tr('(ว่าง)'),30))} ↔ ${escapeHtml(truncateText(m.right[i].text||tr('(ว่าง)'),30))}</span>
+      <span class="compact-meta">${m.pointsEach||0} ${tr('คะแนน')}</span>
+      <button class="btn btn-ghost btn-sm" data-editq="${i}" type="button">${tr('แก้ไข')}</button>
+      <button class="btn btn-danger btn-sm" data-delq="${i}" type="button">${tr('ลบ')}</button>
+    </div>`).join('') || `<p class="muted-note">${tr('ยังไม่มีคู่จับคู่')}</p>`;
   wrap.querySelectorAll('[data-editq]').forEach(b=>b.addEventListener('click', ()=> openQuestionEditor('matching', parseInt(b.dataset.editq,10))));
   wrap.querySelectorAll('[data-delq]').forEach(b=>b.addEventListener('click', ()=>{
     const i = parseInt(b.dataset.delq,10);
-    if(!confirm('ลบคู่นี้?')) return;
+    if(!confirm(tr('ลบคู่นี้?'))) return;
     const lid = m.left[i].id;
     m.left.splice(i,1); m.right.splice(i,1);
     delete m.correctMap[lid];
@@ -1234,26 +1252,27 @@ function renderMatchCompactList(){
   }));
 }
 function matchingEditorPanelHtml(index){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const m = editingSet.sections.matching;
   const isNew = index===null;
   const leftText = isNew ? '' : m.left[index].text;
   const rightText = isNew ? '' : m.right[index].text;
   return `<div class="q-editor-panel">
-    <div class="q-editor-title">${isNew?'เพิ่มคู่จับคู่ใหม่':'แก้ไขคู่ที่ '+(index+1)}</div>
+    <div class="q-editor-title">${isNew?tr('เพิ่มคู่จับคู่ใหม่'):tr('แก้ไขคู่ที่')+' '+(index+1)}</div>
     <div class="field-row">
-      <div class="field"><label>รายการฝั่งซ้าย (โจทย์)</label><input type="text" id="qeMLeft" value="${escapeAttr(leftText)}" placeholder="เช่น CPU"></div>
-      <div class="field"><label>รายการฝั่งขวา (คำตอบ)</label><input type="text" id="qeMRight" value="${escapeAttr(rightText)}" placeholder="เช่น หน่วยประมวลผลกลาง"></div>
+      <div class="field"><label>${tr('รายการฝั่งซ้าย (โจทย์)')}</label><input type="text" id="qeMLeft" value="${escapeAttr(leftText)}" placeholder="เช่น CPU"></div>
+      <div class="field"><label>${tr('รายการฝั่งขวา (คำตอบ)')}</label><input type="text" id="qeMRight" value="${escapeAttr(rightText)}" placeholder="เช่น หน่วยประมวลผลกลาง"></div>
     </div>
     <div class="editor-actions">
-      <button class="btn btn-ghost btn-sm" id="qeCancelBtn" type="button">ยกเลิก</button>
-      <button class="btn btn-primary btn-sm" id="qeSaveBtn" type="button">${isNew?'เพิ่มคู่นี้':'บันทึกการแก้ไข'}</button>
+      <button class="btn btn-ghost btn-sm" id="qeCancelBtn" type="button">${tr('ยกเลิก')}</button>
+      <button class="btn btn-primary btn-sm" id="qeSaveBtn" type="button">${isNew?tr('เพิ่มคู่นี้'):tr('บันทึกการแก้ไข')}</button>
     </div>
   </div>`;
 }
 function saveMatchingPairFromEditor(index){
   const leftText = document.getElementById('qeMLeft').value.trim();
   const rightText = document.getElementById('qeMRight').value.trim();
-  if(!leftText || !rightText){ alert('กรุณากรอกทั้งสองฝั่ง'); return; }
+  if(!leftText || !rightText){ alert(window.I18N?window.I18N.t('กรุณากรอกทั้งสองฝั่ง'):'กรุณากรอกทั้งสองฝั่ง'); return; }
   const m = editingSet.sections.matching;
   if(index===null){
     const lid = uid('l'), rid = uid('r');
@@ -1270,16 +1289,17 @@ function saveMatchingPairFromEditor(index){
 
 /* ---------- Written section ---------- */
 function renderWrittenPanel(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const wrap = document.getElementById('sectionDetailBody');
   if(!wrap) return;
   const s = editingSet.sections.written;
   wrap.innerHTML = `<div class="panel">
-    <h3>✍️ ส่วนที่ 3 — อัตนัย <span style="font-weight:400;color:var(--sub);font-size:12px;">(${s.questions.length} ข้อ)</span></h3>
+    <h3>${tr('✍️ ส่วนที่ 3 — อัตนัย')} <span style="font-weight:400;color:var(--sub);font-size:12px;">(${s.questions.length} ${tr('ข้อ')})</span></h3>
     <div class="field-row">
-      <div class="field" style="max-width:260px;"><label>คะแนนรวมส่วนนี้ (หารเท่ากันทุกข้อ)</label><input type="number" step="0.5" id="writtenSectionPoints" value="${s.sectionPointsTotal||0}" min="0"></div>
+      <div class="field" style="max-width:260px;"><label>${tr('คะแนนรวมส่วนนี้ (หารเท่ากันทุกข้อ)')}</label><input type="number" step="0.5" id="writtenSectionPoints" value="${s.sectionPointsTotal||0}" min="0"></div>
     </div>
     <div class="compact-list" id="writtenCompactList"></div>
-    <button class="add-row-btn" id="addWrittenBtn" type="button">+ เพิ่มข้ออัตนัย</button>
+    <button class="add-row-btn" id="addWrittenBtn" type="button">${tr('+ เพิ่มข้ออัตนัย')}</button>
     <div id="writtenEditorSlot"></div>
   </div>`;
   renderWrittenCompactList();
@@ -1291,21 +1311,22 @@ function renderWrittenPanel(){
   renderOpenEditorIfNeeded('written');
 }
 function renderWrittenCompactList(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const s = editingSet.sections.written;
   const wrap = document.getElementById('writtenCompactList');
   if(!wrap) return;
   wrap.innerHTML = s.questions.map((q,i)=>`
     <div class="compact-row">
       <span class="compact-idx">${i+1}.</span>
-      <span class="compact-text">${escapeHtml(truncateText(q.text||'(ยังไม่ได้กรอกคำถาม)',70))}</span>
-      <span class="compact-meta">${q.maxPoints||0} คะแนน</span>
-      <button class="btn btn-ghost btn-sm" data-editq="${i}" type="button">แก้ไข</button>
-      <button class="btn btn-danger btn-sm" data-delq="${i}" type="button">ลบ</button>
-    </div>`).join('') || `<p class="muted-note">ยังไม่มีข้ออัตนัย</p>`;
+      <span class="compact-text">${escapeHtml(truncateText(q.text||tr('(ยังไม่ได้กรอกคำถาม)'),70))}</span>
+      <span class="compact-meta">${q.maxPoints||0} ${tr('คะแนน')}</span>
+      <button class="btn btn-ghost btn-sm" data-editq="${i}" type="button">${tr('แก้ไข')}</button>
+      <button class="btn btn-danger btn-sm" data-delq="${i}" type="button">${tr('ลบ')}</button>
+    </div>`).join('') || `<p class="muted-note">${tr('ยังไม่มีข้ออัตนัย')}</p>`;
   wrap.querySelectorAll('[data-editq]').forEach(b=>b.addEventListener('click', ()=> openQuestionEditor('written', parseInt(b.dataset.editq,10))));
   wrap.querySelectorAll('[data-delq]').forEach(b=>b.addEventListener('click', ()=>{
     const i = parseInt(b.dataset.delq,10);
-    if(!confirm('ลบข้อนี้?')) return;
+    if(!confirm(tr('ลบข้อนี้?'))) return;
     s.questions.splice(i,1);
     applyPointDistribution('written');
     if(openQEditor && openQEditor.section==='written' && openQEditor.index===i) openQEditor=null;
@@ -1313,28 +1334,29 @@ function renderWrittenCompactList(){
   }));
 }
 function writtenEditorPanelHtml(index){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const s = editingSet.sections.written;
   const isNew = index===null;
   const q = isNew ? {text:'', keywords:[], answerType:'text', answerCode:'', language:'c'} : s.questions[index];
   const isCode = q.answerType === 'code';
   return `<div class="q-editor-panel">
-    <div class="q-editor-title">${isNew?'เพิ่มข้ออัตนัยใหม่':'แก้ไขข้อที่ '+(index+1)}</div>
-    <div class="field"><label>โจทย์</label><textarea id="qeWText" placeholder="พิมพ์คำถาม...">${escapeHtml(q.text)}</textarea></div>
-    <div class="field"><label>รูปแบบคำตอบ</label><select id="qeWAnswerType"><option value="text" ${!isCode?'selected':''}>อัตนัย (ตรวจคำสำคัญ)</option><option value="code" ${isCode?'selected':''}>💻 แก้ไขโค้ด (เทียบเฉลย)</option></select></div>
-    <div class="field" id="qeWKeywordsWrap" ${isCode?'style="display:none"':''}><label>คำสำคัญสำหรับตรวจเบื้องต้น (คั่นด้วยจุลภาค , )</label><input type="text" id="qeWKeywords" value="${escapeAttr((q.keywords||[]).join(', '))}" placeholder="เช่น ฮาร์ดแวร์, ซอฟต์แวร์"></div>
-    <div id="qeWCodeAnswerWrap" ${isCode?'':'style="display:none"'}><div class="field"><label>ภาษา</label><select id="qeWLanguage"><option value="c" ${q.language==='c'?'selected':''}>C</option><option value="cpp" ${q.language==='cpp'?'selected':''}>C++</option><option value="java" ${q.language==='java'?'selected':''}>Java</option></select></div><div class="field"><label>เฉลยโค้ด (ตัดช่องว่างและขึ้นบรรทัดใหม่ก่อนตรวจ)</label><textarea id="qeWAnswerCode" spellcheck="false" style="font-family:ui-monospace,Consolas,monospace;min-height:150px;">${escapeHtml(q.answerCode||'')}</textarea></div>${writtenCodeResourceEditorHtml(q,isNew)}</div><div id="qeWAttachmentWrap" ${isCode?'style="display:none"':''}>${writtenResourceEditorHtml(q,isNew)}</div>
+    <div class="q-editor-title">${isNew?tr('เพิ่มข้ออัตนัยใหม่'):tr('แก้ไขข้อที่')+' '+(index+1)}</div>
+    <div class="field"><label>${tr('โจทย์')}</label><textarea id="qeWText" placeholder="${tr('พิมพ์คำถาม...')}">${escapeHtml(q.text)}</textarea></div>
+    <div class="field"><label>${tr('รูปแบบคำตอบ')}</label><select id="qeWAnswerType"><option value="text" ${!isCode?'selected':''}>${tr('อัตนัย (ตรวจคำสำคัญ)')}</option><option value="code" ${isCode?'selected':''}>${tr('💻 แก้ไขโค้ด (เทียบเฉลย)')}</option></select></div>
+    <div class="field" id="qeWKeywordsWrap" ${isCode?'style="display:none"':''}><label>${tr('คำสำคัญสำหรับตรวจเบื้องต้น (คั่นด้วยจุลภาค , )')}</label><input type="text" id="qeWKeywords" value="${escapeAttr((q.keywords||[]).join(', '))}" placeholder="เช่น ฮาร์ดแวร์, ซอฟต์แวร์"></div>
+    <div id="qeWCodeAnswerWrap" ${isCode?'':'style="display:none"'}><div class="field"><label>${tr('ภาษา')}</label><select id="qeWLanguage"><option value="c" ${q.language==='c'?'selected':''}>C</option><option value="cpp" ${q.language==='cpp'?'selected':''}>C++</option><option value="java" ${q.language==='java'?'selected':''}>Java</option></select></div><div class="field"><label>${tr('เฉลยโค้ด (ตัดช่องว่างและขึ้นบรรทัดใหม่ก่อนตรวจ)')}</label><textarea id="qeWAnswerCode" spellcheck="false" style="font-family:ui-monospace,Consolas,monospace;min-height:150px;">${escapeHtml(q.answerCode||'')}</textarea></div>${writtenCodeResourceEditorHtml(q,isNew)}</div><div id="qeWAttachmentWrap" ${isCode?'style="display:none"':''}>${writtenResourceEditorHtml(q,isNew)}</div>
     <div class="editor-actions">
-      <button class="btn btn-ghost btn-sm" id="qeCancelBtn" type="button">ยกเลิก</button>
-      <button class="btn btn-primary btn-sm" id="qeSaveBtn" type="button">${isNew?'เพิ่มข้อนี้':'บันทึกการแก้ไข'}</button>
+      <button class="btn btn-ghost btn-sm" id="qeCancelBtn" type="button">${tr('ยกเลิก')}</button>
+      <button class="btn btn-primary btn-sm" id="qeSaveBtn" type="button">${isNew?tr('เพิ่มข้อนี้'):tr('บันทึกการแก้ไข')}</button>
     </div>
   </div>`;
 }
 function saveWrittenQuestionFromEditor(index){
   const text = document.getElementById('qeWText').value.trim();
-  if(!text){ alert('กรุณากรอกคำถาม'); return; }
+  if(!text){ alert(window.I18N?window.I18N.t('กรุณากรอกคำถาม'):'กรุณากรอกคำถาม'); return; }
   const answerType = document.getElementById('qeWAnswerType').value;
   const answerCode = document.getElementById('qeWAnswerCode').value.trim();
-  if(answerType==='code' && !answerCode){ alert('กรุณากรอกเฉลยโค้ด'); return; }
+  if(answerType==='code' && !answerCode){ alert(window.I18N?window.I18N.t('กรุณากรอกเฉลยโค้ด'):'กรุณากรอกเฉลยโค้ด'); return; }
   const keywords = answerType==='code' ? [] : document.getElementById('qeWKeywords').value.split(',').map(k=>k.trim()).filter(Boolean);
   const s = editingSet.sections.written;
   const old=index===null?{}:s.questions[index];
@@ -1370,19 +1392,20 @@ function setSetSaveButtonsLoading(loading){
 }
 async function saveEditingSet(){
   if(isSavingSet) return;
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   if(openQEditor){ showToast('กรุณาบันทึกหรือยกเลิกการแก้ไขข้อคำถามก่อน'); return; }
   const s = editingSet;
   if(!editingUiEnabled.mc) Object.assign(s.sections.mc, {questions:[], sectionPointsTotal:0});
   if(!editingUiEnabled.matching) Object.assign(s.sections.matching, {left:[], right:[], correctMap:{}, pointsEach:0, sectionPointsTotal:0});
   if(!editingUiEnabled.written) Object.assign(s.sections.written, {questions:[], sectionPointsTotal:0});
   applyPointDistribution('mc'); applyPointDistribution('matching'); applyPointDistribution('written');
-  if(!s.title || !s.title.trim()){ alert('กรุณากรอกชื่อชุดข้อสอบ (ย้อนกลับไปขั้นตอนที่ 1)'); wizardStep='info'; renderWizard(); return; }
-  if(!['ปวช.','ปวส.'].includes(s.educationLevel)){ alert('กรุณาเลือกระดับ ปวช. หรือ ปวส. (ย้อนกลับไปขั้นตอนที่ 1)'); wizardStep='info'; renderWizard(); return; }
+  if(!s.title || !s.title.trim()){ alert(tr('กรุณากรอกชื่อชุดข้อสอบ (ย้อนกลับไปขั้นตอนที่ 1)')); wizardStep='info'; renderWizard(); return; }
+  if(!['ปวช.','ปวส.'].includes(s.educationLevel)){ alert(tr('กรุณาเลือกระดับ ปวช. หรือ ปวส. (ย้อนกลับไปขั้นตอนที่ 1)')); wizardStep='info'; renderWizard(); return; }
   const hasExamQuestions=s.sections.mc.questions.length||s.sections.matching.left.length||s.sections.written.questions.length;
-  if(s.delivery!=='object-analysis-design' && !hasExamQuestions){ alert('กรุณาเพิ่มข้อสอบอย่างน้อย 1 ข้อ'); wizardStep='sections'; renderWizard(); return; }
+  if(s.delivery!=='object-analysis-design' && !hasExamQuestions){ alert(tr('กรุณาเพิ่มข้อสอบอย่างน้อย 1 ข้อ')); wizardStep='sections'; renderWizard(); return; }
   if(s.examSchedules.length){
     const invalid=s.examSchedules.find(item=>!(item.classes||[]).length||((item.availableFrom||item.availableUntil)&&(!item.availableFrom||!item.availableUntil||new Date(item.availableFrom)>=new Date(item.availableUntil))));
-    if(invalid){ alert('กรุณาเลือกห้องให้ครบทุกรอบ และหากกำหนดเวลาให้กรอกวัน–เวลาเริ่มและสิ้นสุดให้ครบถ้วน'); wizardStep='access'; renderWizard(); return; }
+    if(invalid){ alert(tr('กรุณาเลือกห้องให้ครบทุกรอบ และหากกำหนดเวลาให้กรอกวัน–เวลาเริ่มและสิ้นสุดให้ครบถ้วน')); wizardStep='access'; renderWizard(); return; }
     s.assignedClasses=[...new Set(s.examSchedules.flatMap(item=>item.classes||[]))];
   }
   isSavingSet = true;
@@ -1410,16 +1433,17 @@ async function saveEditingSet(){
    RESULTS + EXCEL EXPORT + PUBLISH
    ====================================================================== */
 function populateSetFilterOptions(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const sel = document.getElementById('setFilterSelect');
   const current = sel.value;
-  sel.innerHTML = '<option value="">ทุกรายวิชา</option>' + ADMIN_SETS.map(s=>`<option value="${escapeAttr(s.key)}">${escapeHtml(s.title)}</option>`).join('');
+  sel.innerHTML = `<option value="">${tr('ทุกรายวิชา')}</option>` + ADMIN_SETS.map(s=>`<option value="${escapeAttr(s.key)}">${escapeHtml(s.title)}</option>`).join('');
   sel.value = current;
   const years=[...new Set(ADMIN_SETS.map(set=>set.academicYear).filter(Boolean))].sort().reverse();
   const yearSelect=document.getElementById('academicYearFilterSelect'); const currentYear=yearSelect.value;
-  yearSelect.innerHTML='<option value="">ทุกปีการศึกษา</option>'+years.map(year=>`<option value="${escapeAttr(year)}">${escapeHtml(year)}</option>`).join(''); yearSelect.value=years.includes(currentYear)?currentYear:'';
-  const terms=[...new Map(ADMIN_SETS.filter(set=>set.semester).map(set=>[set.semester,set.semesterLabel||`เทอม ${set.semester}`])).entries()];
+  yearSelect.innerHTML=`<option value="">${tr('ทุกปีการศึกษา')}</option>`+years.map(year=>`<option value="${escapeAttr(year)}">${escapeHtml(year)}</option>`).join(''); yearSelect.value=years.includes(currentYear)?currentYear:'';
+  const terms=[...new Map(ADMIN_SETS.filter(set=>set.semester).map(set=>[set.semester,set.semesterLabel||tr('เทอม')+` ${set.semester}`])).entries()];
   const termSelect=document.getElementById('semesterFilterSelect'); const currentTerm=termSelect.value;
-  termSelect.innerHTML='<option value="">ทุกภาคเรียน</option>'+terms.map(([id,label])=>`<option value="${escapeAttr(id)}">${escapeHtml(label)}</option>`).join(''); termSelect.value=terms.some(([id])=>id===currentTerm)?currentTerm:'';
+  termSelect.innerHTML=`<option value="">${tr('ทุกภาคเรียน')}</option>`+terms.map(([id,label])=>`<option value="${escapeAttr(id)}">${escapeHtml(label)}</option>`).join(''); termSelect.value=terms.some(([id])=>id===currentTerm)?currentTerm:'';
 }
 let LAST_RESULTS = [];
 let activeResitResult = null;
@@ -1434,11 +1458,12 @@ function closeResitDialog(){
   resitDialogError.textContent='';
 }
 function openResitDialog(resultId){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const result=LAST_RESULTS.find(item=>item.id===resultId);
   if(!result) return showToast('ไม่พบข้อมูลผลสอบรายการนี้');
   activeResitResult=result;
   const from=new Date(), until=new Date(from.getTime()+24*60*60*1000);
-  document.getElementById('resitStudentSummary').innerHTML=`<b>${escapeHtml(result.studentName)}</b> (${escapeHtml(result.studentId)})<br>${escapeHtml(result.questionTitle)} · คะแนนเดิม ${Number(result.overallScore20||0).toFixed(2)}/20`;
+  document.getElementById('resitStudentSummary').innerHTML=`<b>${escapeHtml(result.studentName)}</b> (${escapeHtml(result.studentId)})<br>${escapeHtml(result.questionTitle)} · ${tr('คะแนนเดิม')} ${Number(result.overallScore20||0).toFixed(2)}/20`;
   document.getElementById('resitStartDate').value=formatExamDate(from.toISOString());
   document.getElementById('resitStartTime').value=formatExamTime(from.toISOString());
   document.getElementById('resitEndDate').value=formatExamDate(until.toISOString());
@@ -1455,15 +1480,16 @@ resitForm.addEventListener('submit',async event=>{
   const availableFrom=parseExamDateTime(document.getElementById('resitStartDate').value,document.getElementById('resitStartTime').value);
   const availableUntil=parseExamDateTime(document.getElementById('resitEndDate').value,document.getElementById('resitEndTime').value);
   const scoreMax=Number(document.getElementById('resitScoreMax').value);
-  if(!availableFrom||!availableUntil){ resitDialogError.textContent='กรุณากรอกวันและเวลาให้ถูกต้อง'; return; }
-  if(new Date(availableUntil)<=new Date(availableFrom)){ resitDialogError.textContent='เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่มสอบ'; return; }
-  if(!Number.isFinite(scoreMax)||scoreMax<=0||scoreMax>100){ resitDialogError.textContent='คะแนนเต็มต้องอยู่ระหว่าง 0.01–100'; return; }
-  resitDialogError.textContent=''; approveResitBtn.disabled=true; approveResitBtn.innerHTML='<span class="button-spinner"></span>กำลังอนุมัติ...';
+  const tr9 = window.I18N ? window.I18N.t : (s=>s);
+  if(!availableFrom||!availableUntil){ resitDialogError.textContent=tr9('กรุณากรอกวันและเวลาให้ถูกต้อง'); return; }
+  if(new Date(availableUntil)<=new Date(availableFrom)){ resitDialogError.textContent=tr9('เวลาสิ้นสุดต้องอยู่หลังเวลาเริ่มสอบ'); return; }
+  if(!Number.isFinite(scoreMax)||scoreMax<=0||scoreMax>100){ resitDialogError.textContent=tr9('คะแนนเต็มต้องอยู่ระหว่าง 0.01–100'); return; }
+  resitDialogError.textContent=''; approveResitBtn.disabled=true; approveResitBtn.innerHTML='<span class="button-spinner"></span>'+tr9('กำลังอนุมัติ...');
   try{
     await apiOpenResit(activeResitResult.id,{availableFrom,availableUntil,scoreMax});
     closeResitDialog(); showToast('อนุมัติเปิดสอบซ่อมแล้ว'); refreshResults();
   }catch(error){ resitDialogError.textContent=error.message; }
-  finally{ approveResitBtn.disabled=false; approveResitBtn.textContent='อนุมัติเปิดสอบซ่อม'; }
+  finally{ approveResitBtn.disabled=false; approveResitBtn.textContent=tr9('อนุมัติเปิดสอบซ่อม'); }
 });
 
 let GRADEBOOK_SET_KEYS = new Set();
@@ -1496,19 +1522,20 @@ function setResultExpansion(type,key,expanded){
   saveResultExpansionState();
 }
 function renderResultSubjectGroups(records){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const groups=new Map();
   records.forEach(record=>{
     const key=record.questionKey||record.questionTitle||'unknown';
-    if(!groups.has(key)) groups.set(key,{key,title:record.questionTitle||'ไม่ระบุรายวิชา',records:[]});
+    if(!groups.has(key)) groups.set(key,{key,title:record.questionTitle||tr('ไม่ระบุรายวิชา'),records:[]});
     groups.get(key).records.push(record);
   });
   return [...groups.values()].map(group=>{const publishedCount=group.records.filter(record=>record.published).length,allPublished=publishedCount===group.records.length,columns=resultScoreColumns(group.records,group.key),scoreMax=resultScoreMax(group.records,group.key),expanded=resultExpansionState.groups.has(group.key);return `<div class="course-group result-subject-group">
-    <div class="course-group-head" data-toggleresultgroup="1" data-result-group-key="${escapeAttr(group.key)}"><span class="course-group-title">📚 ${escapeHtml(group.title)}</span><span class="course-group-count">${group.records.length} คน · ประกาศแล้ว ${publishedCount} คน · กดเพื่อดูผลสอบ</span><span class="course-group-actions"><button class="btn btn-ghost btn-sm publish-set-btn" type="button" data-publish-set="${escapeAttr(group.key)}" data-title="${escapeAttr(group.title)}" ${allPublished?'disabled':''}>${allPublished?'✅ ประกาศผลแล้ว':'📣 ประกาศผล'}</button><button class="btn btn-analysis btn-sm" type="button" data-question-analysis="${escapeAttr(group.key)}">📊 วิเคราะห์ข้อสอบ</button>${GRADEBOOK_SET_KEYS.has(group.key)?`<button class="btn btn-primary btn-sm" type="button" data-export-gradebook="${escapeAttr(group.key)}">📊 Excel รวมคะแนน</button>`:''}</span></div>
+    <div class="course-group-head" data-toggleresultgroup="1" data-result-group-key="${escapeAttr(group.key)}"><span class="course-group-title">📚 ${escapeHtml(group.title)}</span><span class="course-group-count">${group.records.length} ${tr('คน')} · ${tr('ประกาศแล้ว')} ${publishedCount} ${tr('คน')} · ${tr('กดเพื่อดูผลสอบ')}</span><span class="course-group-actions"><button class="btn btn-ghost btn-sm publish-set-btn" type="button" data-publish-set="${escapeAttr(group.key)}" data-title="${escapeAttr(group.title)}" ${allPublished?'disabled':''}>${allPublished?tr('✅ ประกาศผลแล้ว'):tr('📣 ประกาศผล')}</button><button class="btn btn-analysis btn-sm" type="button" data-question-analysis="${escapeAttr(group.key)}">${tr('📊 วิเคราะห์ข้อสอบ')}</button>${GRADEBOOK_SET_KEYS.has(group.key)?`<button class="btn btn-primary btn-sm" type="button" data-export-gradebook="${escapeAttr(group.key)}">${tr('📊 Excel รวมคะแนน')}</button>`:''}</span></div>
     <div class="course-group-body ${expanded?'':'collapsed'}" style="overflow-x:auto;"><table class="result-table"><thead><tr>
-      <th>วันเวลา</th><th>รหัส</th><th>ชื่อนักเรียน</th><th>ห้อง</th><th>ประเภท</th><th>รายวิชา</th><th>อาจารย์</th>${columns.mc?'<th>ปรนัย</th>':''}${columns.matching?'<th>จับคู่</th>':''}${columns.written?'<th>อัตนัย</th>':''}<th>รวม/${scoreMax}</th><th>คลิกขวา</th><th>คัดลอก</th><th>สลับแท็บ</th><th></th>
+      <th>${tr('วันเวลา')}</th><th>${tr('รหัส')}</th><th>${tr('ชื่อนักเรียน')}</th><th>${tr('ห้อง')}</th><th>${tr('ประเภท')}</th><th>${tr('รายวิชา')}</th><th>${tr('อาจารย์')}</th>${columns.mc?`<th>${tr('ปรนัย')}</th>`:''}${columns.matching?`<th>${tr('จับคู่')}</th>`:''}${columns.written?`<th>${tr('อัตนัย')}</th>`:''}<th>${tr('รวม')}/${scoreMax}</th><th>${tr('คลิกขวา')}</th><th>${tr('คัดลอก')}</th><th>${tr('สลับแท็บ')}</th><th></th>
     </tr></thead><tbody>${group.records.map(r=>`<tr data-row-id="${r.id}">
-      <td>${new Date(r.submittedAt).toLocaleString('th-TH')}</td><td>${escapeHtml(r.studentId)}</td><td>${escapeHtml(r.studentName)}</td><td>${escapeHtml(r.classRoom)}</td><td>${escapeHtml(r.examType||'-')}</td><td>${escapeHtml(r.questionTitle)}</td><td>${escapeHtml(r.subjectTeacherName||'-')}</td>${columns.mc?`<td>${r.sectionScores.mc}</td>`:''}${columns.matching?`<td>${r.sectionScores.matching}</td>`:''}${columns.written?`<td>${r.sectionScores.written}</td>`:''}<td><b>${r.overallScore20}</b></td><td>${r.rightClickAttempts||0}</td><td>${r.copyAttempts||0}</td><td>${r.tabSwitches||0}</td>
-      <td><div class="result-row-actions"><button class="btn btn-ghost btn-sm" data-viewdetail="${r.id}">ดูรายละเอียด</button>${r.attemptType!=='resit'?`<button class="btn btn-ghost btn-sm" data-openresit="${r.id}">🛠️ เปิดสอบซ่อม</button>`:''}<button class="btn btn-danger btn-sm" data-delres="${r.id}">ลบ</button></div></td>
+      <td>${new Date(r.submittedAt).toLocaleString(window.I18N&&window.I18N.getLang()==='en'?'en-US':'th-TH')}</td><td>${escapeHtml(r.studentId)}</td><td>${escapeHtml(r.studentName)}</td><td>${escapeHtml(r.classRoom)}</td><td>${escapeHtml(r.examType||'-')}</td><td>${escapeHtml(r.questionTitle)}</td><td>${escapeHtml(r.subjectTeacherName||'-')}</td>${columns.mc?`<td>${r.sectionScores.mc}</td>`:''}${columns.matching?`<td>${r.sectionScores.matching}</td>`:''}${columns.written?`<td>${r.sectionScores.written}</td>`:''}<td><b>${r.overallScore20}</b></td><td>${r.rightClickAttempts||0}</td><td>${r.copyAttempts||0}</td><td>${r.tabSwitches||0}</td>
+      <td><div class="result-row-actions"><button class="btn btn-ghost btn-sm" data-viewdetail="${r.id}">${tr('ดูรายละเอียด')}</button>${r.attemptType!=='resit'?`<button class="btn btn-ghost btn-sm" data-openresit="${r.id}">${tr('🛠️ เปิดสอบซ่อม')}</button>`:''}<button class="btn btn-danger btn-sm" data-delres="${r.id}">${tr('ลบ')}</button></div></td>
     </tr>`).join('')}</tbody></table></div></div>`;}).join('');
 }
 
@@ -1518,17 +1545,20 @@ function archivedResultPeriod(record){
   const olderThanThirtyDays=dates.length&&Date.now()-Math.max(...dates)>=30*86400000;
   if(!set.archived&&!olderThanThirtyDays)return null;
   const semester=String(set.semester||'').toLowerCase(),term=semester==='summer'?'s':(semester||'?'),yearText=String(set.academicYear||''),shortYear=yearText.length>=2?yearText.slice(-2):'?';
-  return {key:`${set.examType||record.examType||'ข้อสอบ'}|${term}|${shortYear}`,label:`ผลสอบ ${set.examType||record.examType||'ข้อสอบ'} ${term}/${shortYear}`,sort:`${yearText.padStart(4,'0')}-${term==='s'?'3':term}`};
+  const trp = window.I18N ? window.I18N.t : (s=>s);
+  return {key:`${set.examType||record.examType||'ข้อสอบ'}|${term}|${shortYear}`,label:`${trp('ผลสอบ')} ${trp(set.examType||record.examType||'ข้อสอบ')} ${term}/${shortYear}`,sort:`${yearText.padStart(4,'0')}-${term==='s'?'3':term}`};
 }
 function renderResultGroups(records){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const current=[],periods=new Map();
   records.forEach(record=>{const period=archivedResultPeriod(record);if(!period){current.push(record);return;}if(!periods.has(period.key))periods.set(period.key,{...period,records:[]});periods.get(period.key).records.push(record);});
-  const currentHtml=renderResultSubjectGroups(current),periodHtml=[...periods.values()].sort((a,b)=>b.sort.localeCompare(a.sort)).map(period=>{const subjects=new Set(period.records.map(record=>record.questionKey||record.questionTitle)).size,expanded=resultExpansionState.periods.has(period.key);return `<section class="result-period-group"><button class="result-period-head ${expanded?'open':''}" type="button" data-toggle-result-period data-result-period-key="${escapeAttr(period.key)}"><span><b>🗂️ ${escapeHtml(period.label)}</b><small>${subjects} รายวิชา · ${period.records.length} ผลสอบ</small></span><span class="result-period-chevron">⌄</span></button><div class="result-period-body ${expanded?'':'collapsed'}">${renderResultSubjectGroups(period.records)}</div></section>`;}).join('');
+  const currentHtml=renderResultSubjectGroups(current),periodHtml=[...periods.values()].sort((a,b)=>b.sort.localeCompare(a.sort)).map(period=>{const subjects=new Set(period.records.map(record=>record.questionKey||record.questionTitle)).size,expanded=resultExpansionState.periods.has(period.key);return `<section class="result-period-group"><button class="result-period-head ${expanded?'open':''}" type="button" data-toggle-result-period data-result-period-key="${escapeAttr(period.key)}"><span><b>🗂️ ${escapeHtml(period.label)}</b><small>${subjects} ${tr('รายวิชา')} · ${period.records.length} ${tr('ผลสอบ')}</small></span><span class="result-period-chevron">⌄</span></button><div class="result-period-body ${expanded?'':'collapsed'}">${renderResultSubjectGroups(period.records)}</div></section>`;}).join('');
   return currentHtml+periodHtml;
 }
 async function refreshResults(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const wrap = document.getElementById('resultsWrap');
-  wrap.innerHTML = '<div class="loading-note">กำลังโหลด...</div>';
+  wrap.innerHTML = `<div class="loading-note">${tr('กำลังโหลด...')}</div>`;
   const setKey = document.getElementById('setFilterSelect').value;
   const examType = document.getElementById('examTypeFilterSelect').value;
   const academicYear = document.getElementById('academicYearFilterSelect').value;
@@ -1538,7 +1568,7 @@ async function refreshResults(){
   catch(e){ wrap.innerHTML = '<div class="empty-note">'+escapeHtml(e.message)+'</div>'; return; }
   LAST_RESULTS = records;
   if(!records || !records.length){
-    wrap.innerHTML = '<div class="empty-note">ยังไม่มีผลสอบส่งเข้ามา</div>';
+    wrap.innerHTML = `<div class="empty-note">${tr('ยังไม่มีผลสอบส่งเข้ามา')}</div>`;
     return;
   }
   wrap.innerHTML = renderResultGroups(records);
@@ -1549,10 +1579,10 @@ async function refreshResults(){
   }));
   wrap.querySelectorAll('[data-publish-set]').forEach(button=>button.addEventListener('click',async event=>{
     event.stopPropagation();
-    if(!confirm(`ยืนยันประกาศผลรายวิชา “${button.dataset.title}” ให้นักเรียนทุกคนที่ส่งข้อสอบแล้วหรือไม่?`))return;
-    button.disabled=true;button.textContent='กำลังตรวจสอบและประกาศผล...';
-    try{const result=await apiPublishAllForSet(button.dataset.publishSet);showToast(`ประกาศผลแล้ว ${result.count} คน`);await refreshResults();}
-    catch(error){showToast(error.message);button.disabled=false;button.textContent='📣 ประกาศผล';}
+    if(!confirm(tr('ยืนยันประกาศผลรายวิชา')+` "${button.dataset.title}" `+tr('ให้นักเรียนทุกคนที่ส่งข้อสอบแล้วหรือไม่?')))return;
+    button.disabled=true;button.textContent=tr('กำลังตรวจสอบและประกาศผล...');
+    try{const result=await apiPublishAllForSet(button.dataset.publishSet);showToast(tr('ประกาศผลแล้ว')+` ${result.count} `+tr('คน'));await refreshResults();}
+    catch(error){showToast(error.message);button.disabled=false;button.textContent=tr('📣 ประกาศผล');}
   }));
   wrap.querySelectorAll('[data-openresit]').forEach(b=>b.addEventListener('click', ()=>openResitDialog(b.dataset.openresit)));
   wrap.querySelectorAll('[data-viewdetail]').forEach(b=>b.addEventListener('click', ()=> toggleDetailRow(b.dataset.viewdetail)));
@@ -1562,6 +1592,7 @@ async function refreshResults(){
   wrap.querySelectorAll('[data-export-gradebook]').forEach(button=>button.addEventListener('click',event=>{ event.stopPropagation(); downloadGradebook(button.dataset.exportGradebook,button); }));
 }
 function toggleDetailRow(resultId){
+  const tr9 = window.I18N ? window.I18N.t : (s=>s);
   const existing = document.querySelector(`tr.detail-row[data-for="${resultId}"]`);
   if(existing){ existing.remove(); return; }
   const rec = LAST_RESULTS.find(x=>x.id===resultId);
@@ -1579,38 +1610,38 @@ function toggleDetailRow(resultId){
       const scores=[0,1,2].map(level=>Number(td.querySelector(`[data-dfd-score-level="${level}"]`).value));
       if(scores.some(score=>!Number.isFinite(score)||score<0||score>100)){ showToast('แต่ละ Level ต้องมีคะแนน 0–100'); return; }
       const reason=askChangeReason('แก้คะแนน DFD'); if(reason===null) return;
-      button.disabled=true; button.textContent='กำลังบันทึก...';
+      button.disabled=true; button.textContent=tr9('กำลังบันทึก...');
       try{ await apiUpdateDfdScores(rec.id, scores, reason); showToast('ปรับคะแนน DFD แล้ว ระบบคำนวณรวม /20 ใหม่แล้ว'); refreshResults(); }
-      catch(error){ showToast(error.message); button.disabled=false; button.textContent='บันทึกคะแนนที่ปรับ'; }
+      catch(error){ showToast(error.message); button.disabled=false; button.textContent=tr9('บันทึกคะแนนที่ปรับ'); }
     });
   }else if(!set){
-    td.innerHTML = renderIntegrityReview(rec) + '<div class="detail-block">ไม่พบข้อมูลชุดข้อสอบต้นฉบับ (อาจถูกลบไปแล้ว)</div>';
+    td.innerHTML = renderIntegrityReview(rec) + `<div class="detail-block">${tr9('ไม่พบข้อมูลชุดข้อสอบต้นฉบับ (อาจถูกลบไปแล้ว)')}</div>`;
   }else{
     const answers = (rec.detail && rec.detail.answers) || {mc:{},matching:{},written:{}};
     let html = '';
     const mcQuestions=set.sections?.mc?.questions||[];
-    if(mcQuestions.length) html += `<div class="detail-block"><b>ปรนัย (${rec.sectionScores.mc} คะแนน)</b><br>` + mcQuestions.map((qq,i)=>{
+    if(mcQuestions.length) html += `<div class="detail-block"><b>${tr9('ปรนัย')} (${rec.sectionScores.mc} ${tr9('คะแนน')})</b><br>` + mcQuestions.map((qq,i)=>{
       const picked = answers.mc ? answers.mc[qq.id] : undefined;
-      const pickedText = (picked!=null && qq.choices[picked]!=null) ? qq.choices[picked] : '(ไม่ได้ตอบ)';
+      const pickedText = (picked!=null && qq.choices[picked]!=null) ? qq.choices[picked] : `(${tr9('ไม่ได้ตอบ')})`;
       const correctText = qq.choices[qq.answer];
       const isCorrect = picked===qq.answer;
-      return `${i+1}. ${escapeHtml(qq.text)}<br>&nbsp;&nbsp;ตอบ: ${escapeHtml(pickedText)} ${isCorrect?'✅':'❌ (เฉลย: '+escapeHtml(correctText)+')'}`;
+      return `${i+1}. ${escapeHtml(qq.text)}<br>&nbsp;&nbsp;${tr9('ตอบ')}: ${escapeHtml(pickedText)} ${isCorrect?'✅':'❌ ('+tr9('เฉลย')+': '+escapeHtml(correctText)+')'}`;
     }).join('<br>') + `</div>`;
     const matchingItems=set.sections?.matching?.left||[];
-    if(matchingItems.length) html += `<div class="detail-block"><b>จับคู่ (${rec.sectionScores.matching} คะแนน)</b><br>` + matchingItems.map(item=>{
+    if(matchingItems.length) html += `<div class="detail-block"><b>${tr9('จับคู่')} (${rec.sectionScores.matching} ${tr9('คะแนน')})</b><br>` + matchingItems.map(item=>{
       const rid = answers.matching ? answers.matching[item.id] : undefined;
       const rightItem = set.sections.matching.right.find(r=>r.id===rid);
       const correctRightItem = set.sections.matching.right.find(r=>r.id===set.sections.matching.correctMap[item.id]);
       const isCorrect = rid === set.sections.matching.correctMap[item.id];
-      return `${escapeHtml(item.text)} → ${rightItem?escapeHtml(rightItem.text):'(ไม่ได้จับคู่)'} ${isCorrect?'✅':'❌ (เฉลย: '+escapeHtml(correctRightItem?correctRightItem.text:'-')+')'}`;
+      return `${escapeHtml(item.text)} → ${rightItem?escapeHtml(rightItem.text):`(${tr9('ไม่ได้จับคู่')})`} ${isCorrect?'✅':'❌ ('+tr9('เฉลย')+': '+escapeHtml(correctRightItem?correctRightItem.text:'-')+')'}`;
     }).join('<br>') + `</div>`;
     const writtenQuestions=set.sections?.written?.questions||[];
-    if(writtenQuestions.length) html += `<div class="detail-block"><b>อัตนัย (${rec.sectionScores.written} คะแนน โดยประมาณจากคำสำคัญ)</b><br>` + writtenQuestions.map((qq,i)=>{
-      const text = (answers.written && answers.written[qq.id]) || '(ไม่ได้ตอบ)';
+    if(writtenQuestions.length) html += `<div class="detail-block"><b>${tr9('อัตนัย')} (${rec.sectionScores.written} ${tr9('คะแนน โดยประมาณจากคำสำคัญ')})</b><br>` + writtenQuestions.map((qq,i)=>{
+      const text = (answers.written && answers.written[qq.id]) || `(${tr9('ไม่ได้ตอบ')})`;
       const pts = (rec.detail && rec.detail.writtenPerQuestion) ? rec.detail.writtenPerQuestion[qq.id] : '-';
       const manual=rec.detail?.writtenManualScores?.[qq.id];
-      return `${i+1}. ${escapeHtml(qq.text)} (auto: ${pts}/${qq.maxPoints})<br>&nbsp;&nbsp;คำตอบ: ${escapeHtml(text)}<br>&nbsp;&nbsp;คะแนนอาจารย์: <input class="dfd-score-input" data-written-score="${qq.id}" type="number" min="0" max="${qq.maxPoints}" step="0.5" value="${manual??pts}"> / ${qq.maxPoints}`;
-    }).join('<br><br>') + `<div class="editor-actions"><button class="btn btn-primary btn-sm" data-save-written>บันทึกคะแนนอัตนัย</button></div></div>`;
+      return `${i+1}. ${escapeHtml(qq.text)} (auto: ${pts}/${qq.maxPoints})<br>&nbsp;&nbsp;${tr9('คำตอบ')}: ${escapeHtml(text)}<br>&nbsp;&nbsp;${tr9('คะแนนอาจารย์')}: <input class="dfd-score-input" data-written-score="${qq.id}" type="number" min="0" max="${qq.maxPoints}" step="0.5" value="${manual??pts}"> / ${qq.maxPoints}`;
+    }).join('<br><br>') + `<div class="editor-actions"><button class="btn btn-primary btn-sm" data-save-written>${tr9('บันทึกคะแนนอัตนัย')}</button></div></div>`;
     td.innerHTML = renderIntegrityReview(rec) + html;
     td.querySelector('[data-save-written]')?.addEventListener('click', async event=>{ const scores={}; td.querySelectorAll('[data-written-score]').forEach(input=>scores[input.dataset.writtenScore]=Number(input.value)); const reason=askChangeReason('แก้คะแนนอัตนัย'); if(reason===null)return; try{ await apiUpdateWrittenScores(rec.id,scores,reason); showToast('บันทึกคะแนนอัตนัยแล้ว'); refreshResults(); }catch(error){ showToast(error.message); } });
   }
@@ -1618,6 +1649,7 @@ function toggleDetailRow(resultId){
   rowEl.after(tr);
 }
 function renderDfdReview(rec){
+  const tr9 = window.I18N ? window.I18N.t : (s=>s);
   const levels=rec.detail?.levels || [];
   const scores=rec.detail?.levelScores || [0,0,0];
   const svgFor=level=>{
@@ -1627,16 +1659,17 @@ function renderDfdReview(rec){
     const center=shape=>({x:(Number(shape.x)||0)+(Number(shape.w)||140)/2,y:(Number(shape.y)||0)+(Number(shape.h)||70)/2});
     const lines=connections.map(conn=>{ const from=byId[conn.fromId],to=byId[conn.toId]; if(!from||!to) return ''; const a=center(from),b=center(to); return `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="#64748B" stroke-width="2"/><text x="${(a.x+b.x)/2}" y="${(a.y+b.y)/2-5}" text-anchor="middle" font-size="12" fill="#334155">${escapeHtml(conn.label||'')}</text>`; }).join('');
     const nodes=shapes.map(shape=>{ const x=Number(shape.x)||0,y=Number(shape.y)||0,w=Number(shape.w)||140,h=Number(shape.h)||70,label=escapeHtml(shape.label||shape.num||''); const figure=shape.type==='process'?`<ellipse cx="${x+w/2}" cy="${y+h/2}" rx="${w/2}" ry="${h/2}" fill="#DBEAFE" stroke="#2563EB"/>`:`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${shape.type==='store'?0:8}" fill="#FFFFFF" stroke="#2563EB"/>`; return `${figure}<text x="${x+w/2}" y="${y+h/2+4}" text-anchor="middle" font-size="13" fill="#0F172A">${label}</text>`; }).join('');
-    return `<svg viewBox="0 0 1000 650" role="img" aria-label="แผนภาพ DFD">${lines}${nodes}</svg>`;
+    return `<svg viewBox="0 0 1000 650" role="img" aria-label="${tr9('แผนภาพ DFD')}">${lines}${nodes}</svg>`;
   };
-  return renderIntegrityReview(rec) + `<div class="detail-block"><b>🧩 ตรวจงาน Data Flow Diagram</b><br>คะแนนรวมปัจจุบัน <b>${rec.overallScore20}/20</b> (Level 0–2 รวม 300 คะแนน แล้วแปลงเป็น 20 คะแนน)</div><div class="dfd-review-grid">${[0,1,2].map(level=>{const data=levels.find(item=>Number(item.level)===level);const shapes=data?.shapes?.length||0,flows=data?.connections?.length||0;return `<section class="dfd-review-card"><h4>Level ${level}</h4><div class="dfd-review-meta">สัญลักษณ์ ${shapes} · เส้นข้อมูล ${flows}</div>${svgFor(data)}<div class="editor-actions"><label>คะแนน /100 <input class="dfd-score-input" data-dfd-score-level="${level}" type="number" min="0" max="100" step="0.5" value="${Number(scores[level])||0}"></label></div></section>`;}).join('')}</div><div class="editor-actions"><button class="btn btn-primary btn-sm" data-save-dfd-score>บันทึกคะแนนที่ปรับ</button></div>`;
+  return renderIntegrityReview(rec) + `<div class="detail-block"><b>${tr9('🧩 ตรวจงาน Data Flow Diagram')}</b><br>${tr9('คะแนนรวมปัจจุบัน')} <b>${rec.overallScore20}/20</b> (${tr9('Level 0–2 รวม 300 คะแนน แล้วแปลงเป็น 20 คะแนน')})</div><div class="dfd-review-grid">${[0,1,2].map(level=>{const data=levels.find(item=>Number(item.level)===level);const shapes=data?.shapes?.length||0,flows=data?.connections?.length||0;return `<section class="dfd-review-card"><h4>Level ${level}</h4><div class="dfd-review-meta">${tr9('สัญลักษณ์')} ${shapes} · ${tr9('เส้นข้อมูล')} ${flows}</div>${svgFor(data)}<div class="editor-actions"><label>${tr9('คะแนน')} /100 <input class="dfd-score-input" data-dfd-score-level="${level}" type="number" min="0" max="100" step="0.5" value="${Number(scores[level])||0}"></label></div></section>`;}).join('')}</div><div class="editor-actions"><button class="btn btn-primary btn-sm" data-save-dfd-score>${tr9('บันทึกคะแนนที่ปรับ')}</button></div>`;
 }
 function renderIntegrityReview(rec){
+  const tr9 = window.I18N ? window.I18N.t : (s=>s);
   const events=(Array.isArray(rec.integrityEvents)?rec.integrityEvents:[]).filter(event=>event.type!=='session_recovered');
-  const labels={tab_switch:'สลับแท็บ/หน้าจอ',fullscreen_exit:'ออกจากโหมดเต็มจอ',right_click:'พยายามคลิกขวา',copy:'พยายามคัดลอก',reload:'โหลดหน้าใหม่'};
-  const counts=`สลับแท็บ ${rec.tabSwitches||0} · ออกจากเต็มจอ ${rec.fullscreenExitAttempts||0} · คลิกขวา ${rec.rightClickAttempts||0} · คัดลอก ${rec.copyAttempts||0} · โหลดหน้าใหม่ ${rec.reloadCount||0}`;
+  const labels={tab_switch:tr9('สลับแท็บ/หน้าจอ'),fullscreen_exit:tr9('ออกจากโหมดเต็มจอ'),right_click:tr9('พยายามคลิกขวา'),copy:tr9('พยายามคัดลอก'),reload:tr9('โหลดหน้าใหม่')};
+  const counts=`${tr9('สลับแท็บ')} ${rec.tabSwitches||0} · ${tr9('ออกจากเต็มจอ')} ${rec.fullscreenExitAttempts||0} · ${tr9('คลิกขวา')} ${rec.rightClickAttempts||0} · ${tr9('คัดลอก')} ${rec.copyAttempts||0} · ${tr9('โหลดหน้าใหม่')} ${rec.reloadCount||0}`;
   const alert=(rec.tabSwitches||0)+(rec.fullscreenExitAttempts||0)+(rec.rightClickAttempts||0)+(rec.copyAttempts||0)+(rec.reloadCount||0)>0;
-  return `<section class="integrity-review ${alert?'':'ok'}"><h4>${alert?'⚠ ประวัติเหตุการณ์ระหว่างสอบ':'✓ ไม่พบเหตุการณ์ผิดปกติที่ระบบตรวจจับได้'}</h4><div class="integrity-summary">${counts}</div>${events.length?`<ol class="integrity-events">${events.map(event=>`<li>${escapeHtml(labels[event.type]||event.type)} — ${new Date(event.at).toLocaleString('th-TH')}</li>`).join('')}</ol>`:'<div class="integrity-events">ผลสอบเก่านี้ไม่มีบันทึกเวลารายเหตุการณ์</div>'}</section>`;
+  return `<section class="integrity-review ${alert?'':'ok'}"><h4>${alert?tr9('⚠ ประวัติเหตุการณ์ระหว่างสอบ'):tr9('✓ ไม่พบเหตุการณ์ผิดปกติที่ระบบตรวจจับได้')}</h4><div class="integrity-summary">${counts}</div>${events.length?`<ol class="integrity-events">${events.map(event=>`<li>${escapeHtml(labels[event.type]||event.type)} — ${new Date(event.at).toLocaleString(window.I18N&&window.I18N.getLang()==='en'?'en-US':'th-TH')}</li>`).join('')}</ol>`:`<div class="integrity-events">${tr9('ผลสอบเก่านี้ไม่มีบันทึกเวลารายเหตุการณ์')}</div>`}</section>`;
 }
 document.getElementById('refreshResultsBtn').addEventListener('click', refreshResults);
 document.getElementById('setFilterSelect').addEventListener('change', refreshResults);
@@ -1670,21 +1703,23 @@ async function showAuditLogs(){
   }catch(error){wrap.innerHTML='<div class="empty-note">'+escapeHtml(error.message)+'</div>';}
 }
 async function downloadGradebook(setKey,button){
-  const original=button.textContent; button.disabled=true; button.textContent='กำลังสร้างไฟล์...';
+  const tr = window.I18N ? window.I18N.t : (s=>s);
+  const original=button.textContent; button.disabled=true; button.textContent=tr('กำลังสร้างไฟล์...');
   try{
     const res=await fetch('/api/teacher/export/gradebook.xlsx?setKey='+encodeURIComponent(setKey),{headers:{'x-teacher-token':teacherToken||''}});
-    const errorBody=res.ok?null:await res.json().catch(()=>({})); if(res.status===401){showSessionExpiredDialog();throw new Error('หมดเวลาการเข้าสู่ระบบ');} if(!res.ok)throw new Error(errorBody?.message||'ส่งออกไฟล์รวมคะแนนไม่สำเร็จ');
+    const errorBody=res.ok?null:await res.json().catch(()=>({})); if(res.status===401){showSessionExpiredDialog();throw new Error(tr('หมดเวลาการเข้าสู่ระบบ'));} if(!res.ok)throw new Error(errorBody?.message||tr('ส่งออกไฟล์รวมคะแนนไม่สำเร็จ'));
     const set=ADMIN_SETS.find(item=>item.key===setKey),courseName=String(set?.courseName||set?.title||'รายวิชา').replace(/[\\/:*?"<>|]/g,' ').replace(/\s+/g,' ').trim()||'รายวิชา';
     const blob=await res.blob(),url=URL.createObjectURL(blob),a=document.createElement('a'); a.href=url;a.download=`รวมคะแนนวิชา(${courseName}).xlsx`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);showToast('ดาวน์โหลด Excel รวมคะแนนแล้ว');
   }catch(error){showToast(error.message);}finally{button.disabled=false;button.textContent=original;}
 }
 async function downloadExamPdf(setKey,button){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const original=button?.textContent||'📄 PDF ต้นฉบับ';
-  if(button){button.disabled=true;button.textContent='กำลังสร้าง PDF...';}
+  if(button){button.disabled=true;button.textContent=tr('กำลังสร้าง PDF...');}
   try{
     const res=await fetch('/api/teacher/export/exam.pdf?setKey='+encodeURIComponent(setKey),{headers:{'x-teacher-token':teacherToken||''}});
-    if(res.status===401){showSessionExpiredDialog();throw new Error('หมดเวลาการเข้าสู่ระบบ');}
-    if(!res.ok){const body=await res.json().catch(()=>({}));throw new Error(body.message||'สร้าง PDF ไม่สำเร็จ');}
+    if(res.status===401){showSessionExpiredDialog();throw new Error(tr('หมดเวลาการเข้าสู่ระบบ'));}
+    if(!res.ok){const body=await res.json().catch(()=>({}));throw new Error(body.message||tr('สร้าง PDF ไม่สำเร็จ'));}
     const blob=await res.blob(),url=URL.createObjectURL(blob),a=document.createElement('a');
     const disposition=res.headers.get('content-disposition')||'';
     const encodedName=disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1];
@@ -1808,6 +1843,7 @@ document.getElementById('absenceSummaryBtn').addEventListener('click',async()=>{
 
 document.addEventListener('i18nchange', ()=>{
   if(!adminScreen.classList.contains('hidden')) refreshCurrentPageData();
+  if(editingSet && !document.getElementById('setWizardScreen').classList.contains('hidden')) renderWizard();
 });
 
 })();
