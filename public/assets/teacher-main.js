@@ -99,7 +99,7 @@ function uid(prefix){ return prefix + '_' + Date.now().toString(36) + Math.rando
 function escapeHtml(str){ return String(str==null?'':str).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function escapeAttr(str){ return escapeHtml(str).replace(/\n/g,' '); }
 function showToast(msg){
-  const t = document.createElement('div'); t.className='toast'; t.textContent=msg;
+  const t = document.createElement('div'); t.className='toast'; t.textContent=window.I18N?window.I18N.t(msg):msg;
   document.body.appendChild(t); setTimeout(()=>t.remove(), 2800);
 }
 function askChangeReason(action){
@@ -242,10 +242,11 @@ let knownStudents = [];
 let classPeriods = {};
 
 function renderSetList(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const wrap = document.getElementById('setListWrap');
   const activeSets = ADMIN_SETS.filter(set=>!set.archived && !set.deletedAt);
   if(!activeSets.length){
-    wrap.innerHTML = '<div class="empty-note">ยังไม่มีชุดข้อสอบ กด "เพิ่มชุดข้อสอบใหม่" เพื่อเริ่มสร้างชุดแรก</div>';
+    wrap.innerHTML = `<div class="empty-note">${tr('ยังไม่มีชุดข้อสอบ กด "เพิ่มชุดข้อสอบใหม่" เพื่อเริ่มสร้างชุดแรก')}</div>`;
     return;
   }
   const query=setSearchQuery.trim().toLowerCase();
@@ -253,7 +254,7 @@ function renderSetList(){
     set.courseName,set.title,set.tagline,set.desc,set.examType,set.subjectTeacherName
   ].some(value=>String(value||'').toLowerCase().includes(query))):activeSets).slice().sort((a,b)=>examOpenTimestamp(a)-examOpenTimestamp(b)||String(a.title||'').localeCompare(String(b.title||''),'th'));
   if(!visibleSets.length){
-    wrap.innerHTML=`<div class="empty-note">ไม่พบชุดข้อสอบที่ตรงกับ “${escapeHtml(setSearchQuery)}”</div>`;
+    wrap.innerHTML=`<div class="empty-note">${tr('ไม่พบชุดข้อสอบที่ตรงกับ')} "${escapeHtml(setSearchQuery)}"</div>`;
     return;
   }
   const groups = {};
@@ -264,32 +265,32 @@ function renderSetList(){
   });
   wrap.innerHTML = Object.entries(groups).map(([course, sets])=>{
     const cardsHtml = sets.map(s=>{
-      const classesText = (s.assignedClasses && s.assignedClasses.length) ? s.assignedClasses.join(', ') : 'ทุกห้อง (ยังไม่จำกัดสิทธิ์)';
+      const classesText = (s.assignedClasses && s.assignedClasses.length) ? s.assignedClasses.join(', ') : tr('ทุกห้อง (ยังไม่จำกัดสิทธิ์)');
       const total = computeSetTotal(s);
       const examOpenDate=examOpenDateLabel(s);
       const examStatus=examScheduleStatus(s);
       const originalEnds=(s.examSchedules||[]).filter(item=>!item.absenceOnly).map(item=>normalizedExamTimestamp(item.availableUntil)).filter(Number.isFinite),finalEnd=originalEnds.length?Math.max(...originalEnds):NaN,examFinished=Number.isFinite(finalEnd)&&finalEnd<Date.now(),examNextDay=Number.isFinite(finalEnd)?new Date(finalEnd):null; if(examNextDay)examNextDay.setHours(24,0,0,0); const actionsExpired=!!examNextDay&&Date.now()>=examNextDay.getTime();
       return `<div class="set-card exam-status-${examStatus.key}">
-        <div class="set-badge-row"><span class="badge-pill">${escapeHtml(s.examType||'-')}</span>${examOpenDate?`<span class="badge-pill exam-date-pill" title="วันที่เปิดข้อสอบ">วันที่สอบ ${escapeHtml(examOpenDate)}</span>`:''}<span class="badge-pill exam-status-pill status-${examStatus.key}">${escapeHtml(examStatus.label)}</span><span class="badge-pill academic-period-pill">${escapeHtml(s.academicYear&&s.semesterLabel?`${s.academicYear} / ${s.semesterLabel}`:'ยังไม่กำหนดเทอม')}</span></div>
+        <div class="set-badge-row"><span class="badge-pill">${escapeHtml(s.examType||'-')}</span>${examOpenDate?`<span class="badge-pill exam-date-pill" title="${tr('วันที่เปิดข้อสอบ')}">${tr('วันที่สอบ')} ${escapeHtml(examOpenDate)}</span>`:''}<span class="badge-pill exam-status-pill status-${examStatus.key}">${escapeHtml(tr(examStatus.label))}</span><span class="badge-pill academic-period-pill">${escapeHtml(s.academicYear&&s.semesterLabel?`${s.academicYear} / ${s.semesterLabel}`:tr('ยังไม่กำหนดเทอม'))}</span></div>
         <h3>${escapeHtml(s.title)}</h3>
         <p>${escapeHtml(s.desc||'')}</p>
         <p style="color:var(--blue);">🏫 ${escapeHtml(classesText)}</p>
-        ${s.subjectTeacherName ? `<p>👤 อาจารย์: ${escapeHtml(s.subjectTeacherName)}</p>` : ''}
-        <p style="color:${total===20?'var(--green)':'var(--blue)'};">🎯 คะแนนเต็มรวม: ${total} คะแนน · ${total===20?'ข้อสอบปกติ':'บล็อกคอร์ส — แบ่งลงกลางภาค/ปลายภาค'}</p>
-        <p style="color:var(--sub);font-size:11.5px;">${s.publishMode==='auto'?'⚡ ประกาศคะแนนอัตโนมัติ':'🔒 ต้องตรวจก่อนประกาศ'}${s.shuffleQuestions?' · 🔀 สุ่มโจทย์':''}${s.shuffleChoices?' · 🔀 สุ่มตัวเลือก':''}</p>
+        ${s.subjectTeacherName ? `<p>👤 ${tr('อาจารย์')}: ${escapeHtml(s.subjectTeacherName)}</p>` : ''}
+        <p style="color:${total===20?'var(--green)':'var(--blue)'};">🎯 ${tr('คะแนนเต็มรวม')}: ${total} ${tr('คะแนน')} · ${total===20?tr('ข้อสอบปกติ'):tr('บล็อกคอร์ส — แบ่งลงกลางภาค/ปลายภาค')}</p>
+        <p style="color:var(--sub);font-size:11.5px;">${s.publishMode==='auto'?tr('⚡ ประกาศคะแนนอัตโนมัติ'):tr('🔒 ต้องตรวจก่อนประกาศ')}${s.shuffleQuestions?' · '+tr('🔀 สุ่มโจทย์'):''}${s.shuffleChoices?' · '+tr('🔀 สุ่มตัวเลือก'):''}</p>
         <div class="set-actions set-actions-clear">
-          ${!actionsExpired?`<button class="btn ${s.quickOpen?'btn-danger':examFinished?'btn-ghost':'btn-primary'} btn-sm" data-quick-open="${s.key}" data-open="${s.quickOpen?'0':'1'}">${s.quickOpen?'ยกเลิกการเปิดทันที':'เปิดข้อสอบทันที'}</button><button class="btn btn-ghost btn-sm" data-edit="${s.key}">แก้ไขข้อสอบ</button>`:''}
-          ${examFinished?`<button class="btn btn-primary btn-sm" data-open-absentees="${s.key}">เปิดสอบเฉพาะผู้ขาดสอบ</button>`:''}
-          <button class="btn btn-ghost btn-sm" data-exam-pdf="${s.key}">ดาวน์โหลดข้อสอบ PDF</button>
-          <button class="btn btn-ghost btn-sm" data-archive="${s.key}">เก็บข้อสอบเข้าคลัง</button>
-          ${!actionsExpired?`<button class="btn btn-danger btn-sm set-delete-action" data-del="${s.key}">ย้ายไปถังขยะ</button>`:''}
+          ${!actionsExpired?`<button class="btn ${s.quickOpen?'btn-danger':examFinished?'btn-ghost':'btn-primary'} btn-sm" data-quick-open="${s.key}" data-open="${s.quickOpen?'0':'1'}">${s.quickOpen?tr('ยกเลิกการเปิดทันที'):tr('เปิดข้อสอบทันที')}</button><button class="btn btn-ghost btn-sm" data-edit="${s.key}">${tr('แก้ไขข้อสอบ')}</button>`:''}
+          ${examFinished?`<button class="btn btn-primary btn-sm" data-open-absentees="${s.key}">${tr('เปิดสอบเฉพาะผู้ขาดสอบ')}</button>`:''}
+          <button class="btn btn-ghost btn-sm" data-exam-pdf="${s.key}">${tr('ดาวน์โหลดข้อสอบ PDF')}</button>
+          <button class="btn btn-ghost btn-sm" data-archive="${s.key}">${tr('เก็บข้อสอบเข้าคลัง')}</button>
+          ${!actionsExpired?`<button class="btn btn-danger btn-sm set-delete-action" data-del="${s.key}">${tr('ย้ายไปถังขยะ')}</button>`:''}
         </div>
       </div>`;
     }).join('');
     return `<div class="course-group">
       <div class="course-group-head" data-togglegroup="1">
         <span class="course-group-title">📚 ${escapeHtml(course)}</span>
-        <span class="course-group-count">${sets.length} ชุดข้อสอบ</span>
+        <span class="course-group-count">${sets.length} ${tr('ชุดข้อสอบ')}</span>
       </div>
       <div class="set-list course-group-body collapsed">${cardsHtml}</div>
     </div>`;
@@ -304,9 +305,10 @@ function renderSetList(){
     head.nextElementSibling.classList.toggle('collapsed');
   }));
 }
-async function openForAbsentees(key,button){const value=prompt('เปิดข้อสอบให้ผู้ขาดสอบกี่ชั่วโมง? (1-72)','24');if(value===null)return;const hours=Number(value);if(!Number.isFinite(hours)||hours<1||hours>72){showToast('กรุณาระบุ 1-72 ชั่วโมง');return;}button.disabled=true;try{const result=await apiOpenAbsentees(key,hours);ADMIN_SETS=await apiGetAdminSets();renderSetList();showToast(result.count?`เปิดข้อสอบให้ผู้ขาดสอบ ${result.count} คนแล้ว`:'ไม่พบผู้ขาดสอบที่ต้องเปิดสิทธิ์');}catch(error){button.disabled=false;showToast(error.message);}}
+async function openForAbsentees(key,button){const tr=window.I18N?window.I18N.t:(s=>s);const value=prompt(tr('เปิดข้อสอบให้ผู้ขาดสอบกี่ชั่วโมง? (1-72)'),'24');if(value===null)return;const hours=Number(value);if(!Number.isFinite(hours)||hours<1||hours>72){showToast('กรุณาระบุ 1-72 ชั่วโมง');return;}button.disabled=true;try{const result=await apiOpenAbsentees(key,hours);ADMIN_SETS=await apiGetAdminSets();renderSetList();showToast(result.count?tr('เปิดข้อสอบให้ผู้ขาดสอบ')+` ${result.count} `+tr('คนแล้ว'):'ไม่พบผู้ขาดสอบที่ต้องเปิดสิทธิ์');}catch(error){button.disabled=false;showToast(error.message);}}
 async function toggleQuickOpen(key,open,button){
-  if(!open && !confirm('ยกเลิกการเปิดข้อสอบด่วน และกลับไปใช้ตารางสอบเดิม?')) return;
+  const tr=window.I18N?window.I18N.t:(s=>s);
+  if(!open && !confirm(tr('ยกเลิกการเปิดข้อสอบด่วน และกลับไปใช้ตารางสอบเดิม?'))) return;
   button.disabled=true;
   try{
     await apiQuickOpenSet(key,open);
@@ -1802,6 +1804,10 @@ document.getElementById('absenceSummaryBtn').addEventListener('click',async()=>{
   wrap.innerHTML='<div class="loading-note">กำลังสรุปรายชื่อ...</div>';wrap.classList.remove('hidden');
   try{const data=await apiGetAbsenceSummary(setKey,selectedRosterClasses),labels={submitted:'ส่งแล้ว',in_progress:'กำลังสอบ',absent:'ขาดสอบ',pending:'ยังไม่ถึงเวลาสรุป'},order=['absent','in_progress','pending','submitted'];wrap.innerHTML=`<div class="absence-head"><div><h3>สรุปผู้ขาดสอบ</h3><p>${escapeHtml(data.title)} · ${data.total} คน</p></div><button type="button" class="btn btn-ghost btn-sm" id="closeAbsenceSummary">✕ ปิด</button></div><div class="absence-stats"><div><b>${data.total}</b><span>ผู้มีสิทธิ์</span></div><div class="ok"><b>${data.counts.submitted}</b><span>ส่งแล้ว</span></div><div class="live"><b>${data.counts.in_progress}</b><span>กำลังสอบ</span></div><div class="danger"><b>${data.counts.absent}</b><span>ขาดสอบ</span></div></div><div class="absence-list">${order.flatMap(status=>data.students.filter(student=>student.status===status).map(student=>`<div class="absence-row status-${status}"><span class="absence-status">${labels[status]}</span><b>${escapeHtml(student.studentId)}</b><span>${escapeHtml(`${student.firstName} ${student.lastName}`)}</span><em>${escapeHtml(student.classRoom)}${student.additionalAccess?' · สิทธิ์รายคน':''}</em></div>`)).join('')}</div>`;document.getElementById('closeAbsenceSummary').addEventListener('click',()=>wrap.classList.add('hidden'));}
   catch(error){wrap.innerHTML='';wrap.classList.add('hidden');showToast(error.message);}
+});
+
+document.addEventListener('i18nchange', ()=>{
+  if(!adminScreen.classList.contains('hidden')) refreshCurrentPageData();
 });
 
 })();

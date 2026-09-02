@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ระบบข้อสอบ — สำหรับอาจารย์ผู้สอน</title>
+<title data-i18n="ExamKub — สำหรับอาจารย์ผู้สอน">ExamKub — สำหรับอาจารย์ผู้สอน</title>
 <script src="/assets/teacher-boot.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
 <div id="adminLoginScreen" class="screen-wrap">
   <button class="theme-toggle lang-toggle" id="langToggleBtnLogin" type="button" style="position:fixed;top:16px;right:18px;">🌐 EN</button>
   <div class="card">
-    <span class="eyebrow" data-i18n="EXAM SYSTEM · อาจารย์ผู้สอน">EXAM SYSTEM · อาจารย์ผู้สอน</span>
+    <span class="eyebrow" data-i18n="EXAMKUB · อาจารย์ผู้สอน">EXAMKUB · อาจารย์ผู้สอน</span>
     <h1 data-i18n="เข้าสู่ระบบอาจารย์">เข้าสู่ระบบอาจารย์</h1>
     <p class="lead" data-i18n="กรอก username และ password ที่ผู้ดูแลระบบตั้งให้ คุณจะเห็นเฉพาะข้อสอบและผลสอบของวิชาที่คุณสอนเท่านั้น">กรอก username และ password ที่ผู้ดูแลระบบตั้งให้ คุณจะเห็นเฉพาะข้อสอบและผลสอบของวิชาที่คุณสอนเท่านั้น</p>
     <input type="text" class="name-input" id="teacherUsernameInput" placeholder="Username" autocomplete="username">
@@ -34,7 +34,7 @@
 <!-- ================= ADMIN SCREEN ================= -->
 <div id="adminScreen" class="hidden">
   <div class="admin-topbar">
-    <div class="brand">🧑‍🏫 <span data-i18n="ระบบข้อสอบของฉัน">ระบบข้อสอบของฉัน</span> (<span id="teacherNameLabel"></span>)</div>
+    <div class="brand">🧑‍🏫 ExamKub (<span id="teacherNameLabel"></span>)</div>
     <div style="display:flex;gap:8px;align-items:center;">
       <button class="btn btn-ghost btn-sm lang-toggle" type="button" id="langToggleBtn">🌐 EN</button>
       <button class="btn btn-ghost btn-sm theme-toggle" type="button" id="themeToggleBtn" aria-label="สลับโหมดสี" data-i18n-aria="สลับโหมดสี" data-i18n="โหมดมืด">🌙 โหมดมืด</button>
@@ -95,7 +95,7 @@
             <div class="field"><label for="rosterSetSelect" data-i18n="ชุดข้อสอบ / รายวิชา">ชุดข้อสอบ / รายวิชา</label><select id="rosterSetSelect"><option value="" data-i18n="เลือกชุดข้อสอบ">เลือกชุดข้อสอบ</option></select></div>
             <div class="field"><label for="rosterClassSelect" data-i18n="ชื่อห้อง">ชื่อห้อง</label><div class="roster-class-picker"><select id="rosterClassSelect" disabled><option value="" data-i18n="เลือกห้อง">เลือกห้อง</option></select><button class="btn btn-ghost" id="addRosterClassBtn" type="button" disabled data-i18n="+ เพิ่มห้อง">+ เพิ่มห้อง</button></div><div class="roster-selected-classes" id="rosterSelectedClasses"></div></div>
             <div class="field"><label for="rosterExamRoomInput" data-i18n="ห้องสอบ">ห้องสอบ</label><input id="rosterExamRoomInput" type="text" placeholder="เช่น COM.4"></div>
-            <div class="field"><label for="rosterExamLinkInput" data-i18n="ลิงก์สอบ">ลิงก์สอบ</label><input id="rosterExamLinkInput" type="url" placeholder="https://example.com/"></div>
+            <div class="field"><label for="rosterExamLinkInput" data-i18n="ลิงก์สอบ">ลิงก์สอบ</label><input id="rosterExamLinkInput" type="url" placeholder="https://examkub.com/"></div>
           </div>
           <div class="editor-actions" style="justify-content:flex-start;"><button class="btn btn-primary" id="printRosterBtn" type="button" disabled data-i18n="🖨️ เปิดตัวอย่างและพิมพ์">🖨️ เปิดตัวอย่างและพิมพ์</button><button class="btn btn-ghost" id="absenceSummaryBtn" type="button" data-i18n="📋 สรุปผู้ขาดสอบ">📋 สรุปผู้ขาดสอบ</button></div>
           <div class="absence-summary hidden" id="absenceSummaryWrap"></div>
