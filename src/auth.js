@@ -16,6 +16,16 @@ function verifyPassword(password, stored) {
   catch { return false; }
 }
 
+function timingSafeStringEqual(a, b) {
+  const bufA = Buffer.from(String(a ?? ''), 'utf8');
+  const bufB = Buffer.from(String(b ?? ''), 'utf8');
+  if (bufA.length !== bufB.length) {
+    crypto.timingSafeEqual(bufA, bufA);
+    return false;
+  }
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
 const TEACHER_SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 const STUDENT_SESSION_TTL_MS = 2 * 60 * 60 * 1000;
 const SESSION_CLEANUP_INTERVAL_MS = 15 * 60 * 1000;
@@ -38,7 +48,7 @@ async function requireTeacher(req, res, next) {
 
 function requireAdmin(req, res, next) {
   const key = req.get('x-admin-key');
-  if (!key || key !== ADMIN_KEY) return res.status(401).json({ error: 'unauthorized', message: 'ต้องระบุรหัสผู้ดูแลระบบที่ถูกต้อง' });
+  if (!key || !timingSafeStringEqual(key, ADMIN_KEY)) return res.status(401).json({ error: 'unauthorized', message: 'ต้องระบุรหัสผู้ดูแลระบบที่ถูกต้อง' });
   next();
 }
 
@@ -68,5 +78,6 @@ async function removeTeacherSessions(teacherId) { await sessionStore.removeBySub
 module.exports = {
   hashPassword, verifyPassword, requireTeacher, requireAdmin, requireStudent,
   createTeacherSession, createStudentSession, removeTeacherSessions,
-  teacherSessions, studentSessions, purgeExpiredSessions, sessionStore
+  teacherSessions, studentSessions, purgeExpiredSessions, sessionStore,
+  timingSafeStringEqual
 };
