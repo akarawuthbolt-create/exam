@@ -19,13 +19,15 @@
     <span class="eyebrow" data-i18n="EXAMKUB · อาจารย์ผู้สอน">EXAMKUB · อาจารย์ผู้สอน</span>
     <h1 data-i18n="เข้าสู่ระบบอาจารย์">เข้าสู่ระบบอาจารย์</h1>
     <p class="lead" data-i18n="กรอก username และ password ที่ผู้ดูแลระบบตั้งให้ คุณจะเห็นเฉพาะข้อสอบและผลสอบของวิชาที่คุณสอนเท่านั้น">กรอก username และ password ที่ผู้ดูแลระบบตั้งให้ คุณจะเห็นเฉพาะข้อสอบและผลสอบของวิชาที่คุณสอนเท่านั้น</p>
-    <input type="text" class="name-input" id="teacherUsernameInput" placeholder="Username" autocomplete="username">
-    <input type="password" class="name-input" id="teacherPasswordInput" placeholder="Password" autocomplete="current-password">
-    <div id="adminLoginError" style="color:var(--red);font-size:13px;margin:-12px 0 16px;display:none;"></div>
-    <div class="start-actions">
-      <span></span>
-      <button class="btn btn-primary" id="adminLoginBtn" data-i18n="เข้าสู่ระบบ →">เข้าสู่ระบบ →</button>
-    </div>
+    <form id="teacherLoginForm" autocomplete="on">
+      <input type="text" class="name-input" id="teacherUsernameInput" name="username" placeholder="Username" autocomplete="username">
+      <input type="password" class="name-input" id="teacherPasswordInput" name="password" placeholder="Password" autocomplete="current-password">
+      <div id="adminLoginError" style="color:var(--red);font-size:13px;margin:-12px 0 16px;display:none;"></div>
+      <div class="start-actions">
+        <span></span>
+        <button class="btn btn-primary" id="adminLoginBtn" type="submit" data-i18n="เข้าสู่ระบบ →">เข้าสู่ระบบ →</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -188,6 +190,6 @@
   </div>
 </div>
 
-<script src="/assets/teacher-main.js?v=20260829-1"></script>
+<script src="/assets/teacher-main.js?v=20260902-2"></script>
 </body>
 </html>

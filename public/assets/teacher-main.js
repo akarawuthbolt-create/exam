@@ -147,8 +147,7 @@ async function tryAdminLogin(){
   }
   btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ →';
 }
-document.getElementById('adminLoginBtn').addEventListener('click', tryAdminLogin);
-document.getElementById('teacherPasswordInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryAdminLogin(); });
+document.getElementById('teacherLoginForm').addEventListener('submit', (e)=>{ e.preventDefault(); tryAdminLogin(); });
 document.getElementById('pageRefreshBtn').addEventListener('click', refreshCurrentPageData);
 const changePasswordDialog = document.getElementById('changePasswordDialog');
 document.getElementById('changePasswordBtn').addEventListener('click', ()=>{
