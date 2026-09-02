@@ -19,9 +19,10 @@ document.getElementById('themeToggleBtnInline').addEventListener('click', toggle
   if(!saved) saved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
   applyTheme(saved);
 })();
-/* the floating corner toggle only makes sense outside the exam shell (which has its own inline toggle) */
+/* the floating corner toggles only make sense outside the exam shell (which has its own inline toggles) */
 function setFloatingThemeButtonVisible(visible){
   document.getElementById('themeToggleBtn').classList.toggle('hidden', !visible);
+  document.getElementById('langToggleBtn').classList.toggle('hidden', !visible);
 }
 
 /* ============ API CLIENT ============ */
