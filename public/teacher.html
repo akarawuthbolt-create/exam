@@ -7,7 +7,7 @@
 <script src="/assets/teacher-boot.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/teacher.css?v=20260829-2">
+<link rel="stylesheet" href="/assets/teacher.css?v=20260902-1">
 <script src="/assets/i18n.js?v=20260902-1"></script>
 </head>
 <body>
@@ -150,6 +150,17 @@
   </div>
 </dialog>
 
+<dialog class="google-import-dialog" id="questionBankDialog">
+  <div class="google-import-dialog-inner">
+    <div class="google-import-dialog-head"><div><h3 data-i18n="📚 คลังคำถามปรนัย">📚 คลังคำถามปรนัย</h3><p data-i18n="เลือกข้อที่เคยบันทึกไว้เพื่อเพิ่มเข้าชุดข้อสอบนี้ ไม่ต้องพิมพ์ซ้ำ">เลือกข้อที่เคยบันทึกไว้เพื่อเพิ่มเข้าชุดข้อสอบนี้ ไม่ต้องพิมพ์ซ้ำ</p></div><button class="btn btn-ghost btn-sm" type="button" id="closeQuestionBankDialog">✕</button></div>
+    <div class="google-import-step">
+      <input class="filter-select" type="search" id="questionBankSearchInput" placeholder="ค้นหาคำถามหรือชื่อวิชา" data-i18n-placeholder="ค้นหาคำถามหรือชื่อวิชา" style="margin-bottom:12px;">
+      <div class="mc-import-preview" id="questionBankList"></div>
+      <div class="editor-actions"><span class="panel-sub" id="questionBankSelectedCount" style="margin-right:auto;"></span><button class="btn btn-primary btn-sm" id="addSelectedBankQuestionsBtn" type="button" disabled data-i18n="➕ เพิ่มข้อที่เลือก">➕ เพิ่มข้อที่เลือก</button></div>
+    </div>
+  </div>
+</dialog>
+
 <dialog class="resit-dialog" id="resitDialog">
   <form class="resit-dialog-card" id="resitForm">
     <button class="btn btn-ghost btn-sm resit-close" type="button" id="closeResitDialog" aria-label="ปิด">✕</button>
@@ -190,6 +201,6 @@
   </div>
 </div>
 
-<script src="/assets/teacher-main.js?v=20260902-2"></script>
+<script src="/assets/teacher-main.js?v=20260902-3"></script>
 </body>
 </html>

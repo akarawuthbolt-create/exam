@@ -901,6 +901,10 @@ function renderMcPanel(){
     </div>
     <div class="compact-list" id="mcCompactList"></div>
     <button class="add-row-btn" id="addMcBtn" type="button">${tr('+ เพิ่มข้อปรนัย')}</button>
+    <div class="editor-actions" style="margin-top:8px;justify-content:flex-start;">
+      <button class="btn btn-ghost btn-sm" id="loadMcFromBankBtn" type="button">${tr('📚 เลือกจากคลังคำถาม')}</button>
+      <button class="btn btn-ghost btn-sm" id="saveMcToBankBtn" type="button">${tr('💾 บันทึกข้อทั้งหมดในส่วนนี้เข้าคลัง')}</button>
+    </div>
     <button class="add-row-btn" id="toggleMcImportBtn" type="button" style="margin-top:8px;border-color:#A78BFA;color:var(--indigo);">${tr('✨ นำเข้าข้อปรนัยจาก ChatGPT')}</button>
     <div class="mc-import-box hidden" id="mcImportBox">
       <h4>${tr('1. สร้างข้อสอบด้วย ChatGPT')}</h4><p>${tr('คัดลอก Prompt นี้ไปวางใน ChatGPT แล้วแก้ไขหัวข้อหรือจำนวนข้อได้ตามต้องการ')}</p>
@@ -921,6 +925,7 @@ function renderMcPanel(){
   });
   document.getElementById('addMcBtn').addEventListener('click', ()=> openQuestionEditor('mc', null));
   bindMcImportEvents();
+  bindQuestionBankEvents();
   document.getElementById('saveSetFromMcBtn').addEventListener('click', saveEditingSet);
   renderOpenEditorIfNeeded('mc');
 }
@@ -1040,24 +1045,81 @@ function bindQuestionFileImportEvents(){
   apply.addEventListener('click',()=>{if(!questionFilePreview?.questions.length)return;const draft=googleFormsDraftSet(questionFilePreview);dialog.close();openEditor(null,draft);showToast(`นำเข้าข้อสอบ ${questionFilePreview.questions.length} ข้อแล้ว กรุณาตรวจเฉลยและคะแนนก่อนบันทึก`);});
 }
 bindQuestionFileImportEvents();
+const questionBankDialog = document.getElementById('questionBankDialog');
+let questionBankCache = null;
+let questionBankSelected = new Set();
 function bindQuestionBankEvents(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   document.getElementById('saveMcToBankBtn').addEventListener('click', async ()=>{
     if(!editingSet.sections.mc.questions.length){ showToast('ยังไม่มีข้อปรนัยให้เก็บ'); return; }
-    try{ const result=await apiFetch('/api/teacher/question-bank',{method:'POST',body:{questions:editingSet.sections.mc.questions.map(question=>({...question,courseName:editingSet.courseName||editingSet.title||''}))},auth:true}); showToast(`เพิ่มเข้าคลัง ${result.added} ข้อ`); }catch(error){ showToast(error.message); }
+    try{ const result=await apiFetch('/api/teacher/question-bank',{method:'POST',body:{questions:editingSet.sections.mc.questions.map(question=>({...question,courseName:editingSet.courseName||editingSet.title||''}))},auth:true}); showToast(tr('เพิ่มเข้าคลัง')+` ${result.added} `+tr('ข้อ')); }catch(error){ showToast(error.message); }
   });
-  document.getElementById('loadMcFromBankBtn').addEventListener('click', async ()=>{
-    try{
-      const questions=await apiFetch('/api/teacher/question-bank',{auth:true});
-      if(!questions.length){ showToast('คลังข้อสอบยังว่าง'); return; }
-      const choices=questions.map((question,index)=>`${index+1}. ${question.text}`).join('\n');
-      const selected=prompt(`พิมพ์หมายเลขข้อที่ต้องการ คั่นด้วยจุลภาค\n\n${choices}`); if(!selected) return;
-      const indexes=[...new Set(selected.split(',').map(value=>parseInt(value.trim(),10)-1).filter(index=>index>=0&&index<questions.length))];
-      if(!indexes.length){ showToast('ไม่พบหมายเลขข้อที่เลือก'); return; }
-      editingSet.sections.mc.questions.push(...indexes.map(index=>{const question=questions[index];return {id:uid('mc'),text:question.text,choices:question.choices.slice(),answer:question.answer,points:0};}));
-      applyPointDistribution('mc'); renderMcPanel(); showToast(`เพิ่มจากคลัง ${indexes.length} ข้อแล้ว`);
-    }catch(error){ showToast(error.message); }
-  });
+  document.getElementById('loadMcFromBankBtn').addEventListener('click', openQuestionBankDialog);
 }
+async function openQuestionBankDialog(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
+  questionBankSelected = new Set();
+  document.getElementById('questionBankSearchInput').value = '';
+  const list = document.getElementById('questionBankList');
+  list.innerHTML = `<div class="loading-note">${tr('กำลังโหลด...')}</div>`;
+  questionBankDialog.showModal();
+  try{
+    questionBankCache = await apiFetch('/api/teacher/question-bank',{auth:true});
+  }catch(error){
+    list.innerHTML = `<div class="empty-note">${escapeHtml(error.message)}</div>`;
+    return;
+  }
+  renderQuestionBankList();
+}
+function renderQuestionBankList(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
+  const list = document.getElementById('questionBankList');
+  const query = document.getElementById('questionBankSearchInput').value.trim().toLowerCase();
+  const items = (questionBankCache||[]).filter(q => !query || q.text.toLowerCase().includes(query) || (q.courseName||'').toLowerCase().includes(query));
+  if(!(questionBankCache||[]).length){ list.innerHTML = `<div class="empty-note">${tr('คลังข้อสอบยังว่าง')}</div>`; updateQuestionBankSelectedCount(); return; }
+  if(!items.length){ list.innerHTML = `<div class="empty-note">${tr('ไม่พบข้อคำถามที่ตรงกับคำค้นหา')}</div>`; updateQuestionBankSelectedCount(); return; }
+  list.innerHTML = items.map(q=>`
+    <label class="question-bank-row" style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer;">
+      <input type="checkbox" data-bank-id="${escapeAttr(q.id)}" ${questionBankSelected.has(q.id)?'checked':''} style="margin-top:3px;">
+      <span style="flex:1;min-width:0;">
+        <span style="display:block;font-weight:600;font-size:13.5px;">${escapeHtml(truncateText(q.text,140))}</span>
+        <span style="display:block;color:var(--sub);font-size:12px;margin-top:2px;">${q.courseName?escapeHtml(q.courseName)+' · ':''}${q.choices.length} ${tr('ตัวเลือก')}</span>
+      </span>
+      <button type="button" class="btn btn-ghost btn-sm" data-bank-delete="${escapeAttr(q.id)}" title="${tr('ลบออกจากคลัง')}">🗑️</button>
+    </label>`).join('');
+  list.querySelectorAll('[data-bank-id]').forEach(input=>input.addEventListener('change', ()=>{
+    if(input.checked) questionBankSelected.add(input.dataset.bankId); else questionBankSelected.delete(input.dataset.bankId);
+    updateQuestionBankSelectedCount();
+  }));
+  list.querySelectorAll('[data-bank-delete]').forEach(button=>button.addEventListener('click', async (event)=>{
+    event.preventDefault(); event.stopPropagation();
+    if(!confirm(tr('ลบข้อนี้ออกจากคลังถาวร?'))) return;
+    const id = button.dataset.bankDelete;
+    try{
+      await apiFetch('/api/teacher/question-bank/'+encodeURIComponent(id),{method:'DELETE',auth:true});
+      questionBankCache = questionBankCache.filter(q=>q.id!==id);
+      questionBankSelected.delete(id);
+      renderQuestionBankList();
+    }catch(error){ showToast(error.message); }
+  }));
+  updateQuestionBankSelectedCount();
+}
+function updateQuestionBankSelectedCount(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
+  document.getElementById('questionBankSelectedCount').textContent = questionBankSelected.size ? `${tr('เลือกแล้ว')} ${questionBankSelected.size} ${tr('ข้อ')}` : '';
+  document.getElementById('addSelectedBankQuestionsBtn').disabled = !questionBankSelected.size;
+}
+document.getElementById('questionBankSearchInput').addEventListener('input', renderQuestionBankList);
+document.getElementById('closeQuestionBankDialog').addEventListener('click', ()=>questionBankDialog.close());
+document.getElementById('addSelectedBankQuestionsBtn').addEventListener('click', ()=>{
+  const tr = window.I18N ? window.I18N.t : (s=>s);
+  const chosen = (questionBankCache||[]).filter(q=>questionBankSelected.has(q.id));
+  if(!chosen.length) return;
+  editingSet.sections.mc.questions.push(...chosen.map(question=>({id:uid('mc'), text:question.text, choices:question.choices.slice(), answer:question.answer, points:0, resources:question.resources?JSON.parse(JSON.stringify(question.resources)):undefined})));
+  applyPointDistribution('mc'); renderMcPanel();
+  showToast(tr('เพิ่มจากคลัง')+` ${chosen.length} `+tr('ข้อแล้ว'));
+  questionBankDialog.close();
+});
 function parseChatGptMc(text){
   const questions=[]; const errors=[]; let current=null; let target=null;
   const answerIndex = token => ({'ก':0,'ข':1,'ค':2,'ง':3,'a':0,'b':1,'c':2,'d':3,'1':0,'2':1,'3':2,'4':3}[String(token).trim().toLowerCase()]);

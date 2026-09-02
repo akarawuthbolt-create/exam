@@ -23,10 +23,19 @@ function registerQuestionBankRoutes(app, { readDB, writeDB, newId, requireAdmin,
     source.forEach(question => { const clean = sanitizeQuestion(question, newId, owner); if (clean && !db.questionBank.some(item => item.ownerId === owner && item.text === clean.text)) { db.questionBank.push(clean); added += 1; } });
     await writeDB(db); res.json({ added });
   };
+  const remove = owner => async (req, res) => {
+    const db = readDB();
+    const index = db.questionBank.findIndex(question => question.id === req.params.id && (owner === null || question.ownerId === owner));
+    if (index === -1) return res.status(404).json({ error: 'not_found', message: 'ไม่พบข้อคำถามนี้ในคลัง' });
+    db.questionBank.splice(index, 1);
+    await writeDB(db); res.json({ deleted: true });
+  };
   app.get('/api/question-bank', requireAdmin, list(null));
   app.post('/api/question-bank', requireAdmin, save(null));
+  app.delete('/api/question-bank/:id', requireAdmin, remove(null));
   app.get('/api/teacher/question-bank', requireTeacher, (req, res) => list(req.teacherId)(req, res));
   app.post('/api/teacher/question-bank', requireTeacher, (req, res) => save(req.teacherId)(req, res));
+  app.delete('/api/teacher/question-bank/:id', requireTeacher, (req, res) => remove(req.teacherId)(req, res));
 }
 
 module.exports = { registerQuestionBankRoutes };

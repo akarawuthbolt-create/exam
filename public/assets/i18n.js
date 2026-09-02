@@ -601,6 +601,22 @@
     'กำลังสร้าง PDF...': 'Generating PDF...',
     'สร้าง PDF ไม่สำเร็จ': 'Failed to generate PDF',
     '🧩 แก้ไขชุดข้อสอบ': '🧩 Edit exam set',
+
+    // ---- teacher-main.js: question bank ----
+    '📚 คลังคำถามปรนัย': '📚 Multiple-choice question bank',
+    'เลือกข้อที่เคยบันทึกไว้เพื่อเพิ่มเข้าชุดข้อสอบนี้ ไม่ต้องพิมพ์ซ้ำ': "Pick previously saved questions to add to this exam set — no need to retype them",
+    'ค้นหาคำถามหรือชื่อวิชา': 'Search question or subject name',
+    '➕ เพิ่มข้อที่เลือก': '➕ Add selected',
+    '📚 เลือกจากคลังคำถาม': '📚 Choose from question bank',
+    '💾 บันทึกข้อทั้งหมดในส่วนนี้เข้าคลัง': '💾 Save all questions in this section to the bank',
+    'เพิ่มเข้าคลัง': 'Added to bank',
+    'ไม่พบข้อคำถามที่ตรงกับคำค้นหา': 'No questions match the search',
+    'ตัวเลือก': 'choices',
+    'ลบออกจากคลัง': 'Remove from bank',
+    'ลบข้อนี้ออกจากคลังถาวร?': 'Permanently remove this question from the bank?',
+    'เลือกแล้ว': 'Selected',
+    'เพิ่มจากคลัง': 'Added from bank',
+    'ข้อแล้ว': 'question(s)',
   };
 
   var lang = 'th';
