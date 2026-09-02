@@ -105,6 +105,12 @@
             <input type="file" id="studentExcelFile" accept=".xlsx,.xls" style="max-width:260px;">
             <button class="btn btn-primary btn-sm" id="importStudentsExcelBtn">นำเข้า Excel</button>
             <button class="btn btn-ghost btn-sm" id="exportStudentsBtn">⬇ ส่งออกรายชื่อ Excel</button>
+          </div>
+        </div>
+        <div class="panel" id="systemBackupPanel">
+          <h3>🛡️ สำรอง / กู้คืนข้อมูลทั้งระบบ</h3>
+          <p class="panel-sub">สำรองข้อมูลทั้งระบบเป็นไฟล์เดียว หรือกู้คืนจากไฟล์สำรองที่เคยดาวน์โหลดไว้</p>
+          <div class="editor-actions" style="justify-content:flex-start;flex-wrap:wrap;">
             <button class="btn btn-ghost btn-sm" id="downloadBackupBtn">🛡️ สำรองข้อมูลระบบ</button>
           </div>
           <div class="restore-system-card"><div><b>♻️ กู้คืนข้อมูลทั้งระบบ</b><p>ใช้ไฟล์ <code>exam-system-backup.json</code> ที่ดาวน์โหลดจากระบบ ข้อมูลปัจจุบันจะถูกแทนที่ทั้งหมด</p></div><input type="file" id="restoreBackupFile" accept=".json,application/json" hidden><button class="btn btn-danger btn-sm" id="selectRestoreBackupBtn" type="button">เลือกไฟล์เพื่อกู้คืน</button></div>
@@ -212,8 +218,9 @@
             <p class="panel-sub">ดูและจับคู่ห้องทั้งหมดก่อนสร้างประวัติห้องของปีใหม่</p>
             <button class="btn btn-primary btn-sm" id="openPromotionDialogBtn" type="button">จัดการเลื่อนชั้น →</button>
           </div>
-          <button class="panel settings-menu-card" id="openStudentFilesDialogBtn" type="button"><div><h3>📁 นำเข้า / ส่งออกข้อมูล</h3><p class="panel-sub">นำเข้ารายชื่อนักเรียนจาก Excel, ส่งออกรายชื่อ และสำรองข้อมูลระบบ</p></div><span class="btn btn-primary btn-sm">จัดการไฟล์ →</span></button>
+          <button class="panel settings-menu-card" id="openStudentFilesDialogBtn" type="button"><div><h3>📁 นำเข้า / ส่งออกข้อมูลนักเรียน</h3><p class="panel-sub">นำเข้ารายชื่อนักเรียนจาก Excel และส่งออกรายชื่อ</p></div><span class="btn btn-primary btn-sm">จัดการไฟล์ →</span></button>
           <button class="panel settings-menu-card" id="openTeacherImportDialogBtn" type="button"><div><h3>📥 นำเข้า / ส่งออกบัญชีอาจารย์</h3><p class="panel-sub">เพิ่มบัญชีอาจารย์หลายรายการพร้อมกันด้วยไฟล์ตัวอย่างที่กำหนดคอลัมน์ไว้แล้ว หรือส่งออกรายชื่อเป็น Excel</p></div><span class="btn btn-primary btn-sm">จัดการบัญชี →</span></button>
+          <button class="panel settings-menu-card" id="openSystemBackupDialogBtn" type="button"><div><h3>🛡️ สำรอง / กู้คืนข้อมูลระบบ</h3><p class="panel-sub">ดาวน์โหลดไฟล์สำรองข้อมูลทั้งระบบ หรือกู้คืนจากไฟล์สำรองที่เคยดาวน์โหลดไว้</p></div><span class="btn btn-primary btn-sm">จัดการข้อมูล →</span></button>
           <div class="panel" id="adminAccountPanel">
             <h3>บัญชีผู้ดูแล</h3>
             <p class="panel-sub">ออกจากระบบเมื่อใช้งานบนเครื่องสาธารณะหรือใช้งานเสร็จแล้ว</p>
@@ -235,8 +242,15 @@
 
 <dialog class="google-import-dialog settings-dialog" id="studentFilesDialog">
   <div class="google-import-dialog-inner">
-    <div class="google-import-dialog-head"><div><h3>📁 นำเข้า / ส่งออกข้อมูล</h3><p>นำเข้ารายชื่อนักเรียน สำรองข้อมูล และกู้คืนข้อมูลทั้งระบบ</p></div><button class="btn btn-ghost btn-sm" id="closeStudentFilesDialogBtn" type="button">✕</button></div>
+    <div class="google-import-dialog-head"><div><h3>📁 นำเข้า / ส่งออกข้อมูลนักเรียน</h3><p>นำเข้ารายชื่อนักเรียนจาก Excel และส่งออกรายชื่อ</p></div><button class="btn btn-ghost btn-sm" id="closeStudentFilesDialogBtn" type="button">✕</button></div>
     <div id="studentFilesDialogBody"></div>
+  </div>
+</dialog>
+
+<dialog class="google-import-dialog settings-dialog" id="systemBackupDialog">
+  <div class="google-import-dialog-inner">
+    <div class="google-import-dialog-head"><div><h3>🛡️ สำรอง / กู้คืนข้อมูลระบบ</h3><p>สำรองข้อมูลทั้งระบบเป็นไฟล์เดียว หรือกู้คืนจากไฟล์สำรองที่เคยดาวน์โหลดไว้</p></div><button class="btn btn-ghost btn-sm" id="closeSystemBackupDialogBtn" type="button">✕</button></div>
+    <div id="systemBackupDialogBody"></div>
   </div>
 </dialog>
 
@@ -308,7 +322,7 @@
   </div>
 </div>
 
-<script src="/assets/admin-main.js?v=20260902-2"></script>
+<script src="/assets/admin-main.js?v=20260902-3"></script>
 <script src="/assets/learning-plan-import.js?v=20260727-1"></script>
 <script src="/assets/admin-learning-plans.js?v=20260727-1"></script>
 </body>

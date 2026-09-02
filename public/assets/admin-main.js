@@ -205,9 +205,12 @@ function organizeAdminSettings(){
   movePanelToDialog('adminAccountPanel','adminAccountDialogBody','adminAccountDialog',`<div><h3>👤 บัญชีผู้ดูแล</h3><p class="panel-sub">จัดการการใช้งานบัญชีผู้ดูแลบนเครื่องนี้</p></div><button class="btn btn-ghost btn-sm" type="button">เปิดเมนู →</button>`);
   const filePanel=document.getElementById('studentFileImportPanel');
   if(filePanel) document.getElementById('studentFilesDialogBody')?.appendChild(filePanel);
+  const backupPanel=document.getElementById('systemBackupPanel');
+  if(backupPanel) document.getElementById('systemBackupDialogBody')?.appendChild(backupPanel);
   document.getElementById('openStudentFilesDialogBtn')?.addEventListener('click',()=>openDialog('studentFilesDialog'));
   document.getElementById('openTeacherImportDialogBtn')?.addEventListener('click',()=>openDialog('teacherImportDialog'));
-  [['closeAcademicCalendarDialogBtn','academicCalendarDialog'],['closeStudentFilesDialogBtn','studentFilesDialog'],['closeTeacherImportDialogBtn','teacherImportDialog'],['closeAdminAccountDialogBtn','adminAccountDialog']].forEach(([buttonId,dialogId])=>document.getElementById(buttonId)?.addEventListener('click',()=>document.getElementById(dialogId)?.close()));
+  document.getElementById('openSystemBackupDialogBtn')?.addEventListener('click',()=>openDialog('systemBackupDialog'));
+  [['closeAcademicCalendarDialogBtn','academicCalendarDialog'],['closeStudentFilesDialogBtn','studentFilesDialog'],['closeTeacherImportDialogBtn','teacherImportDialog'],['closeAdminAccountDialogBtn','adminAccountDialog'],['closeSystemBackupDialogBtn','systemBackupDialog']].forEach(([buttonId,dialogId])=>document.getElementById(buttonId)?.addEventListener('click',()=>document.getElementById(dialogId)?.close()));
 }
 organizeAdminSettings();
 
