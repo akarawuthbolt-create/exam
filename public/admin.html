@@ -101,7 +101,7 @@
           <h3>📁 นำเข้า/ส่งออกไฟล์</h3>
           <p class="panel-sub">นำเข้า Excel ที่มีหัวคอลัมน์: รหัสนักเรียน, ชื่อ, นามสกุล, ห้อง — รหัสซ้ำจะอัปเดตข้อมูลเดิมโดยไม่ลบ PIN</p>
           <div class="editor-actions" style="justify-content:flex-start;flex-wrap:wrap;">
-            <a class="btn btn-ghost btn-sm" id="downloadStudentTemplateBtn" href="/api/students/import-template.xlsx">📄 ดาวน์โหลดไฟล์ตัวอย่าง Excel</a>
+            <button type="button" class="btn btn-ghost btn-sm" id="downloadStudentTemplateBtn">📄 ดาวน์โหลดไฟล์ตัวอย่าง Excel</button>
             <input type="file" id="studentExcelFile" accept=".xlsx,.xls" style="max-width:260px;">
             <button class="btn btn-primary btn-sm" id="importStudentsExcelBtn">นำเข้า Excel</button>
             <button class="btn btn-ghost btn-sm" id="exportStudentsBtn">⬇ ส่งออกรายชื่อ Excel</button>
@@ -258,7 +258,7 @@
   <div class="google-import-dialog-inner">
     <div class="google-import-dialog-head"><div><h3>📥 นำเข้า / ส่งออกบัญชีอาจารย์</h3><p>ดาวน์โหลดไฟล์ตัวอย่าง กรอกข้อมูลตามคอลัมน์ แล้วเลือกไฟล์เพื่อนำเข้าบัญชีหลายรายการพร้อมกัน หรือส่งออกรายชื่อทั้งหมดเป็น Excel</p></div><button class="btn btn-ghost btn-sm" id="closeTeacherImportDialogBtn" type="button">✕</button></div>
     <div class="editor-actions" style="justify-content:flex-start;flex-wrap:wrap;">
-      <a class="btn btn-ghost btn-sm" id="downloadTeacherTemplateBtn" href="/api/teachers/import-template.xlsx">ดาวน์โหลดไฟล์ตัวอย่าง Excel</a>
+      <button type="button" class="btn btn-ghost btn-sm" id="downloadTeacherTemplateBtn">📄 ดาวน์โหลดไฟล์ตัวอย่าง Excel</button>
       <input type="file" id="teacherExcelFile" accept=".xlsx" class="filter-select">
       <button class="btn btn-primary btn-sm" id="importTeachersExcelBtn" type="button">นำเข้าบัญชี</button>
       <button class="btn btn-ghost btn-sm" id="exportTeachersBtn" type="button">⬇ ส่งออกรายชื่อ Excel</button>
