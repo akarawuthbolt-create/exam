@@ -901,7 +901,7 @@ function renderMcPanel(){
     </div>
     <div class="compact-list" id="mcCompactList"></div>
     <button class="add-row-btn" id="addMcBtn" type="button">${tr('+ เพิ่มข้อปรนัย')}</button>
-    <div class="editor-actions" style="margin-top:8px;justify-content:flex-start;">
+    <div class="editor-actions" style="margin-top:8px;justify-content:center;">
       <button class="btn btn-ghost btn-sm" id="loadMcFromBankBtn" type="button">${tr('📚 เลือกจากคลังคำถาม')}</button>
       <button class="btn btn-ghost btn-sm" id="saveMcToBankBtn" type="button">${tr('💾 บันทึกข้อทั้งหมดในส่วนนี้เข้าคลัง')}</button>
     </div>
@@ -915,7 +915,7 @@ function renderMcPanel(){
       <div class="editor-actions"><button class="btn btn-ghost btn-sm" id="previewMcImportBtn" type="button">${tr('ตรวจรูปแบบ')}</button><button class="btn btn-primary btn-sm" id="applyMcImportBtn" type="button" disabled>${tr('เพิ่มข้อที่ตรวจแล้ว')}</button></div>
       <div class="mc-import-preview" id="mcImportPreview"></div>
     </div>
-    <div class="editor-actions"><button class="btn btn-primary" id="saveSetFromMcBtn" type="button">${tr('💾 บันทึกชุดข้อสอบ')}</button></div>
+    <div class="editor-actions"><button class="btn btn-primary" id="saveSetFromMcBtn" type="button" style="width:100%;">${tr('💾 บันทึกชุดข้อสอบ')}</button></div>
     <div id="mcEditorSlot"></div>
   </div>`;
   renderMcCompactList();
