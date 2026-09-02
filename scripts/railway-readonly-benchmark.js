@@ -1,10 +1,11 @@
 /* Read-only production benchmark. It only sends GET requests and never writes exam data. */
 const { performance } = require('perf_hooks');
 
+const APPROVED_URLS = ['https://examz.up.railway.app', 'https://examkub.com'];
 const baseUrl = String(process.env.RAILWAY_LOAD_URL || 'https://examz.up.railway.app').replace(/\/$/, '');
 const total = Math.max(1, Number(process.argv[2] || 1000));
 const concurrency = Math.max(1, Number(process.argv[3] || 100));
-if (baseUrl !== 'https://examz.up.railway.app') throw new Error('This benchmark is restricted to the approved Railway production URL.');
+if (!APPROVED_URLS.includes(baseUrl)) throw new Error('This benchmark is restricted to the approved Railway production URLs.');
 
 function percentile(values, p) {
   const sorted = [...values].sort((a, b) => a - b);
