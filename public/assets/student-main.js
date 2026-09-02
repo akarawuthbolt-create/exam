@@ -876,8 +876,9 @@ function renderMcSection(){
       ${renderQuestionResources(qq)}
       <div class="choice-list">${choicesHtml}</div>
     </div>
-    ${idx>0 ? `<div class="mc-nav-row"><button class="btn btn-ghost" id="mcPrevBtn">← ข้อก่อนหน้า</button></div>` : ''}
-    ${canSubmit ? `<div class="section-actions mc-submit-row"><button class="btn btn-primary" id="submitSectionBtn">${isOnlyMcSection()?'ส่งข้อสอบ':'บันทึกคำตอบส่วนนี้'}</button></div>` : ''}
+    ${canSubmit && idx>0 ? `<div class="mc-complete-actions"><button class="btn btn-ghost" id="mcPrevBtn">← ข้อก่อนหน้า</button><button class="btn btn-primary" id="submitSectionBtn">${isOnlyMcSection()?'ส่งข้อสอบ':'บันทึกคำตอบส่วนนี้'}</button></div>` : ''}
+    ${!canSubmit && idx>0 ? `<div class="mc-nav-row"><button class="btn btn-ghost" id="mcPrevBtn">← ข้อก่อนหน้า</button></div>` : ''}
+    ${canSubmit && idx===0 ? `<div class="section-actions mc-submit-row"><button class="btn btn-primary" id="submitSectionBtn">${isOnlyMcSection()?'ส่งข้อสอบ':'บันทึกคำตอบส่วนนี้'}</button></div>` : ''}
   `;
 
   inner.querySelectorAll('.choice-item').forEach(item=>{
