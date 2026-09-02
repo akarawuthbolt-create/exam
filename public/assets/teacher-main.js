@@ -1079,11 +1079,11 @@ function renderQuestionBankList(){
   if(!(questionBankCache||[]).length){ list.innerHTML = `<div class="empty-note">${tr('คลังข้อสอบยังว่าง')}</div>`; updateQuestionBankSelectedCount(); return; }
   if(!items.length){ list.innerHTML = `<div class="empty-note">${tr('ไม่พบข้อคำถามที่ตรงกับคำค้นหา')}</div>`; updateQuestionBankSelectedCount(); return; }
   list.innerHTML = items.map(q=>`
-    <label class="question-bank-row" style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer;">
-      <input type="checkbox" data-bank-id="${escapeAttr(q.id)}" ${questionBankSelected.has(q.id)?'checked':''} style="margin-top:3px;">
-      <span style="flex:1;min-width:0;">
-        <span style="display:block;font-weight:600;font-size:13.5px;">${escapeHtml(truncateText(q.text,140))}</span>
-        <span style="display:block;color:var(--sub);font-size:12px;margin-top:2px;">${q.courseName?escapeHtml(q.courseName)+' · ':''}${q.choices.length} ${tr('ตัวเลือก')}</span>
+    <label class="question-bank-row">
+      <input type="checkbox" data-bank-id="${escapeAttr(q.id)}" ${questionBankSelected.has(q.id)?'checked':''}>
+      <span class="qb-info">
+        <span class="qb-title">${escapeHtml(truncateText(q.text,140))}</span>
+        <span class="qb-meta">${q.courseName?escapeHtml(q.courseName)+' · ':''}${q.choices.length} ${tr('ตัวเลือก')}</span>
       </span>
       <button type="button" class="btn btn-ghost btn-sm" data-bank-delete="${escapeAttr(q.id)}" title="${tr('ลบออกจากคลัง')}">🗑️</button>
     </label>`).join('');
