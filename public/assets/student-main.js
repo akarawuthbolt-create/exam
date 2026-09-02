@@ -854,6 +854,7 @@ function renderMcSection(){
   }).join('');
 
   const inner = document.getElementById('sectionInner');
+  inner.classList.remove('mc-answer-pending');
   inner.innerHTML = `
     <div class="section-head"><h2>${SECTION_ICON.mc} ${escapeHtml(s.title)}</h2><p>${escapeHtml(s.desc||'')}</p></div>
     <div class="mc-map-card">
