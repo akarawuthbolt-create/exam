@@ -51,6 +51,18 @@ function registerOperationsRoutes(app, { requireAdmin, readDB, mutateDB, newId, 
     await mutateDB(db => { const draft = (db.drafts || []).find(item => item.draftKey === req.params.draftKey); if (!draft) return; const before = { deviceId: draft.deviceId || null, lockUntil: draft.lockUntil || null }; draft.lockUntil = new Date().toISOString(); draft.rescuedAt = new Date().toISOString(); appendAuditLog(db, { newId, actorType: 'admin', actorId: 'admin', action: 'exam_pulse_release_device', targetType: 'exam_draft', targetId: draft.draftKey, questionKey: draft.questionKey, before, after: { deviceId: draft.deviceId || null, lockUntil: draft.lockUntil }, reason }); released = true; });
     if (!released) return res.status(404).json({ error: 'not_found', message: 'ไม่พบสถานะการทำข้อสอบนี้' }); res.json({ ok: true });
   });
+  app.delete('/api/admin/exam-pulse/:draftKey', requireAdmin, async (req, res) => {
+    const reason = String(req.body?.reason || '').trim(); if (!reason || reason.length > 300) return res.status(400).json({ error: 'invalid_reason', message: 'กรุณาระบุเหตุผลไม่เกิน 300 ตัวอักษร' });
+    let removed = false;
+    await mutateDB(db => {
+      const index = (db.drafts || []).findIndex(item => item.draftKey === req.params.draftKey);
+      if (index === -1) return;
+      const [draft] = db.drafts.splice(index, 1);
+      appendAuditLog(db, { newId, actorType: 'admin', actorId: 'admin', action: 'exam_pulse_delete_draft', targetType: 'exam_draft', targetId: draft.draftKey, questionKey: draft.questionKey, before: { studentId: draft.studentId, questionKey: draft.questionKey }, after: null, reason });
+      removed = true;
+    });
+    if (!removed) return res.status(404).json({ error: 'not_found', message: 'ไม่พบสถานะการทำข้อสอบนี้' }); res.json({ ok: true });
+  });
   app.get('/api/admin/operations/score-verification', requireAdmin, (req, res) => {
     const db = readDB();
     res.json({ generatedAt: new Date().toISOString(), summary: verificationSummary(db), issues: verificationReport(db) });
