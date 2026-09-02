@@ -1476,6 +1476,22 @@ function resultScoreMax(records,key){
   const set=ADMIN_SETS.find(item=>item.key===key),setMax=set?computeSetTotal(set):0;
   return setMax>0?setMax:20;
 }
+const RESULT_EXPANSION_STORAGE_KEY = 'teacherResultsExpansionState';
+function loadResultExpansionState(){
+  try{
+    const saved=JSON.parse(localStorage.getItem(RESULT_EXPANSION_STORAGE_KEY)||'{}');
+    return {groups:new Set(Array.isArray(saved.groups)?saved.groups:[]),periods:new Set(Array.isArray(saved.periods)?saved.periods:[])};
+  }catch(error){ return {groups:new Set(),periods:new Set()}; }
+}
+let resultExpansionState=loadResultExpansionState();
+function saveResultExpansionState(){
+  try{localStorage.setItem(RESULT_EXPANSION_STORAGE_KEY,JSON.stringify({groups:[...resultExpansionState.groups],periods:[...resultExpansionState.periods]}));}catch(error){}
+}
+function setResultExpansion(type,key,expanded){
+  const items=resultExpansionState[type];
+  if(expanded) items.add(key); else items.delete(key);
+  saveResultExpansionState();
+}
 function renderResultSubjectGroups(records){
   const groups=new Map();
   records.forEach(record=>{
@@ -1483,9 +1499,9 @@ function renderResultSubjectGroups(records){
     if(!groups.has(key)) groups.set(key,{key,title:record.questionTitle||'ไม่ระบุรายวิชา',records:[]});
     groups.get(key).records.push(record);
   });
-  return [...groups.values()].map(group=>{const publishedCount=group.records.filter(record=>record.published).length,allPublished=publishedCount===group.records.length,columns=resultScoreColumns(group.records,group.key),scoreMax=resultScoreMax(group.records,group.key);return `<div class="course-group result-subject-group">
-    <div class="course-group-head" data-toggleresultgroup="1"><span class="course-group-title">📚 ${escapeHtml(group.title)}</span><span class="course-group-count">${group.records.length} คน · ประกาศแล้ว ${publishedCount} คน · กดเพื่อดูผลสอบ</span><span class="course-group-actions"><button class="btn btn-ghost btn-sm publish-set-btn" type="button" data-publish-set="${escapeAttr(group.key)}" data-title="${escapeAttr(group.title)}" ${allPublished?'disabled':''}>${allPublished?'✅ ประกาศผลแล้ว':'📣 ประกาศผล'}</button><button class="btn btn-analysis btn-sm" type="button" data-question-analysis="${escapeAttr(group.key)}">📊 วิเคราะห์ข้อสอบ</button>${GRADEBOOK_SET_KEYS.has(group.key)?`<button class="btn btn-primary btn-sm" type="button" data-export-gradebook="${escapeAttr(group.key)}">📊 Excel รวมคะแนน</button>`:''}</span></div>
-    <div class="course-group-body collapsed" style="overflow-x:auto;"><table class="result-table"><thead><tr>
+  return [...groups.values()].map(group=>{const publishedCount=group.records.filter(record=>record.published).length,allPublished=publishedCount===group.records.length,columns=resultScoreColumns(group.records,group.key),scoreMax=resultScoreMax(group.records,group.key),expanded=resultExpansionState.groups.has(group.key);return `<div class="course-group result-subject-group">
+    <div class="course-group-head" data-toggleresultgroup="1" data-result-group-key="${escapeAttr(group.key)}"><span class="course-group-title">📚 ${escapeHtml(group.title)}</span><span class="course-group-count">${group.records.length} คน · ประกาศแล้ว ${publishedCount} คน · กดเพื่อดูผลสอบ</span><span class="course-group-actions"><button class="btn btn-ghost btn-sm publish-set-btn" type="button" data-publish-set="${escapeAttr(group.key)}" data-title="${escapeAttr(group.title)}" ${allPublished?'disabled':''}>${allPublished?'✅ ประกาศผลแล้ว':'📣 ประกาศผล'}</button><button class="btn btn-analysis btn-sm" type="button" data-question-analysis="${escapeAttr(group.key)}">📊 วิเคราะห์ข้อสอบ</button>${GRADEBOOK_SET_KEYS.has(group.key)?`<button class="btn btn-primary btn-sm" type="button" data-export-gradebook="${escapeAttr(group.key)}">📊 Excel รวมคะแนน</button>`:''}</span></div>
+    <div class="course-group-body ${expanded?'':'collapsed'}" style="overflow-x:auto;"><table class="result-table"><thead><tr>
       <th>วันเวลา</th><th>รหัส</th><th>ชื่อนักเรียน</th><th>ห้อง</th><th>ประเภท</th><th>รายวิชา</th><th>อาจารย์</th>${columns.mc?'<th>ปรนัย</th>':''}${columns.matching?'<th>จับคู่</th>':''}${columns.written?'<th>อัตนัย</th>':''}<th>รวม/${scoreMax}</th><th>คลิกขวา</th><th>คัดลอก</th><th>สลับแท็บ</th><th></th>
     </tr></thead><tbody>${group.records.map(r=>`<tr data-row-id="${r.id}">
       <td>${new Date(r.submittedAt).toLocaleString('th-TH')}</td><td>${escapeHtml(r.studentId)}</td><td>${escapeHtml(r.studentName)}</td><td>${escapeHtml(r.classRoom)}</td><td>${escapeHtml(r.examType||'-')}</td><td>${escapeHtml(r.questionTitle)}</td><td>${escapeHtml(r.subjectTeacherName||'-')}</td>${columns.mc?`<td>${r.sectionScores.mc}</td>`:''}${columns.matching?`<td>${r.sectionScores.matching}</td>`:''}${columns.written?`<td>${r.sectionScores.written}</td>`:''}<td><b>${r.overallScore20}</b></td><td>${r.rightClickAttempts||0}</td><td>${r.copyAttempts||0}</td><td>${r.tabSwitches||0}</td>
@@ -1504,7 +1520,7 @@ function archivedResultPeriod(record){
 function renderResultGroups(records){
   const current=[],periods=new Map();
   records.forEach(record=>{const period=archivedResultPeriod(record);if(!period){current.push(record);return;}if(!periods.has(period.key))periods.set(period.key,{...period,records:[]});periods.get(period.key).records.push(record);});
-  const currentHtml=renderResultSubjectGroups(current),periodHtml=[...periods.values()].sort((a,b)=>b.sort.localeCompare(a.sort)).map(period=>{const subjects=new Set(period.records.map(record=>record.questionKey||record.questionTitle)).size;return `<section class="result-period-group"><button class="result-period-head" type="button" data-toggle-result-period><span><b>🗂️ ${escapeHtml(period.label)}</b><small>${subjects} รายวิชา · ${period.records.length} ผลสอบ</small></span><span class="result-period-chevron">⌄</span></button><div class="result-period-body collapsed">${renderResultSubjectGroups(period.records)}</div></section>`;}).join('');
+  const currentHtml=renderResultSubjectGroups(current),periodHtml=[...periods.values()].sort((a,b)=>b.sort.localeCompare(a.sort)).map(period=>{const subjects=new Set(period.records.map(record=>record.questionKey||record.questionTitle)).size,expanded=resultExpansionState.periods.has(period.key);return `<section class="result-period-group"><button class="result-period-head ${expanded?'open':''}" type="button" data-toggle-result-period data-result-period-key="${escapeAttr(period.key)}"><span><b>🗂️ ${escapeHtml(period.label)}</b><small>${subjects} รายวิชา · ${period.records.length} ผลสอบ</small></span><span class="result-period-chevron">⌄</span></button><div class="result-period-body ${expanded?'':'collapsed'}">${renderResultSubjectGroups(period.records)}</div></section>`;}).join('');
   return currentHtml+periodHtml;
 }
 async function refreshResults(){
@@ -1537,8 +1553,8 @@ async function refreshResults(){
   }));
   wrap.querySelectorAll('[data-openresit]').forEach(b=>b.addEventListener('click', ()=>openResitDialog(b.dataset.openresit)));
   wrap.querySelectorAll('[data-viewdetail]').forEach(b=>b.addEventListener('click', ()=> toggleDetailRow(b.dataset.viewdetail)));
-  wrap.querySelectorAll('[data-toggleresultgroup]').forEach(head=>head.addEventListener('click',()=>head.nextElementSibling.classList.toggle('collapsed')));
-  wrap.querySelectorAll('[data-toggle-result-period]').forEach(head=>head.addEventListener('click',()=>{head.classList.toggle('open');head.nextElementSibling.classList.toggle('collapsed');}));
+  wrap.querySelectorAll('[data-toggleresultgroup]').forEach(head=>head.addEventListener('click',event=>{if(event.target.closest('button'))return;const body=head.nextElementSibling,expanded=body.classList.contains('collapsed');body.classList.toggle('collapsed');setResultExpansion('groups',head.dataset.resultGroupKey,expanded);}));
+  wrap.querySelectorAll('[data-toggle-result-period]').forEach(head=>head.addEventListener('click',()=>{const body=head.nextElementSibling,expanded=body.classList.contains('collapsed');head.classList.toggle('open');body.classList.toggle('collapsed');setResultExpansion('periods',head.dataset.resultPeriodKey,expanded);}));
   wrap.querySelectorAll('[data-question-analysis]').forEach(button=>button.addEventListener('click',event=>{ event.stopPropagation(); showQuestionAnalysis(button.dataset.questionAnalysis); }));
   wrap.querySelectorAll('[data-export-gradebook]').forEach(button=>button.addEventListener('click',event=>{ event.stopPropagation(); downloadGradebook(button.dataset.exportGradebook,button); }));
 }
@@ -1683,7 +1699,6 @@ async function downloadQuestionAnalysis(setKey){
   const button=document.getElementById('exportQuestionAnalysisBtn'); if(button){button.disabled=true;button.textContent='กำลังสร้างไฟล์...';}
   try{const res=await fetch('/api/teacher/export/question-analysis.xlsx?setKey='+encodeURIComponent(setKey),{headers:{'x-teacher-token':teacherToken||''}});if(res.status===401){showSessionExpiredDialog();throw new Error('หมดเวลาการเข้าสู่ระบบ');}if(!res.ok)throw new Error('ส่งออกตารางวิเคราะห์ไม่สำเร็จ');const blob=await res.blob(),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ตารางวิเคราะห์ข้อสอบ.xlsx';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);showToast('ดาวน์โหลดตารางวิเคราะห์ข้อสอบแล้ว');}catch(error){showToast(error.message);}finally{if(button){button.disabled=false;button.textContent='⬇ Export ตารางวิเคราะห์';}}
 }
-document.getElementById('auditLogBtn').addEventListener('click', showAuditLogs);
 document.getElementById('exportExcelBtn').addEventListener('click', async ()=>{
   const setKey = document.getElementById('setFilterSelect').value;
   const examType = document.getElementById('examTypeFilterSelect').value;
