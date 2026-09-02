@@ -169,14 +169,15 @@ async function flushServerSave(){
 function updateAutosaveTag(status){
   const tag = document.getElementById('autosaveTag');
   if(!tag) return;
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   if(status==='saving'){
-    tag.textContent='💾 กำลังบันทึกอัตโนมัติ...'; tag.classList.add('saving'); return;
+    tag.textContent=tr('💾 กำลังบันทึกอัตโนมัติ...'); tag.classList.add('saving'); return;
   }
   if(status==='error'){
-    tag.textContent='⚠ บันทึกอัตโนมัติไม่สำเร็จ'; tag.classList.remove('saving'); tag.classList.add('badge-warn'); return;
+    tag.textContent=tr('⚠ บันทึกอัตโนมัติไม่สำเร็จ'); tag.classList.remove('saving'); tag.classList.add('badge-warn'); return;
   }
-  const time = new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
-  tag.textContent='💾 บันทึกอัตโนมัติแล้ว '+time; tag.classList.remove('saving','badge-warn');
+  const time = new Date().toLocaleTimeString(window.I18N&&window.I18N.getLang()==='en'?'en-US':'th-TH',{hour:'2-digit',minute:'2-digit'});
+  tag.textContent=tr('💾 บันทึกอัตโนมัติแล้ว ')+time; tag.classList.remove('saving','badge-warn');
 }
 function scheduleSave(){ updateAutosaveTag('saving'); clearTimeout(_saveDebounceHandle); _saveDebounceHandle = setTimeout(saveSession, 500); }
 function loadSessionData(){
@@ -206,9 +207,10 @@ function updateCheatTags(){
   const fs = document.getElementById('fullscreenExitTag');
   const rc = document.getElementById('rightClickTag');
   const cp = document.getElementById('copyTag');
-  if(fs){ fs.textContent = 'ออกจากเต็มจอ: '+state.fullscreenExitAttempts+' ครั้ง'; fs.classList.toggle('badge-warn', state.fullscreenExitAttempts>0); }
-  if(rc){ rc.textContent = 'คลิกขวา: '+state.rightClickAttempts+' ครั้ง'; rc.classList.toggle('badge-warn', state.rightClickAttempts>0); }
-  if(cp){ cp.textContent = 'คัดลอก: '+state.copyAttempts+' ครั้ง'; cp.classList.toggle('badge-warn', state.copyAttempts>0); }
+  const tr = window.I18N ? window.I18N.t : (s=>s);
+  if(fs){ fs.textContent = tr('ออกจากเต็มจอ')+': '+state.fullscreenExitAttempts+' '+tr('ครั้ง'); fs.classList.toggle('badge-warn', state.fullscreenExitAttempts>0); }
+  if(rc){ rc.textContent = tr('คลิกขวา')+': '+state.rightClickAttempts+' '+tr('ครั้ง'); rc.classList.toggle('badge-warn', state.rightClickAttempts>0); }
+  if(cp){ cp.textContent = tr('คัดลอก')+': '+state.copyAttempts+' '+tr('ครั้ง'); cp.classList.toggle('badge-warn', state.copyAttempts>0); }
 }
 function resetAllExamAnswers(){
   draftAnswers={mc:{},matching:{},written:{}};
@@ -219,9 +221,12 @@ function resetAllExamAnswers(){
 }
 function showTabSwitchWarning(){
   if(app.examEnded||state.tabSwitches<=state.tabWarningAcknowledged||state.tabSwitches>=5)return;
+  const isEn = window.I18N && window.I18N.getLang()==='en';
   const text=state.tabSwitches<3
-    ? `คุณสลับแท็บ/หน้าต่างแล้ว ${state.tabSwitches} ครั้ง หากครบ 3 ครั้ง ระบบจะล้างคำตอบทั้งหมด`
-    : `ระบบล้างคำตอบทั้งหมดแล้ว เนื่องจากสลับหน้าจอครบ 3 ครั้ง หากสลับเพิ่มอีก ${5-state.tabSwitches} ครั้ง ระบบจะส่งข้อสอบทันที`;
+    ? (isEn ? `You have switched tabs/windows ${state.tabSwitches} time(s). At 3 switches, all answers will be cleared.`
+            : `คุณสลับแท็บ/หน้าต่างแล้ว ${state.tabSwitches} ครั้ง หากครบ 3 ครั้ง ระบบจะล้างคำตอบทั้งหมด`)
+    : (isEn ? `All answers have been cleared because you switched screens 3 times. ${5-state.tabSwitches} more switch(es) and the exam will be submitted immediately.`
+            : `ระบบล้างคำตอบทั้งหมดแล้ว เนื่องจากสลับหน้าจอครบ 3 ครั้ง หากสลับเพิ่มอีก ${5-state.tabSwitches} ครั้ง ระบบจะส่งข้อสอบทันที`);
   document.getElementById('tabWarningText').textContent=text;
   document.getElementById('tabWarningModal').classList.remove('hidden');
 }
@@ -229,7 +234,8 @@ function registerTabSwitch(){
   const now=Date.now();
   if(pageIsLeaving||!app.examInProgress||app.examEnded||now-lastTabSwitchAt<600)return;
   lastTabSwitchAt=now;state.tabSwitches++;recordIntegrityEvent('tab_switch');
-  const tag=document.getElementById('tabSwitchTag');tag.textContent='สลับแท็บ/หน้าต่าง: '+state.tabSwitches+' ครั้ง';tag.classList.add('badge-warn');
+  const tr = window.I18N ? window.I18N.t : (s=>s);
+  const tag=document.getElementById('tabSwitchTag');tag.textContent=tr('สลับแท็บ')+': '+state.tabSwitches+' '+tr('ครั้ง');tag.classList.add('badge-warn');
   if(state.tabSwitches===3)resetAllExamAnswers();
   saveSession();flushServerSave();
   if(state.tabSwitches>=5){document.getElementById('tabWarningModal').classList.add('hidden');finalizeExam('tabswitch');}
@@ -684,15 +690,16 @@ function getActiveSections(){
   return active;
 }
 function renderHubCards(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   const grid = document.getElementById('lvGrid');
-  const descBy = {mc:'เลือกคำตอบที่ถูกต้องที่สุดในแต่ละข้อ', matching:'จับคู่รายการซ้าย-ขวาให้สัมพันธ์กัน', written:'เขียนตอบด้วยคำพูดของตนเอง'};
+  const descBy = {mc:tr('เลือกคำตอบที่ถูกต้องที่สุดในแต่ละข้อ'), matching:tr('จับคู่รายการซ้าย-ขวาให้สัมพันธ์กัน'), written:tr('เขียนตอบด้วยคำพูดของตนเอง')};
   const active = getActiveSections();
   grid.innerHTML = active.map(sec=>{
     const done = app.submittedSections[sec];
-    const statusHtml = done ? `<span class="lv-status done">บันทึกคำตอบแล้ว</span>` : `<span class="lv-status todo">ยังไม่ทำ</span>`;
-    const btnLabel = done ? 'แก้ไขคำตอบต่อ' : 'เข้าทำส่วนนี้';
+    const statusHtml = done ? `<span class="lv-status done">${tr('บันทึกคำตอบแล้ว')}</span>` : `<span class="lv-status todo">${tr('ยังไม่ทำ')}</span>`;
+    const btnLabel = done ? tr('แก้ไขคำตอบต่อ') : tr('เข้าทำส่วนนี้');
     return `<div class="lv-card">
-      <h3>${SECTION_ICON[sec]} ${SECTION_TITLES[sec]}</h3>
+      <h3>${SECTION_ICON[sec]} ${tr(SECTION_TITLES[sec])}</h3>
       <div class="lv-desc">${descBy[sec]}</div>
       ${statusHtml}
       <button class="btn btn-primary" data-enter="${sec}" ${app.examEnded?'disabled':''}>${btnLabel}</button>
@@ -767,7 +774,7 @@ function enterSection(sec){
   sectionActions.classList.remove('hidden');
   hubView.classList.add('hidden');
   sectionView.classList.remove('hidden');
-  document.getElementById('topTitle').textContent = SECTION_TITLES[sec] + ' — ' + currentQuestion().title;
+  document.getElementById('topTitle').textContent = (window.I18N?window.I18N.t(SECTION_TITLES[sec]):SECTION_TITLES[sec]) + ' — ' + currentQuestion().title;
   matchPendingLeft = null;
   if(sec==='mc') initMcStateIfNeeded();
   renderSection();
@@ -806,7 +813,7 @@ function renderSection(){
         ${matchedLeft?`<span class="match-badge">${badge}</span>`:`<span class="noBadge"></span>`}<span>${escapeHtml(item.text)}</span></div>`;
     }).join('');
     html += `</div></div>
-      <div class="section-actions" style="margin-top:14px;"><button class="btn btn-ghost" id="clearMatchBtn">ล้างการจับคู่ทั้งหมด</button></div>`;
+      <div class="section-actions" style="margin-top:14px;"><button class="btn btn-ghost" id="clearMatchBtn">${(window.I18N?window.I18N.t:s2=>s2)('ล้างการจับคู่ทั้งหมด')}</button></div>`;
   } else if(sec==='written'){
     const answeredCount = s.questions.filter(qq=>draftAnswers.written[qq.id] && draftAnswers.written[qq.id].trim()).length;
     html += `<div class="progress-badge ${answeredCount===s.questions.length?'complete':''}">ตอบแล้ว ${answeredCount}/${s.questions.length} ข้อ</div>`;
@@ -819,7 +826,7 @@ function renderSection(){
     }).join('');
   }
 
-  html += `<div class="section-actions"><button class="btn btn-primary" id="submitSectionBtn">บันทึกคำตอบส่วนนี้</button></div>`;
+  html += `<div class="section-actions"><button class="btn btn-primary" id="submitSectionBtn">${(window.I18N?window.I18N.t:s2=>s2)('บันทึกคำตอบส่วนนี้')}</button></div>`;
   inner.innerHTML = html;
   bindSectionEvents();
 }
@@ -841,7 +848,7 @@ function renderMcSection(){
   const paletteHtml = app.mcState.order.map((oid,i)=>{
     const answered = draftAnswers.mc[oid]!==undefined;
     const cur = i===idx;
-    return `<button class="mc-pal-btn ${answered?'answered':''} ${cur?'current':''}" data-jump="${i}" title="ข้อ ${i+1}">${i+1}</button>`;
+    return `<button class="mc-pal-btn ${answered?'answered':''} ${cur?'current':''}" data-jump="${i}" title="${(window.I18N?window.I18N.t('ข้อ'):'ข้อ')} ${i+1}">${i+1}</button>`;
   }).join('');
 
   const choicesHtml = dispOrder.map(origIdx=>{
@@ -849,36 +856,37 @@ function renderMcSection(){
     const isPicked = picked===origIdx;
     return `<label class="choice-item ${isPicked?'picked':''}" data-origidx="${origIdx}">
       <input type="radio" name="mcCurrent" ${isPicked?'checked':''}> <span>${escapeHtml(c)}</span>
-      ${isPicked?'<button type="button" class="choice-clear-btn" data-clear="1" title="ยกเลิกคำตอบข้อนี้">✕</button>':''}
+      ${isPicked?`<button type="button" class="choice-clear-btn" data-clear="1" title="${(window.I18N?window.I18N.t('ยกเลิกคำตอบข้อนี้'):'ยกเลิกคำตอบข้อนี้')}">✕</button>`:''}
     </label>`;
   }).join('');
 
+  const tr = window.I18N ? window.I18N.t : (s2=>s2);
   const inner = document.getElementById('sectionInner');
   inner.classList.remove('mc-answer-pending');
   inner.innerHTML = `
     <div class="section-head"><h2>${SECTION_ICON.mc} ${escapeHtml(s.title)}</h2><p>${escapeHtml(s.desc||'')}</p></div>
     <div class="mc-map-card">
       <div class="mc-map-head">
-        <span class="title">🗺️ แผนที่ข้อสอบ</span>
-        <span class="count">ตอบแล้ว ${answeredCount} / ${total} ข้อ</span>
+        <span class="title">🗺️ ${tr('แผนที่ข้อสอบ')}</span>
+        <span class="count">${tr('ตอบแล้ว')} ${answeredCount} / ${total} ${tr('ข้อ')}</span>
       </div>
       <div class="mc-progress-bar"><div class="mc-progress-fill" style="width:${total?Math.round(answeredCount/total*100):0}%;"></div></div>
       <div class="mc-palette">${paletteHtml}</div>
       <div class="mc-legend">
-        <span><i class="dot answered"></i> ตอบแล้ว</span>
-        <span><i class="dot todo"></i> ยังไม่ตอบ</span>
-        <span><i class="dot current"></i> ข้อที่กำลังทำ</span>
+        <span><i class="dot answered"></i> ${tr('ตอบแล้ว')}</span>
+        <span><i class="dot todo"></i> ${tr('ยังไม่ตอบ')}</span>
+        <span><i class="dot current"></i> ${tr('ข้อที่กำลังทำ')}</span>
       </div>
     </div>
     <div class="qblock">
-      <div class="qnum">ข้อ ${idx+1} จาก ${total}</div>
+      <div class="qnum">${tr('ข้อ')} ${idx+1} ${tr('จาก')} ${total}</div>
       <div class="qtext">${escapeHtml(qq.text)}</div>
       ${renderQuestionResources(qq)}
       <div class="choice-list">${choicesHtml}</div>
     </div>
-    ${canSubmit && idx>0 ? `<div class="mc-complete-actions"><button class="btn btn-ghost" id="mcPrevBtn">← ข้อก่อนหน้า</button><button class="btn btn-primary" id="submitSectionBtn">${isOnlyMcSection()?'ส่งข้อสอบ':'บันทึกคำตอบส่วนนี้'}</button></div>` : ''}
-    ${!canSubmit && idx>0 ? `<div class="mc-nav-row"><button class="btn btn-ghost" id="mcPrevBtn">← ข้อก่อนหน้า</button></div>` : ''}
-    ${canSubmit && idx===0 ? `<div class="section-actions mc-submit-row"><button class="btn btn-primary" id="submitSectionBtn">${isOnlyMcSection()?'ส่งข้อสอบ':'บันทึกคำตอบส่วนนี้'}</button></div>` : ''}
+    ${canSubmit && idx>0 ? `<div class="mc-complete-actions"><button class="btn btn-ghost" id="mcPrevBtn">← ${tr('ข้อก่อนหน้า')}</button><button class="btn btn-primary" id="submitSectionBtn">${isOnlyMcSection()?tr('ส่งข้อสอบ'):tr('บันทึกคำตอบส่วนนี้')}</button></div>` : ''}
+    ${!canSubmit && idx>0 ? `<div class="mc-nav-row"><button class="btn btn-ghost" id="mcPrevBtn">← ${tr('ข้อก่อนหน้า')}</button></div>` : ''}
+    ${canSubmit && idx===0 ? `<div class="section-actions mc-submit-row"><button class="btn btn-primary" id="submitSectionBtn">${isOnlyMcSection()?tr('ส่งข้อสอบ'):tr('บันทึกคำตอบส่วนนี้')}</button></div>` : ''}
   `;
 
   inner.querySelectorAll('.choice-item').forEach(item=>{
@@ -1001,9 +1009,16 @@ async function submitFinalAnswers(autoSubmit){
     showToast('ข้อสอบชุดนี้ส่งจากอุปกรณ์อื่นเรียบร้อยแล้ว กำลังปิดข้อสอบบนเครื่องนี้');
     return {alreadySubmitted:true};
   }
-  showToast(lastErr && lastErr.payload && lastErr.payload.error==='already_submitted'
-    ? 'รหัสนักเรียนนี้ได้ทำข้อสอบวิชานี้ไปแล้ว ระบบไม่รับคำตอบซ้ำ'
-    : `ส่งข้อสอบไม่สำเร็จ: ${lastErr?.message||'กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'}`);
+  {
+    const tr9 = window.I18N ? window.I18N.t : (s2=>s2);
+    if(lastErr && lastErr.payload && lastErr.payload.error==='already_submitted'){
+      showToast(tr9('รหัสนักเรียนนี้ได้ทำข้อสอบวิชานี้ไปแล้ว ระบบไม่รับคำตอบซ้ำ'));
+    } else {
+      const t = document.createElement('div');
+      t.className='toast'; t.textContent = tr9('ส่งข้อสอบไม่สำเร็จ: ')+(lastErr?.message||tr9('กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่'));
+      document.body.appendChild(t); setTimeout(()=>t.remove(),2800);
+    }
+  }
   throw lastErr;
 }
 
@@ -1016,13 +1031,14 @@ function setSubmissionBusy(active,message='กำลังส่งข้อส�
     overlay.querySelector('[data-submit-message]').textContent=message;
   }else overlay?.remove();
   const button=document.getElementById('endExamBtn');
-  if(button){if(active&&!button.dataset.originalText)button.dataset.originalText=button.textContent;button.disabled=active;button.textContent=active?'⏳ กำลังส่งข้อสอบ...':(button.dataset.originalText||button.textContent);}
+  if(button){if(active&&!button.dataset.originalText)button.dataset.originalText=button.textContent;button.disabled=active;button.textContent=active?(window.I18N?window.I18N.t('⏳ กำลังส่งข้อสอบ...'):'⏳ กำลังส่งข้อสอบ...'):(button.dataset.originalText||button.textContent);}
 }
 function forceTimeUp(){ finalizeExam('timeup'); }
 async function finalizeExam(reason){
   if(finalSubmissionInProgress) return;
   finalSubmissionInProgress=true;
-  setSubmissionBusy(true,reason==='manual'?'กำลังส่งข้อสอบ...':'กำลังบันทึกคำตอบอัตโนมัติ...');
+  const tr0 = window.I18N ? window.I18N.t : (s2=>s2);
+  setSubmissionBusy(true,reason==='manual'?tr0('กำลังส่งข้อสอบ...'):tr0('กำลังบันทึกคำตอบอัตโนมัติ...'));
   const auto = reason !== 'manual';
   const activeSections = getActiveSections();
   app.examEnded = true;
@@ -1054,14 +1070,15 @@ async function finalizeExam(reason){
     timeup: 'ครบเวลา 60 นาทีแล้ว ระบบปิดการทำข้อสอบและส่งคำตอบของคุณเข้าสู่ระบบให้อัตโนมัติ (แม้จะยังตอบไม่ครบทุกข้อ)',
     tabswitch: 'คุณสลับหน้าจอ/แท็บหลังจากได้รับคำเตือนแล้ว ระบบจึงปิดการทำข้อสอบและส่งคำตอบที่มีอยู่ให้อัตโนมัติ'
   };
-  document.getElementById('finalHeadline').textContent = submission?.alreadySubmitted ? 'ข้อสอบชุดนี้ส่งเรียบร้อยแล้ว' : (headlines[reason] || headlines.manual);
-  document.getElementById('finalSummaryText').textContent = submission?.alreadySubmitted
+  document.getElementById('finalHeadline').textContent = tr0(submission?.alreadySubmitted ? 'ข้อสอบชุดนี้ส่งเรียบร้อยแล้ว' : (headlines[reason] || headlines.manual));
+  document.getElementById('finalSummaryText').textContent = tr0(submission?.alreadySubmitted
     ? 'ตรวจพบว่าคำตอบของชุดนี้ถูกส่งจากอุปกรณ์อื่นแล้ว ระบบจึงปิดข้อสอบบนเครื่องนี้และล้างร่างที่ค้างไว้ให้เรียบร้อย'
-    : (summaries[reason] || summaries.manual);
+    : (summaries[reason] || summaries.manual));
   const list = document.getElementById('finalList');
   list.innerHTML = activeSections.map(sec=>{
     const done = app.submittedSections[sec];
-    return `<div class="final-row"><span>${SECTION_TITLES[sec]}</span><b>${done ? 'ส่งคำตอบแล้ว' : 'ไม่ได้ทำ'}</b></div>`;
+    const tr = window.I18N ? window.I18N.t : (s=>s);
+    return `<div class="final-row"><span>${tr(SECTION_TITLES[sec])}</span><b>${done ? tr('ส่งคำตอบแล้ว') : tr('ไม่ได้ทำ')}</b></div>`;
   }).join('');
 }
 document.getElementById('restartAllBtn').addEventListener('click', ()=>{
@@ -1148,7 +1165,7 @@ function escapeHtml(str){
 }
 function showToast(msg){
   const t = document.createElement('div');
-  t.className = 'toast'; t.textContent = msg;
+  t.className = 'toast'; t.textContent = window.I18N ? window.I18N.t(msg) : msg;
   document.body.appendChild(t);
   setTimeout(()=>t.remove(), 2800);
 }
@@ -1178,6 +1195,13 @@ examSystemIsClosed().then(closed=>{
   if(!attemptResumeSession()){
     continueVerifiedStudent().then(continued=>{ if(!continued) startScreen.classList.remove('hidden'); });
   }else document.documentElement.classList.remove('restoring-session');
+});
+
+document.addEventListener('i18nchange', ()=>{
+  if(!examScreen.classList.contains('hidden')){
+    if(app.section) renderSection(); else showHub();
+  }
+  updateCheatTags();
 });
 
 })();

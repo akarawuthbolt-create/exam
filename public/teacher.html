@@ -8,42 +8,45 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/teacher.css?v=20260829-2">
+<script src="/assets/i18n.js"></script>
 </head>
 <body>
 
 <!-- ================= ADMIN LOGIN ================= -->
 <div id="adminLoginScreen" class="screen-wrap">
+  <button class="theme-toggle lang-toggle" id="langToggleBtnLogin" type="button" style="position:fixed;top:16px;right:18px;">🌐 EN</button>
   <div class="card">
-    <span class="eyebrow">EXAM SYSTEM · อาจารย์ผู้สอน</span>
-    <h1>เข้าสู่ระบบอาจารย์</h1>
-    <p class="lead">กรอก username และ password ที่ผู้ดูแลระบบตั้งให้ คุณจะเห็นเฉพาะข้อสอบและผลสอบของวิชาที่คุณสอนเท่านั้น</p>
+    <span class="eyebrow" data-i18n="EXAM SYSTEM · อาจารย์ผู้สอน">EXAM SYSTEM · อาจารย์ผู้สอน</span>
+    <h1 data-i18n="เข้าสู่ระบบอาจารย์">เข้าสู่ระบบอาจารย์</h1>
+    <p class="lead" data-i18n="กรอก username และ password ที่ผู้ดูแลระบบตั้งให้ คุณจะเห็นเฉพาะข้อสอบและผลสอบของวิชาที่คุณสอนเท่านั้น">กรอก username และ password ที่ผู้ดูแลระบบตั้งให้ คุณจะเห็นเฉพาะข้อสอบและผลสอบของวิชาที่คุณสอนเท่านั้น</p>
     <input type="text" class="name-input" id="teacherUsernameInput" placeholder="Username" autocomplete="username">
     <input type="password" class="name-input" id="teacherPasswordInput" placeholder="Password" autocomplete="current-password">
     <div id="adminLoginError" style="color:var(--red);font-size:13px;margin:-12px 0 16px;display:none;"></div>
     <div class="start-actions">
       <span></span>
-      <button class="btn btn-primary" id="adminLoginBtn">เข้าสู่ระบบ →</button>
+      <button class="btn btn-primary" id="adminLoginBtn" data-i18n="เข้าสู่ระบบ →">เข้าสู่ระบบ →</button>
     </div>
   </div>
 </div>
 
-<dialog class="session-expired-dialog" id="sessionExpiredDialog"><div class="session-expired-card"><div class="session-expired-icon">🔒</div><h2>หมดเวลาการเข้าสู่ระบบ</h2><p>เพื่อความปลอดภัย กรุณาเข้าสู่ระบบอาจารย์ใหม่อีกครั้ง</p><button class="btn btn-primary" type="button" id="sessionReloginBtn">เข้าสู่ระบบใหม่</button></div></dialog>
+<dialog class="session-expired-dialog" id="sessionExpiredDialog"><div class="session-expired-card"><div class="session-expired-icon">🔒</div><h2 data-i18n="หมดเวลาการเข้าสู่ระบบ">หมดเวลาการเข้าสู่ระบบ</h2><p data-i18n="เพื่อความปลอดภัย กรุณาเข้าสู่ระบบอาจารย์ใหม่อีกครั้ง">เพื่อความปลอดภัย กรุณาเข้าสู่ระบบอาจารย์ใหม่อีกครั้ง</p><button class="btn btn-primary" type="button" id="sessionReloginBtn" data-i18n="เข้าสู่ระบบใหม่">เข้าสู่ระบบใหม่</button></div></dialog>
 
 <!-- ================= ADMIN SCREEN ================= -->
 <div id="adminScreen" class="hidden">
   <div class="admin-topbar">
-    <div class="brand">🧑‍🏫 ระบบข้อสอบของฉัน (<span id="teacherNameLabel"></span>)</div>
+    <div class="brand">🧑‍🏫 <span data-i18n="ระบบข้อสอบของฉัน">ระบบข้อสอบของฉัน</span> (<span id="teacherNameLabel"></span>)</div>
     <div style="display:flex;gap:8px;align-items:center;">
-      <button class="btn btn-ghost btn-sm theme-toggle" type="button" id="themeToggleBtn" aria-label="สลับโหมดสี">🌙 โหมดมืด</button>
-      <button class="btn btn-ghost btn-sm" id="pageRefreshBtn" title="โหลดข้อมูลล่าสุดโดยไม่ออกจากระบบ">↻ รีเฟรชข้อมูล</button>
+      <button class="btn btn-ghost btn-sm lang-toggle" type="button" id="langToggleBtn">🌐 EN</button>
+      <button class="btn btn-ghost btn-sm theme-toggle" type="button" id="themeToggleBtn" aria-label="สลับโหมดสี" data-i18n-aria="สลับโหมดสี" data-i18n="โหมดมืด">🌙 โหมดมืด</button>
+      <button class="btn btn-ghost btn-sm" id="pageRefreshBtn" title="โหลดข้อมูลล่าสุดโดยไม่ออกจากระบบ" data-i18n-title="โหลดข้อมูลล่าสุดโดยไม่ออกจากระบบ" data-i18n="↻ รีเฟรชข้อมูล">↻ รีเฟรชข้อมูล</button>
     </div>
   </div>
   <div class="admin-tabs">
-    <button class="admin-tab-btn active" data-atab="sets">ชุดข้อสอบของฉัน</button>
-    <button class="admin-tab-btn" data-atab="library">🗃️ คลังข้อสอบเก่า</button>
-    <button class="admin-tab-btn" data-atab="results">ผลสอบนักเรียน</button>
-    <button class="admin-tab-btn" data-atab="roster">🖨️ พิมพ์รายชื่อสอบ</button>
-    <button class="admin-tab-btn" data-atab="settings">⚙️ ตั้งค่า</button>
+    <button class="admin-tab-btn active" data-atab="sets" data-i18n="ชุดข้อสอบของฉัน">ชุดข้อสอบของฉัน</button>
+    <button class="admin-tab-btn" data-atab="library" data-i18n="🗃️ คลังข้อสอบเก่า">🗃️ คลังข้อสอบเก่า</button>
+    <button class="admin-tab-btn" data-atab="results" data-i18n="ผลสอบนักเรียน">ผลสอบนักเรียน</button>
+    <button class="admin-tab-btn" data-atab="roster" data-i18n="🖨️ พิมพ์รายชื่อสอบ">🖨️ พิมพ์รายชื่อสอบ</button>
+    <button class="admin-tab-btn" data-atab="settings" data-i18n="⚙️ ตั้งค่า">⚙️ ตั้งค่า</button>
   </div>
   <div class="admin-body">
     <div class="admin-inner">
@@ -52,61 +55,61 @@
       <div id="atab-sets">
         <div class="toolbar-row">
           <div>
-            <h2>ชุดข้อสอบของฉัน</h2>
-            <p class="sub" style="margin:0;">จัดกลุ่มตามชื่อวิชา — 1 วิชาอาจมีทั้งข้อสอบกลางภาคและปลายภาค คุณเห็นเฉพาะข้อสอบที่คุณสร้างเองเท่านั้น</p>
-            <input class="filter-select" type="search" id="setSearchInput" placeholder="ค้นหาชื่อวิชา หรือชุดข้อสอบ" aria-label="ค้นหาชุดข้อสอบ" style="min-width:250px;margin-top:12px;">
+            <h2 data-i18n="ชุดข้อสอบของฉัน">ชุดข้อสอบของฉัน</h2>
+            <p class="sub" style="margin:0;" data-i18n="จัดกลุ่มตามชื่อวิชา — 1 วิชาอาจมีทั้งข้อสอบกลางภาคและปลายภาค คุณเห็นเฉพาะข้อสอบที่คุณสร้างเองเท่านั้น">จัดกลุ่มตามชื่อวิชา — 1 วิชาอาจมีทั้งข้อสอบกลางภาคและปลายภาค คุณเห็นเฉพาะข้อสอบที่คุณสร้างเองเท่านั้น</p>
+            <input class="filter-select" type="search" id="setSearchInput" placeholder="ค้นหาชื่อวิชา หรือชุดข้อสอบ" data-i18n-placeholder="ค้นหาชื่อวิชา หรือชุดข้อสอบ" aria-label="ค้นหาชุดข้อสอบ" data-i18n-aria="ค้นหาชุดข้อสอบ" style="min-width:250px;margin-top:12px;">
           </div>
-          <div class="editor-actions" style="margin:0;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" id="openExamImportDialogBtn">📥 นำเข้าข้อสอบ</button><button class="btn btn-primary btn-sm" id="newSetBtn">+ เพิ่มชุดข้อสอบใหม่</button></div>
+          <div class="editor-actions" style="margin:0;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" id="openExamImportDialogBtn" data-i18n="📥 นำเข้าข้อสอบ">📥 นำเข้าข้อสอบ</button><button class="btn btn-primary btn-sm" id="newSetBtn" data-i18n="+ เพิ่มชุดข้อสอบใหม่">+ เพิ่มชุดข้อสอบใหม่</button></div>
         </div>
-        <div id="setListWrap"><div class="loading-note">กำลังโหลด...</div></div>
+        <div id="setListWrap"><div class="loading-note" data-i18n="กำลังโหลด...">กำลังโหลด...</div></div>
       </div>
 
       <div id="atab-library" class="hidden">
-        <div class="toolbar-row"><div><h2>คลังข้อสอบเก่าของฉัน</h2><p class="sub" style="margin:0;">เก็บต้นแบบข้อสอบจากปีที่ผ่านมาไว้ทำสำเนา ชุดในคลังจะไม่แสดงในชุดข้อสอบของฉัน</p></div></div>
-        <div id="librarySetListWrap"><div class="loading-note">กำลังโหลด...</div></div>
+        <div class="toolbar-row"><div><h2 data-i18n="คลังข้อสอบเก่าของฉัน">คลังข้อสอบเก่าของฉัน</h2><p class="sub" style="margin:0;" data-i18n="เก็บต้นแบบข้อสอบจากปีที่ผ่านมาไว้ทำสำเนา ชุดในคลังจะไม่แสดงในชุดข้อสอบของฉัน">เก็บต้นแบบข้อสอบจากปีที่ผ่านมาไว้ทำสำเนา ชุดในคลังจะไม่แสดงในชุดข้อสอบของฉัน</p></div></div>
+        <div id="librarySetListWrap"><div class="loading-note" data-i18n="กำลังโหลด...">กำลังโหลด...</div></div>
       </div>
 
       <!-- ============ RESULTS TAB ============ -->
       <div id="atab-results" class="hidden">
         <div class="toolbar-row results-toolbar">
           <div>
-            <h2>ผลสอบที่นักเรียนส่งเข้ามา</h2>
-            <p class="sub" style="margin:0;">คะแนนเป็นความลับจนกว่าจะกด "ประกาศผล" — นักเรียนจะไม่เห็นคะแนนในระบบไม่ว่ากรณีใด ต้องแจ้งผลเองนอกระบบ</p>
+            <h2 data-i18n="ผลสอบที่นักเรียนส่งเข้ามา">ผลสอบที่นักเรียนส่งเข้ามา</h2>
+            <p class="sub" style="margin:0;" data-i18n='คะแนนเป็นความลับจนกว่าจะกด "ประกาศผล" — นักเรียนจะไม่เห็นคะแนนในระบบไม่ว่ากรณีใด ต้องแจ้งผลเองนอกระบบ'>คะแนนเป็นความลับจนกว่าจะกด "ประกาศผล" — นักเรียนจะไม่เห็นคะแนนในระบบไม่ว่ากรณีใด ต้องแจ้งผลเองนอกระบบ</p>
           </div>
           <div class="results-filter-row">
-            <select class="filter-select" id="examTypeFilterSelect"><option value="">ทุกประเภทข้อสอบ</option></select>
-            <select class="filter-select" id="academicYearFilterSelect"><option value="">ทุกปีการศึกษา</option></select>
-            <select class="filter-select" id="semesterFilterSelect"><option value="">ทุกภาคเรียน</option></select>
-            <select class="filter-select" id="setFilterSelect"><option value="">ทุกรายวิชา</option></select>
-            <button class="btn btn-ghost btn-sm" id="refreshResultsBtn">↻ รีเฟรช</button>
-            <button class="btn btn-primary btn-sm" id="exportExcelBtn">⬇ ส่งออก Excel</button>
+            <select class="filter-select" id="examTypeFilterSelect"><option value="" data-i18n="ทุกประเภทข้อสอบ">ทุกประเภทข้อสอบ</option></select>
+            <select class="filter-select" id="academicYearFilterSelect"><option value="" data-i18n="ทุกปีการศึกษา">ทุกปีการศึกษา</option></select>
+            <select class="filter-select" id="semesterFilterSelect"><option value="" data-i18n="ทุกภาคเรียน">ทุกภาคเรียน</option></select>
+            <select class="filter-select" id="setFilterSelect"><option value="" data-i18n="ทุกรายวิชา">ทุกรายวิชา</option></select>
+            <button class="btn btn-ghost btn-sm" id="refreshResultsBtn" data-i18n="↻ รีเฟรช">↻ รีเฟรช</button>
+            <button class="btn btn-primary btn-sm" id="exportExcelBtn" data-i18n="⬇ ส่งออก Excel">⬇ ส่งออก Excel</button>
           </div>
         </div>
-        <div id="resultsWrap"><div class="loading-note">กำลังโหลด...</div></div>
+        <div id="resultsWrap"><div class="loading-note" data-i18n="กำลังโหลด...">กำลังโหลด...</div></div>
       </div>
 
       <div id="atab-roster" class="hidden">
-        <div class="toolbar-row"><div><h2>พิมพ์รายชื่อนักเรียนเข้าห้องสอบ</h2><p class="sub" style="margin:0;">เลือกชุดข้อสอบและห้อง ระบบจะจัดทำใบรายชื่อพร้อมวันสอบ ผู้สอน รายวิชา และลิงก์สอบ</p></div></div>
+        <div class="toolbar-row"><div><h2 data-i18n="พิมพ์รายชื่อนักเรียนเข้าห้องสอบ">พิมพ์รายชื่อนักเรียนเข้าห้องสอบ</h2><p class="sub" style="margin:0;" data-i18n="เลือกชุดข้อสอบและห้อง ระบบจะจัดทำใบรายชื่อพร้อมวันสอบ ผู้สอน รายวิชา และลิงก์สอบ">เลือกชุดข้อสอบและห้อง ระบบจะจัดทำใบรายชื่อพร้อมวันสอบ ผู้สอน รายวิชา และลิงก์สอบ</p></div></div>
         <div class="panel roster-controls">
           <div class="roster-form-grid">
-            <div class="field"><label for="rosterSetSelect">ชุดข้อสอบ / รายวิชา</label><select id="rosterSetSelect"><option value="">เลือกชุดข้อสอบ</option></select></div>
-            <div class="field"><label for="rosterClassSelect">ชื่อห้อง</label><div class="roster-class-picker"><select id="rosterClassSelect" disabled><option value="">เลือกห้อง</option></select><button class="btn btn-ghost" id="addRosterClassBtn" type="button" disabled>+ เพิ่มห้อง</button></div><div class="roster-selected-classes" id="rosterSelectedClasses"></div></div>
-            <div class="field"><label for="rosterExamRoomInput">ห้องสอบ</label><input id="rosterExamRoomInput" type="text" placeholder="เช่น COM.4"></div>
-            <div class="field"><label for="rosterExamLinkInput">ลิงก์สอบ</label><input id="rosterExamLinkInput" type="url" placeholder="https://example.com/"></div>
+            <div class="field"><label for="rosterSetSelect" data-i18n="ชุดข้อสอบ / รายวิชา">ชุดข้อสอบ / รายวิชา</label><select id="rosterSetSelect"><option value="" data-i18n="เลือกชุดข้อสอบ">เลือกชุดข้อสอบ</option></select></div>
+            <div class="field"><label for="rosterClassSelect" data-i18n="ชื่อห้อง">ชื่อห้อง</label><div class="roster-class-picker"><select id="rosterClassSelect" disabled><option value="" data-i18n="เลือกห้อง">เลือกห้อง</option></select><button class="btn btn-ghost" id="addRosterClassBtn" type="button" disabled data-i18n="+ เพิ่มห้อง">+ เพิ่มห้อง</button></div><div class="roster-selected-classes" id="rosterSelectedClasses"></div></div>
+            <div class="field"><label for="rosterExamRoomInput" data-i18n="ห้องสอบ">ห้องสอบ</label><input id="rosterExamRoomInput" type="text" placeholder="เช่น COM.4"></div>
+            <div class="field"><label for="rosterExamLinkInput" data-i18n="ลิงก์สอบ">ลิงก์สอบ</label><input id="rosterExamLinkInput" type="url" placeholder="https://example.com/"></div>
           </div>
-          <div class="editor-actions" style="justify-content:flex-start;"><button class="btn btn-primary" id="printRosterBtn" type="button" disabled>🖨️ เปิดตัวอย่างและพิมพ์</button><button class="btn btn-ghost" id="absenceSummaryBtn" type="button">📋 สรุปผู้ขาดสอบ</button></div>
+          <div class="editor-actions" style="justify-content:flex-start;"><button class="btn btn-primary" id="printRosterBtn" type="button" disabled data-i18n="🖨️ เปิดตัวอย่างและพิมพ์">🖨️ เปิดตัวอย่างและพิมพ์</button><button class="btn btn-ghost" id="absenceSummaryBtn" type="button" data-i18n="📋 สรุปผู้ขาดสอบ">📋 สรุปผู้ขาดสอบ</button></div>
           <div class="absence-summary hidden" id="absenceSummaryWrap"></div>
         </div>
       </div>
 
       <!-- ============ SETTINGS TAB ============ -->
       <div id="atab-settings" class="hidden">
-        <div class="toolbar-row"><div><h2>ตั้งค่า</h2><p class="sub" style="margin:0;">จัดการบัญชีและการส่งออกข้อมูล</p></div></div>
+        <div class="toolbar-row"><div><h2 data-i18n="ตั้งค่า">ตั้งค่า</h2><p class="sub" style="margin:0;" data-i18n="จัดการบัญชีและการส่งออกข้อมูล">จัดการบัญชีและการส่งออกข้อมูล</p></div></div>
         <div class="settings-grid">
           <div class="panel">
-            <h3>บัญชีของฉัน</h3>
-            <p class="panel-sub">เปลี่ยนรหัสผ่านหรือออกจากระบบเมื่อใช้งานเสร็จ</p>
-            <div class="editor-actions" style="justify-content:flex-start;"><button class="btn btn-ghost btn-sm" id="changePasswordBtn">🔐 เปลี่ยนรหัสผ่าน</button><button class="btn btn-danger btn-sm" id="adminExitBtn">ออกจากระบบ</button></div>
+            <h3 data-i18n="บัญชีของฉัน">บัญชีของฉัน</h3>
+            <p class="panel-sub" data-i18n="เปลี่ยนรหัสผ่านหรือออกจากระบบเมื่อใช้งานเสร็จ">เปลี่ยนรหัสผ่านหรือออกจากระบบเมื่อใช้งานเสร็จ</p>
+            <div class="editor-actions" style="justify-content:flex-start;"><button class="btn btn-ghost btn-sm" id="changePasswordBtn" data-i18n="🔐 เปลี่ยนรหัสผ่าน">🔐 เปลี่ยนรหัสผ่าน</button><button class="btn btn-danger btn-sm" id="adminExitBtn" data-i18n="ออกจากระบบ">ออกจากระบบ</button></div>
           </div>
         </div>
       </div>
@@ -117,30 +120,30 @@
 
 <dialog class="password-dialog" id="changePasswordDialog">
   <form id="changePasswordForm">
-    <h3>🔐 เปลี่ยนรหัสผ่าน</h3>
-    <p>ใช้รหัสผ่านใหม่อย่างน้อย 8 ตัวอักษร ระบบจะออกจากอุปกรณ์อื่นเพื่อความปลอดภัย</p>
-    <div class="field"><label for="currentPasswordInput">รหัสผ่านเดิม</label><input type="password" id="currentPasswordInput" autocomplete="current-password" required></div>
-    <div class="field"><label for="newPasswordInput">รหัสผ่านใหม่</label><input type="password" id="newPasswordInput" minlength="8" autocomplete="new-password" required></div>
-    <div class="field"><label for="confirmPasswordInput">ยืนยันรหัสผ่านใหม่</label><input type="password" id="confirmPasswordInput" minlength="8" autocomplete="new-password" required></div>
+    <h3 data-i18n="🔐 เปลี่ยนรหัสผ่าน">🔐 เปลี่ยนรหัสผ่าน</h3>
+    <p data-i18n="ใช้รหัสผ่านใหม่อย่างน้อย 8 ตัวอักษร ระบบจะออกจากอุปกรณ์อื่นเพื่อความปลอดภัย">ใช้รหัสผ่านใหม่อย่างน้อย 8 ตัวอักษร ระบบจะออกจากอุปกรณ์อื่นเพื่อความปลอดภัย</p>
+    <div class="field"><label for="currentPasswordInput" data-i18n="รหัสผ่านเดิม">รหัสผ่านเดิม</label><input type="password" id="currentPasswordInput" autocomplete="current-password" required></div>
+    <div class="field"><label for="newPasswordInput" data-i18n="รหัสผ่านใหม่">รหัสผ่านใหม่</label><input type="password" id="newPasswordInput" minlength="8" autocomplete="new-password" required></div>
+    <div class="field"><label for="confirmPasswordInput" data-i18n="ยืนยันรหัสผ่านใหม่">ยืนยันรหัสผ่านใหม่</label><input type="password" id="confirmPasswordInput" minlength="8" autocomplete="new-password" required></div>
     <div class="password-error" id="changePasswordError"></div>
-    <div class="editor-actions"><button class="btn btn-ghost btn-sm" type="button" id="cancelChangePasswordBtn">ยกเลิก</button><button class="btn btn-primary btn-sm" type="submit" id="savePasswordBtn">บันทึกรหัสผ่าน</button></div>
+    <div class="editor-actions"><button class="btn btn-ghost btn-sm" type="button" id="cancelChangePasswordBtn" data-i18n="ยกเลิก">ยกเลิก</button><button class="btn btn-primary btn-sm" type="submit" id="savePasswordBtn" data-i18n="บันทึกรหัสผ่าน">บันทึกรหัสผ่าน</button></div>
   </form>
 </dialog>
 
 <dialog class="google-import-dialog" id="examImportChoiceDialog">
   <div class="google-import-dialog-inner">
-    <div class="google-import-dialog-head"><div><h3>📥 นำเข้าข้อสอบ</h3><p>เลือกแหล่งข้อมูลที่ต้องการนำเข้า</p></div><button class="btn btn-ghost btn-sm" type="button" id="closeExamImportChoiceDialog">✕</button></div>
+    <div class="google-import-dialog-head"><div><h3 data-i18n="📥 นำเข้าข้อสอบ">📥 นำเข้าข้อสอบ</h3><p data-i18n="เลือกแหล่งข้อมูลที่ต้องการนำเข้า">เลือกแหล่งข้อมูลที่ต้องการนำเข้า</p></div><button class="btn btn-ghost btn-sm" type="button" id="closeExamImportChoiceDialog">✕</button></div>
     <div class="settings-grid">
-      <button class="panel settings-menu-card" id="chooseQuestionFileImportBtn" type="button"><div><h3>📄 Word / PDF / Excel / TXT</h3><p class="panel-sub">อ่านข้อสอบจากไฟล์และแสดงตัวอย่างก่อนนำเข้า</p></div><span class="btn btn-primary btn-sm">เลือกไฟล์ →</span></button>
-      <button class="panel settings-menu-card" id="chooseGoogleFormsImportBtn" type="button"><div><h3>🟢 Google Forms</h3><p class="panel-sub">เชื่อมต่อแบบทดสอบ Google Forms พร้อมเฉลยและคะแนน</p></div><span class="btn btn-primary btn-sm">เชื่อมต่อ Forms →</span></button>
+      <button class="panel settings-menu-card" id="chooseQuestionFileImportBtn" type="button"><div><h3 data-i18n="📄 Word / PDF / Excel / TXT">📄 Word / PDF / Excel / TXT</h3><p class="panel-sub" data-i18n="อ่านข้อสอบจากไฟล์และแสดงตัวอย่างก่อนนำเข้า">อ่านข้อสอบจากไฟล์และแสดงตัวอย่างก่อนนำเข้า</p></div><span class="btn btn-primary btn-sm" data-i18n="เลือกไฟล์ →">เลือกไฟล์ →</span></button>
+      <button class="panel settings-menu-card" id="chooseGoogleFormsImportBtn" type="button"><div><h3 data-i18n="🟢 Google Forms">🟢 Google Forms</h3><p class="panel-sub" data-i18n="เชื่อมต่อแบบทดสอบ Google Forms พร้อมเฉลยและคะแนน">เชื่อมต่อแบบทดสอบ Google Forms พร้อมเฉลยและคะแนน</p></div><span class="btn btn-primary btn-sm" data-i18n="เชื่อมต่อ Forms →">เชื่อมต่อ Forms →</span></button>
     </div>
   </div>
 </dialog>
 
 <dialog class="google-import-dialog" id="questionFileImportDialog">
   <div class="google-import-dialog-inner">
-    <div class="google-import-dialog-head"><div><h3>📄 นำเข้าข้อสอบจากไฟล์</h3><p>รองรับ Word (.docx), PDF (.pdf), Excel (.xlsx) และข้อความ (.txt)</p></div><button class="btn btn-ghost btn-sm" type="button" id="closeQuestionFileImportDialog">✕</button></div>
-    <div class="google-import-step"><h4>1. เลือกไฟล์ข้อสอบ</h4><input class="filter-select" type="file" id="questionImportFile" accept=".docx,.pdf,.xlsx,.txt"><p>รูปแบบข้อความ: เลขข้อ ตามด้วยตัวเลือก ก./ข./ค./ง. และบรรทัด <b>เฉลย:</b> สำหรับข้อปรนัย ข้อที่ไม่มีตัวเลือกจะเป็นข้ออัตนัย</p><div class="file-format-guide"><b>📌 ตัวอย่างรูปแบบที่ระบบอ่านได้</b><div class="file-format-grid"><section><strong>Word / PDF / TXT</strong><code>1. คำถาม...<br>ก. ตัวเลือก 1<br>ข. ตัวเลือก 2<br>ค. ตัวเลือก 3<br>ง. ตัวเลือก 4<br>เฉลย: ก</code><small>ตัวเลือกต้องอยู่คนละบรรทัด ห้ามทำ 2 คอลัมน์</small></section><section><strong>Excel (.xlsx)</strong><code>คำถาม | ก | ข | ค | ง | เฉลย<br>คำถาม... | ... | ... | ... | ... | ก</code><small>ใช้หัวคอลัมน์ “คำถาม”, “ก”, “ข”, “ค”, “ง”, “เฉลย”</small></section></div></div><div class="editor-actions"><button class="btn btn-ghost btn-sm" id="backToExamImportChoiceBtn" type="button">← กลับ</button><button class="btn btn-ghost btn-sm" id="previewQuestionFileBtn" type="button">ตรวจสอบไฟล์</button><button class="btn btn-primary btn-sm" id="applyQuestionFileBtn" type="button" disabled>นำเข้าและตั้งค่าชุดข้อสอบ</button></div></div>
+    <div class="google-import-dialog-head"><div><h3 data-i18n="📄 นำเข้าข้อสอบจากไฟล์">📄 นำเข้าข้อสอบจากไฟล์</h3><p data-i18n="รองรับ Word (.docx), PDF (.pdf), Excel (.xlsx) และข้อความ (.txt)">รองรับ Word (.docx), PDF (.pdf), Excel (.xlsx) และข้อความ (.txt)</p></div><button class="btn btn-ghost btn-sm" type="button" id="closeQuestionFileImportDialog">✕</button></div>
+    <div class="google-import-step"><h4 data-i18n="1. เลือกไฟล์ข้อสอบ">1. เลือกไฟล์ข้อสอบ</h4><input class="filter-select" type="file" id="questionImportFile" accept=".docx,.pdf,.xlsx,.txt"><p data-i18n="รูปแบบข้อความ: เลขข้อ ตามด้วยตัวเลือก ก./ข./ค./ง. และบรรทัด <b>เฉลย:</b> สำหรับข้อปรนัย ข้อที่ไม่มีตัวเลือกจะเป็นข้ออัตนัย">รูปแบบข้อความ: เลขข้อ ตามด้วยตัวเลือก ก./ข./ค./ง. และบรรทัด <b>เฉลย:</b> สำหรับข้อปรนัย ข้อที่ไม่มีตัวเลือกจะเป็นข้ออัตนัย</p><div class="file-format-guide"><b data-i18n="📌 ตัวอย่างรูปแบบที่ระบบอ่านได้">📌 ตัวอย่างรูปแบบที่ระบบอ่านได้</b><div class="file-format-grid"><section><strong data-i18n="Word / PDF / TXT">Word / PDF / TXT</strong><code>1. คำถาม...<br>ก. ตัวเลือก 1<br>ข. ตัวเลือก 2<br>ค. ตัวเลือก 3<br>ง. ตัวเลือก 4<br>เฉลย: ก</code><small data-i18n="ตัวเลือกต้องอยู่คนละบรรทัด ห้ามทำ 2 คอลัมน์">ตัวเลือกต้องอยู่คนละบรรทัด ห้ามทำ 2 คอลัมน์</small></section><section><strong data-i18n="Excel (.xlsx)">Excel (.xlsx)</strong><code>คำถาม | ก | ข | ค | ง | เฉลย<br>คำถาม... | ... | ... | ... | ... | ก</code><small data-i18n="ใช้หัวคอลัมน์ “คำถาม”, “ก”, “ข”, “ค”, “ง”, “เฉลย”">ใช้หัวคอลัมน์ “คำถาม”, “ก”, “ข”, “ค”, “ง”, “เฉลย”</small></section></div></div><div class="editor-actions"><button class="btn btn-ghost btn-sm" id="backToExamImportChoiceBtn" type="button" data-i18n="← กลับ">← กลับ</button><button class="btn btn-ghost btn-sm" id="previewQuestionFileBtn" type="button" data-i18n="ตรวจสอบไฟล์">ตรวจสอบไฟล์</button><button class="btn btn-primary btn-sm" id="applyQuestionFileBtn" type="button" disabled data-i18n="นำเข้าและตั้งค่าชุดข้อสอบ">นำเข้าและตั้งค่าชุดข้อสอบ</button></div></div>
     <div class="mc-import-preview" id="questionFilePreview"></div>
   </div>
 </dialog>
@@ -148,36 +151,36 @@
 <dialog class="resit-dialog" id="resitDialog">
   <form class="resit-dialog-card" id="resitForm">
     <button class="btn btn-ghost btn-sm resit-close" type="button" id="closeResitDialog" aria-label="ปิด">✕</button>
-    <span class="eyebrow">🛠️ อนุมัติสอบซ่อม</span>
-    <h3>กำหนดสิทธิ์สอบซ่อม</h3>
-    <p>เลือกช่วงเวลาสำหรับนักเรียนคนนี้ และกำหนดคะแนนเต็มหลังแปลงคะแนน</p>
+    <span class="eyebrow" data-i18n="🛠️ อนุมัติสอบซ่อม">🛠️ อนุมัติสอบซ่อม</span>
+    <h3 data-i18n="กำหนดสิทธิ์สอบซ่อม">กำหนดสิทธิ์สอบซ่อม</h3>
+    <p data-i18n="เลือกช่วงเวลาสำหรับนักเรียนคนนี้ และกำหนดคะแนนเต็มหลังแปลงคะแนน">เลือกช่วงเวลาสำหรับนักเรียนคนนี้ และกำหนดคะแนนเต็มหลังแปลงคะแนน</p>
     <div class="resit-summary" id="resitStudentSummary"></div>
     <div class="resit-time-grid">
-      <div class="field"><label for="resitStartDate">วันเริ่มสอบ</label><input type="text" id="resitStartDate" placeholder="dd/mm/yyyy" required></div>
-      <div class="field"><label for="resitStartTime">เวลาเริ่มสอบ</label><input type="text" id="resitStartTime" placeholder="13.30" required></div>
-      <div class="field"><label for="resitEndDate">วันสิ้นสุด</label><input type="text" id="resitEndDate" placeholder="dd/mm/yyyy" required></div>
-      <div class="field"><label for="resitEndTime">เวลาสิ้นสุด</label><input type="text" id="resitEndTime" placeholder="13.30" required></div>
+      <div class="field"><label for="resitStartDate" data-i18n="วันเริ่มสอบ">วันเริ่มสอบ</label><input type="text" id="resitStartDate" placeholder="dd/mm/yyyy" required></div>
+      <div class="field"><label for="resitStartTime" data-i18n="เวลาเริ่มสอบ">เวลาเริ่มสอบ</label><input type="text" id="resitStartTime" placeholder="13.30" required></div>
+      <div class="field"><label for="resitEndDate" data-i18n="วันสิ้นสุด">วันสิ้นสุด</label><input type="text" id="resitEndDate" placeholder="dd/mm/yyyy" required></div>
+      <div class="field"><label for="resitEndTime" data-i18n="เวลาสิ้นสุด">เวลาสิ้นสุด</label><input type="text" id="resitEndTime" placeholder="13.30" required></div>
     </div>
-    <div class="field"><label for="resitScoreMax">คะแนนเต็มหลังแปลง</label><input type="number" id="resitScoreMax" min="0.01" max="100" step="0.01" value="20" required></div>
-    <p class="resit-score-note">ระบบคำนวณ: คะแนนสอบซ่อม ÷ 20 × คะแนนเต็มที่กำหนด</p>
+    <div class="field"><label for="resitScoreMax" data-i18n="คะแนนเต็มหลังแปลง">คะแนนเต็มหลังแปลง</label><input type="number" id="resitScoreMax" min="0.01" max="100" step="0.01" value="20" required></div>
+    <p class="resit-score-note" data-i18n="ระบบคำนวณ: คะแนนสอบซ่อม ÷ 20 × คะแนนเต็มที่กำหนด">ระบบคำนวณ: คะแนนสอบซ่อม ÷ 20 × คะแนนเต็มที่กำหนด</p>
     <div class="resit-error" id="resitDialogError"></div>
-    <div class="editor-actions"><button class="btn btn-ghost btn-sm" type="button" id="cancelResitDialog">ยกเลิก</button><button class="btn btn-primary btn-sm" type="submit" id="approveResitBtn">อนุมัติเปิดสอบซ่อม</button></div>
+    <div class="editor-actions"><button class="btn btn-ghost btn-sm" type="button" id="cancelResitDialog" data-i18n="ยกเลิก">ยกเลิก</button><button class="btn btn-primary btn-sm" type="submit" id="approveResitBtn" data-i18n="อนุมัติเปิดสอบซ่อม">อนุมัติเปิดสอบซ่อม</button></div>
   </form>
 </dialog>
 
 <!-- ================= EXAM SET WIZARD (full-page, mirrors the student exam-taking flow) ================= -->
 <dialog class="google-import-dialog" id="googleFormsSetDialog">
   <div class="google-import-dialog-inner">
-    <div class="google-import-dialog-head"><div><h3>🟢 นำเข้าข้อสอบจาก Google Forms</h3><p>จำแนกข้อปรนัยและอัตนัย ตัดเลขข้อซ้ำ และนำเข้ารูปประกอบโดยอัตโนมัติ</p></div><button class="btn btn-ghost btn-sm" type="button" id="closeGoogleFormsSetDialog">✕</button></div>
-    <div class="google-import-step" id="googleFormsConnectStep"><h4>ขั้นที่ 1: เชื่อมต่อ Google</h4><p>ใช้บัญชี Google ที่เป็นเจ้าของ หรือมีสิทธิ์แก้ไข Google Forms ชุดนั้น</p><button class="btn btn-primary btn-sm" type="button" id="connectGoogleFormsSetBtn">เชื่อมต่อ Google</button></div>
-    <div class="google-import-step hidden" id="googleFormsImportStep"><div id="googleFormsPickerView"><h4>ขั้นที่ 2: เลือก Google Forms</h4><p>เลือกจากรายการ Google Forms ของบัญชีที่เชื่อมต่อ หรือวางลิงก์หน้าแก้ไขของฟอร์ม</p><div class="editor-actions"><button class="btn btn-ghost btn-sm" type="button" id="listGoogleFormsSetBtn">เลือก Google Forms</button></div><div class="mc-import-preview" id="googleFormsListPreview"></div><input id="googleFormsSetUrl" type="url" placeholder="วางลิงก์ Google Forms สำหรับแก้ไข"><div class="editor-actions"><button class="btn btn-primary btn-sm" type="button" id="previewGoogleFormsSetBtn">ตรวจสอบแบบฟอร์ม</button></div></div><div id="googleFormsReviewView" class="hidden"><div class="editor-actions" style="justify-content:space-between;"><h4 style="margin:0;">ขั้นที่ 3: รายละเอียดข้อสอบ</h4><button class="btn btn-ghost btn-sm" type="button" id="backToGoogleFormsPickerBtn">← เลือกฟอร์มใหม่</button></div><div class="mc-import-preview" id="googleFormsSetPreview"></div><div class="editor-actions"><button class="btn btn-primary btn-sm" type="button" id="applyGoogleFormsSetBtn" disabled>นำเข้าและตั้งค่าชุดข้อสอบ</button></div></div></div>
+    <div class="google-import-dialog-head"><div><h3 data-i18n="🟢 นำเข้าข้อสอบจาก Google Forms">🟢 นำเข้าข้อสอบจาก Google Forms</h3><p data-i18n="จำแนกข้อปรนัยและอัตนัย ตัดเลขข้อซ้ำ และนำเข้ารูปประกอบโดยอัตโนมัติ">จำแนกข้อปรนัยและอัตนัย ตัดเลขข้อซ้ำ และนำเข้ารูปประกอบโดยอัตโนมัติ</p></div><button class="btn btn-ghost btn-sm" type="button" id="closeGoogleFormsSetDialog">✕</button></div>
+    <div class="google-import-step" id="googleFormsConnectStep"><h4 data-i18n="ขั้นที่ 1: เชื่อมต่อ Google">ขั้นที่ 1: เชื่อมต่อ Google</h4><p data-i18n="ใช้บัญชี Google ที่เป็นเจ้าของ หรือมีสิทธิ์แก้ไข Google Forms ชุดนั้น">ใช้บัญชี Google ที่เป็นเจ้าของ หรือมีสิทธิ์แก้ไข Google Forms ชุดนั้น</p><button class="btn btn-primary btn-sm" type="button" id="connectGoogleFormsSetBtn" data-i18n="เชื่อมต่อ Google">เชื่อมต่อ Google</button></div>
+    <div class="google-import-step hidden" id="googleFormsImportStep"><div id="googleFormsPickerView"><h4 data-i18n="ขั้นที่ 2: เลือก Google Forms">ขั้นที่ 2: เลือก Google Forms</h4><p data-i18n="เลือกจากรายการ Google Forms ของบัญชีที่เชื่อมต่อ หรือวางลิงก์หน้าแก้ไขของฟอร์ม">เลือกจากรายการ Google Forms ของบัญชีที่เชื่อมต่อ หรือวางลิงก์หน้าแก้ไขของฟอร์ม</p><div class="editor-actions"><button class="btn btn-ghost btn-sm" type="button" id="listGoogleFormsSetBtn" data-i18n="เลือก Google Forms">เลือก Google Forms</button></div><div class="mc-import-preview" id="googleFormsListPreview"></div><input id="googleFormsSetUrl" type="url" placeholder="วางลิงก์ Google Forms สำหรับแก้ไข" data-i18n-placeholder="วางลิงก์ Google Forms สำหรับแก้ไข"><div class="editor-actions"><button class="btn btn-primary btn-sm" type="button" id="previewGoogleFormsSetBtn" data-i18n="ตรวจสอบแบบฟอร์ม">ตรวจสอบแบบฟอร์ม</button></div></div><div id="googleFormsReviewView" class="hidden"><div class="editor-actions" style="justify-content:space-between;"><h4 style="margin:0;" data-i18n="ขั้นที่ 3: รายละเอียดข้อสอบ">ขั้นที่ 3: รายละเอียดข้อสอบ</h4><button class="btn btn-ghost btn-sm" type="button" id="backToGoogleFormsPickerBtn" data-i18n="← เลือกฟอร์มใหม่">← เลือกฟอร์มใหม่</button></div><div class="mc-import-preview" id="googleFormsSetPreview"></div><div class="editor-actions"><button class="btn btn-primary btn-sm" type="button" id="applyGoogleFormsSetBtn" disabled data-i18n="นำเข้าและตั้งค่าชุดข้อสอบ">นำเข้าและตั้งค่าชุดข้อสอบ</button></div></div></div>
   </div>
 </dialog>
 
 <div id="setWizardScreen" class="hidden" style="min-height:100vh;display:flex;flex-direction:column;background:var(--bg);">
   <div class="admin-topbar">
-    <div class="brand" id="wizardTitleBar">🧩 สร้างชุดข้อสอบใหม่</div>
-    <div class="editor-actions" style="margin:0;gap:8px;"><button class="btn btn-primary btn-sm" id="wizSaveBtn" type="button">💾 บันทึกชุดข้อสอบ</button><button class="btn btn-ghost btn-sm" id="wizardExitBtn">✕ ออกโดยไม่บันทึก</button></div>
+    <div class="brand" id="wizardTitleBar" data-i18n="🧩 สร้างชุดข้อสอบใหม่">🧩 สร้างชุดข้อสอบใหม่</div>
+    <div class="editor-actions" style="margin:0;gap:8px;"><button class="btn btn-primary btn-sm" id="wizSaveBtn" type="button" data-i18n="💾 บันทึกชุดข้อสอบ">💾 บันทึกชุดข้อสอบ</button><button class="btn btn-ghost btn-sm" id="wizardExitBtn" data-i18n="✕ ออกโดยไม่บันทึก">✕ ออกโดยไม่บันทึก</button></div>
   </div>
   <div class="wizard-steps-bar" id="wizardStepsBar"></div>
   <div class="admin-body">
@@ -186,5 +189,6 @@
 </div>
 
 <script src="/assets/teacher-main.js?v=20260829-1"></script>
+<script>if(window.I18N){I18N.initLangToggle('langToggleBtn');I18N.initLangToggle('langToggleBtnLogin');}</script>
 </body>
 </html>

@@ -8,46 +8,50 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/student.css?v=20260829-1">
+<script src="/assets/i18n.js"></script>
 </head>
 <body>
 
-<button class="theme-toggle" id="themeToggleBtn">🌙 โหมดมืด</button>
+<div class="top-toggle-group">
+  <button class="theme-toggle lang-toggle" id="langToggleBtn" type="button">🌐 EN</button>
+  <button class="theme-toggle" id="themeToggleBtn" data-i18n="โหมดมืด">🌙 โหมดมืด</button>
+</div>
 
 <div id="systemClosedScreen" class="screen-wrap hidden">
   <div class="card system-closed-card">
     <div class="system-closed-icon">🔒</div>
-    <span class="eyebrow">SYSTEM MAINTENANCE</span>
-    <h1>ระบบสอบปิดให้บริการชั่วคราว</h1>
-    <p class="lead" id="systemClosedMessage">กรุณารอประกาศจากอาจารย์ผู้สอน</p>
-    <button class="btn btn-primary" type="button" onclick="location.reload()">ตรวจสอบอีกครั้ง</button>
+    <span class="eyebrow" data-i18n="SYSTEM MAINTENANCE">SYSTEM MAINTENANCE</span>
+    <h1 data-i18n="ระบบสอบปิดให้บริการชั่วคราว">ระบบสอบปิดให้บริการชั่วคราว</h1>
+    <p class="lead" id="systemClosedMessage" data-i18n="กรุณารอประกาศจากอาจารย์ผู้สอน">กรุณารอประกาศจากอาจารย์ผู้สอน</p>
+    <button class="btn btn-primary" type="button" onclick="location.reload()" data-i18n="ตรวจสอบอีกครั้ง">ตรวจสอบอีกครั้ง</button>
   </div>
 </div>
 
 <!-- ================= START ================= -->
 <div id="startScreen" class="screen-wrap">
   <div class="card">
-    <span class="eyebrow">EXAM SYSTEM · นักเรียน</span>
-    <h1>ระบบข้อสอบออนไลน์</h1>
-    <p class="lead">ข้อสอบกลางภาคและปลายภาค 3 รูปแบบ ได้แก่ ปรนัย (เลือกตอบ), จับคู่ และอัตนัย (เขียนตอบ) คะแนนเต็มรวม 20 คะแนนต่อวิชา</p>
+    <span class="eyebrow" data-i18n="EXAM SYSTEM · นักเรียน">EXAM SYSTEM · นักเรียน</span>
+    <h1 data-i18n="ระบบข้อสอบออนไลน์">ระบบข้อสอบออนไลน์</h1>
+    <p class="lead" data-i18n="ข้อสอบกลางภาคและปลายภาค 3 รูปแบบ ได้แก่ ปรนัย (เลือกตอบ), จับคู่ และอัตนัย (เขียนตอบ) คะแนนเต็มรวม 20 คะแนนต่อวิชา">ข้อสอบกลางภาคและปลายภาค 3 รูปแบบ ได้แก่ ปรนัย (เลือกตอบ), จับคู่ และอัตนัย (เขียนตอบ) คะแนนเต็มรวม 20 คะแนนต่อวิชา</p>
     <div class="meta-row">
-      <div class="meta-pill">⏱ เวลารวม <b>60:00</b> นาที</div>
-      <div class="meta-pill">🎯 คะแนนเต็ม <b>20</b> คะแนน</div>
-      <div class="meta-pill">📝 3 รูปแบบ <b>ปรนัย/จับคู่/อัตนัย</b></div>
-      <div class="meta-pill">🔒 คะแนน <b>เป็นความลับ</b></div>
+      <div class="meta-pill"><span data-i18n="⏱ เวลารวม">⏱ เวลารวม</span> <b>60:00</b> <span data-i18n="นาที">นาที</span></div>
+      <div class="meta-pill"><span data-i18n="🎯 คะแนนเต็ม">🎯 คะแนนเต็ม</span> <b>20</b> <span data-i18n="คะแนน">คะแนน</span></div>
+      <div class="meta-pill"><span data-i18n="📝 3 รูปแบบ">📝 3 รูปแบบ</span> <b data-i18n="ปรนัย/จับคู่/อัตนัย">ปรนัย/จับคู่/อัตนัย</b></div>
+      <div class="meta-pill"><span data-i18n="🔒 คะแนน">🔒 คะแนน</span> <b data-i18n="เป็นความลับ">เป็นความลับ</b></div>
     </div>
     <div class="spec-box">
-      <h3>คำชี้แจง</h3>
+      <h3 data-i18n="คำชี้แจง">คำชี้แจง</h3>
       <ul>
-        <li>ใช้ <b>รหัสนักเรียน</b> ในการเข้าสู่ระบบ ระบบจะดึงชื่อ-สกุลและรายวิชาที่คุณมีสิทธิสอบขึ้นมาให้อัตโนมัติ</li>
-        <li>ข้อสอบปรนัยแสดงทีละข้อ เลือกคำตอบแล้วกด "ถัดไป" หรือคลิกหมายเลขข้อเพื่อข้ามไปข้อใดก็ได้</li>
-        <li>ต้องตอบให้ครบทุกข้อในทุกส่วนก่อนจึงจะส่งคำตอบได้ ระบบจะพาไปยังข้อที่ยังไม่ได้ตอบให้อัตโนมัติ</li>
-        <li><b>คะแนนจะไม่แสดงให้เห็นทันที</b> เพื่อรักษาความลับของข้อสอบ ตรวจสอบผลได้ภายหลังด้วยรหัสนักเรียนของคุณ</li>
-        <li class="integrity-warning">⚠️ <strong>ห้ามคัดลอกข้อความ คลิกขวา สลับแท็บ หรือออกจากโหมดเต็มจอโดยเด็ดขาด</strong><br><span>ระบบจะบันทึกเหตุการณ์ที่เกิดขึ้นระหว่างทำข้อสอบ</span></li>
+        <li data-i18n="ใช้ <b>รหัสนักเรียน</b> ในการเข้าสู่ระบบ ระบบจะดึงชื่อ-สกุลและรายวิชาที่คุณมีสิทธิสอบขึ้นมาให้อัตโนมัติ">ใช้ <b>รหัสนักเรียน</b> ในการเข้าสู่ระบบ ระบบจะดึงชื่อ-สกุลและรายวิชาที่คุณมีสิทธิสอบขึ้นมาให้อัตโนมัติ</li>
+        <li data-i18n='ข้อสอบปรนัยแสดงทีละข้อ เลือกคำตอบแล้วกด "ถัดไป" หรือคลิกหมายเลขข้อเพื่อข้ามไปข้อใดก็ได้'>ข้อสอบปรนัยแสดงทีละข้อ เลือกคำตอบแล้วกด "ถัดไป" หรือคลิกหมายเลขข้อเพื่อข้ามไปข้อใดก็ได้</li>
+        <li data-i18n="ต้องตอบให้ครบทุกข้อในทุกส่วนก่อนจึงจะส่งคำตอบได้ ระบบจะพาไปยังข้อที่ยังไม่ได้ตอบให้อัตโนมัติ">ต้องตอบให้ครบทุกข้อในทุกส่วนก่อนจึงจะส่งคำตอบได้ ระบบจะพาไปยังข้อที่ยังไม่ได้ตอบให้อัตโนมัติ</li>
+        <li data-i18n="<b>คะแนนจะไม่แสดงให้เห็นทันที</b> เพื่อรักษาความลับของข้อสอบ ตรวจสอบผลได้ภายหลังด้วยรหัสนักเรียนของคุณ"><b>คะแนนจะไม่แสดงให้เห็นทันที</b> เพื่อรักษาความลับของข้อสอบ ตรวจสอบผลได้ภายหลังด้วยรหัสนักเรียนของคุณ</li>
+        <li class="integrity-warning" data-i18n="⚠️ <strong>ห้ามคัดลอกข้อความ คลิกขวา สลับแท็บ หรือออกจากโหมดเต็มจอโดยเด็ดขาด</strong><br><span>ระบบจะบันทึกเหตุการณ์ที่เกิดขึ้นระหว่างทำข้อสอบ</span>">⚠️ <strong>ห้ามคัดลอกข้อความ คลิกขวา สลับแท็บ หรือออกจากโหมดเต็มจอโดยเด็ดขาด</strong><br><span>ระบบจะบันทึกเหตุการณ์ที่เกิดขึ้นระหว่างทำข้อสอบ</span></li>
       </ul>
     </div>
     <div class="start-actions">
-      <button class="btn btn-ghost" id="goCheckScoreBtn">📊 ตรวจสอบผลคะแนน</button>
-      <button class="btn btn-primary" id="goLoginBtn">เข้าสู่ระบบด้วยรหัสนักเรียน →</button>
+      <button class="btn btn-ghost" id="goCheckScoreBtn" data-i18n="📊 ตรวจสอบผลคะแนน">📊 ตรวจสอบผลคะแนน</button>
+      <button class="btn btn-primary" id="goLoginBtn" data-i18n="เข้าสู่ระบบด้วยรหัสนักเรียน →">เข้าสู่ระบบด้วยรหัสนักเรียน →</button>
     </div>
   </div>
 </div>
@@ -55,55 +59,55 @@
 <!-- ================= STUDENT LOGIN ================= -->
 <div id="loginScreen" class="screen-wrap hidden">
   <div class="card">
-    <span class="eyebrow">เข้าสู่ระบบ</span>
-    <h1>กรอกรหัสนักเรียน</h1>
-    <p class="lead">ระบบจะตรวจสอบสิทธิ์และดึงชื่อ-สกุล พร้อมรายวิชาที่คุณต้องสอบขึ้นมาให้อัตโนมัติ</p>
-    <input type="text" class="name-input" id="studentIdInput" placeholder="เช่น 10001" inputmode="numeric">
+    <span class="eyebrow" data-i18n="เข้าสู่ระบบ">เข้าสู่ระบบ</span>
+    <h1 data-i18n="กรอกรหัสนักเรียน">กรอกรหัสนักเรียน</h1>
+    <p class="lead" data-i18n="ระบบจะตรวจสอบสิทธิ์และดึงชื่อ-สกุล พร้อมรายวิชาที่คุณต้องสอบขึ้นมาให้อัตโนมัติ">ระบบจะตรวจสอบสิทธิ์และดึงชื่อ-สกุล พร้อมรายวิชาที่คุณต้องสอบขึ้นมาให้อัตโนมัติ</p>
+    <input type="text" class="name-input" id="studentIdInput" placeholder="เช่น 10001" data-i18n-placeholder="เช่น 10001" inputmode="numeric">
     <div class="id-error" id="loginError"></div>
     <div class="start-actions">
-      <button class="btn btn-ghost" id="backToStartBtn">← ย้อนกลับ</button>
-      <button class="btn btn-primary" id="checkIdBtn">ตรวจสอบสิทธิ์ →</button>
+      <button class="btn btn-ghost" id="backToStartBtn" data-i18n="← ย้อนกลับ">← ย้อนกลับ</button>
+      <button class="btn btn-primary" id="checkIdBtn" data-i18n="ตรวจสอบสิทธิ์ →">ตรวจสอบสิทธิ์ →</button>
     </div>
   </div>
 </div>
 
 <div id="studentIdentityConfirmModal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="studentIdentityConfirmTitle">
   <div class="modal-card student-identity-confirm-card">
-    <span class="eyebrow">ตรวจสอบก่อนดำเนินการ</span>
-    <h2 id="studentIdentityConfirmTitle">นี่คือบัญชีของคุณใช่หรือไม่?</h2>
+    <span class="eyebrow" data-i18n="ตรวจสอบก่อนดำเนินการ">ตรวจสอบก่อนดำเนินการ</span>
+    <h2 id="studentIdentityConfirmTitle" data-i18n="นี่คือบัญชีของคุณใช่หรือไม่?">นี่คือบัญชีของคุณใช่หรือไม่?</h2>
     <div class="identity-box" id="studentIdentityConfirmDetails"></div>
-    <p class="identity-warning" id="studentIdentityWarning">กรุณาตรวจสอบชื่อ–นามสกุลให้ถูกต้องก่อนดำเนินการ</p>
+    <p class="identity-warning" id="studentIdentityWarning" data-i18n="กรุณาตรวจสอบชื่อ–นามสกุลให้ถูกต้องก่อนดำเนินการ">กรุณาตรวจสอบชื่อ–นามสกุลให้ถูกต้องก่อนดำเนินการ</p>
     <div id="identityPinVerifyFields">
-      <input type="password" class="name-input" id="identityPinInput" placeholder="กรอก PIN" inputmode="numeric" maxlength="6" autocomplete="off">
+      <input type="password" class="name-input" id="identityPinInput" placeholder="กรอก PIN" data-i18n-placeholder="กรอก PIN" inputmode="numeric" maxlength="6" autocomplete="off">
     </div>
     <div id="identityPinSetupFields" class="hidden">
-      <input type="password" class="name-input" id="identityPinSetupInput" placeholder="ตั้ง PIN ตัวเลข 4-6 หลัก" inputmode="numeric" maxlength="6" autocomplete="off">
-      <input type="password" class="name-input" id="identityPinSetupConfirmInput" placeholder="ยืนยัน PIN อีกครั้ง" inputmode="numeric" maxlength="6" autocomplete="off">
+      <input type="password" class="name-input" id="identityPinSetupInput" placeholder="ตั้ง PIN ตัวเลข 4-6 หลัก" data-i18n-placeholder="ตั้ง PIN ตัวเลข 4-6 หลัก" inputmode="numeric" maxlength="6" autocomplete="off">
+      <input type="password" class="name-input" id="identityPinSetupConfirmInput" placeholder="ยืนยัน PIN อีกครั้ง" data-i18n-placeholder="ยืนยัน PIN อีกครั้ง" inputmode="numeric" maxlength="6" autocomplete="off">
     </div>
     <div class="id-error" id="studentIdentityConfirmError"></div>
     <div class="modal-actions identity-primary-actions" id="studentIdentityActions">
-      <button class="btn btn-identity-edit" id="studentIdentityRejectBtn" type="button">แก้ไขรหัสนักเรียน</button>
-      <button class="btn btn-primary hidden" id="studentIdentityAcceptBtn" type="button">ยืนยันและเข้าสู่ระบบ →</button>
+      <button class="btn btn-identity-edit" id="studentIdentityRejectBtn" type="button" data-i18n="แก้ไขรหัสนักเรียน">แก้ไขรหัสนักเรียน</button>
+      <button class="btn btn-primary hidden" id="studentIdentityAcceptBtn" type="button" data-i18n="ยืนยันและเข้าสู่ระบบ →">ยืนยันและเข้าสู่ระบบ →</button>
     </div>
-    <button class="btn identity-forgot-pin" id="identityForgotPinBtn" type="button">ลืม PIN? ยืนยันตัวตนเพื่อตั้งใหม่</button>
+    <button class="btn identity-forgot-pin" id="identityForgotPinBtn" type="button" data-i18n="ลืม PIN? ยืนยันตัวตนเพื่อตั้งใหม่">ลืม PIN? ยืนยันตัวตนเพื่อตั้งใหม่</button>
   </div>
 </div>
 
 <!-- ================= PIN RECOVERY ================= -->
 <div id="pinRecoveryScreen" class="screen-wrap hidden">
   <div class="card">
-    <span class="eyebrow">ยืนยันตัวตน</span>
-    <h1>ตั้ง PIN ใหม่</h1>
+    <span class="eyebrow" data-i18n="ยืนยันตัวตน">ยืนยันตัวตน</span>
+    <h1 data-i18n="ตั้ง PIN ใหม่">ตั้ง PIN ใหม่</h1>
     <div class="identity-box" id="pinRecoveryIdentity"></div>
-    <p class="lead">กรอกชื่อและนามสกุลให้ตรงกับข้อมูลในระบบ แล้วตั้ง PIN ใหม่</p>
-    <input type="text" class="name-input" id="pinRecoveryFirstName" placeholder="ชื่อ" autocomplete="off">
-    <input type="text" class="name-input" id="pinRecoveryLastName" placeholder="นามสกุล" autocomplete="off">
-    <input type="password" class="name-input" id="pinRecoveryPin" placeholder="ตั้ง PIN ใหม่ (4-6 หลัก)" inputmode="numeric" maxlength="6" autocomplete="off">
-    <input type="password" class="name-input" id="pinRecoveryConfirmPin" placeholder="ยืนยัน PIN ใหม่" inputmode="numeric" maxlength="6" autocomplete="off">
+    <p class="lead" data-i18n="กรอกชื่อและนามสกุลให้ตรงกับข้อมูลในระบบ แล้วตั้ง PIN ใหม่">กรอกชื่อและนามสกุลให้ตรงกับข้อมูลในระบบ แล้วตั้ง PIN ใหม่</p>
+    <input type="text" class="name-input" id="pinRecoveryFirstName" placeholder="ชื่อ" data-i18n-placeholder="ชื่อ" autocomplete="off">
+    <input type="text" class="name-input" id="pinRecoveryLastName" placeholder="นามสกุล" data-i18n-placeholder="นามสกุล" autocomplete="off">
+    <input type="password" class="name-input" id="pinRecoveryPin" placeholder="ตั้ง PIN ใหม่ (4-6 หลัก)" data-i18n-placeholder="ตั้ง PIN ใหม่ (4-6 หลัก)" inputmode="numeric" maxlength="6" autocomplete="off">
+    <input type="password" class="name-input" id="pinRecoveryConfirmPin" placeholder="ยืนยัน PIN ใหม่" data-i18n-placeholder="ยืนยัน PIN ใหม่" inputmode="numeric" maxlength="6" autocomplete="off">
     <div class="id-error" id="pinRecoveryError"></div>
     <div class="start-actions pin-recovery-actions">
-      <button class="btn btn-ghost" id="pinRecoveryBackBtn" type="button">← กลับ</button>
-      <button class="btn btn-primary" id="pinRecoveryConfirmBtn" type="button">ยืนยันและตั้ง PIN ใหม่</button>
+      <button class="btn btn-ghost" id="pinRecoveryBackBtn" type="button" data-i18n="← กลับ">← กลับ</button>
+      <button class="btn btn-primary" id="pinRecoveryConfirmBtn" type="button" data-i18n="ยืนยันและตั้ง PIN ใหม่">ยืนยันและตั้ง PIN ใหม่</button>
     </div>
   </div>
 </div>
@@ -111,15 +115,15 @@
 <!-- ================= CHECK SCORE ================= -->
 <div id="checkScoreScreen" class="screen-wrap hidden">
   <div class="card" style="max-width:760px;">
-    <span class="eyebrow">ตรวจสอบผลคะแนน</span>
-    <h1>ตรวจสอบผลคะแนน</h1>
-    <p class="lead">กรอกรหัสนักเรียนเพื่อดูรายวิชาที่เคยสอบและสถานะการประกาศผล คะแนนจะแสดงเฉพาะวิชาที่อาจารย์ประกาศผลแล้วเท่านั้น</p>
-    <input type="text" class="name-input" id="checkIdInput" placeholder="เช่น 10001" inputmode="numeric">
+    <span class="eyebrow" data-i18n="ตรวจสอบผลคะแนน">ตรวจสอบผลคะแนน</span>
+    <h1 data-i18n="ตรวจสอบผลคะแนน">ตรวจสอบผลคะแนน</h1>
+    <p class="lead" data-i18n="กรอกรหัสนักเรียนเพื่อดูรายวิชาที่เคยสอบและสถานะการประกาศผล คะแนนจะแสดงเฉพาะวิชาที่อาจารย์ประกาศผลแล้วเท่านั้น">กรอกรหัสนักเรียนเพื่อดูรายวิชาที่เคยสอบและสถานะการประกาศผล คะแนนจะแสดงเฉพาะวิชาที่อาจารย์ประกาศผลแล้วเท่านั้น</p>
+    <input type="text" class="name-input" id="checkIdInput" placeholder="เช่น 10001" data-i18n-placeholder="เช่น 10001" inputmode="numeric">
     <div class="id-error" id="checkError"></div>
     <div id="scoreListWrap"></div>
     <div class="start-actions" style="margin-top:16px;">
-      <button class="btn btn-ghost" id="backFromCheckBtn">← ย้อนกลับ</button>
-      <button class="btn btn-primary" id="doCheckScoreBtn">ตรวจสอบ →</button>
+      <button class="btn btn-ghost" id="backFromCheckBtn" data-i18n="← ย้อนกลับ">← ย้อนกลับ</button>
+      <button class="btn btn-primary" id="doCheckScoreBtn" data-i18n="ตรวจสอบ →">ตรวจสอบ →</button>
     </div>
   </div>
 </div>
@@ -127,58 +131,58 @@
 <!-- ================= SUBJECT SELECT ================= -->
 <div id="selectScreen" class="screen-wrap hidden">
   <div class="card" style="max-width:820px;">
-    <span class="eyebrow">เลือกรายวิชาที่จะสอบ</span>
-    <h1 id="selectHeading" style="margin-bottom:6px;">รายวิชาที่คุณมีสิทธิสอบ</h1>
+    <span class="eyebrow" data-i18n="เลือกรายวิชาที่จะสอบ">เลือกรายวิชาที่จะสอบ</span>
+    <h1 id="selectHeading" style="margin-bottom:6px;" data-i18n="รายวิชาที่คุณมีสิทธิสอบ">รายวิชาที่คุณมีสิทธิสอบ</h1>
     <div class="identity-box" id="identityBox"></div>
-    <div id="qgridWrap"><div class="loading-note">กำลังโหลดรายวิชา...</div></div>
+    <div id="qgridWrap"><div class="loading-note" data-i18n="กำลังโหลดรายวิชา...">กำลังโหลดรายวิชา...</div></div>
     <div class="start-actions" style="margin-top:20px;">
-      <button class="btn btn-ghost" id="backToLoginBtn">← ออกจากระบบ</button>
-      <button class="btn btn-primary" id="confirmQBtn" disabled>เริ่มทำข้อสอบ →</button>
+      <button class="btn btn-ghost" id="backToLoginBtn" data-i18n="← ออกจากระบบ">← ออกจากระบบ</button>
+      <button class="btn btn-primary" id="confirmQBtn" disabled data-i18n="เริ่มทำข้อสอบ →">เริ่มทำข้อสอบ →</button>
     </div>
   </div>
 </div>
 
 <!-- ================= EXAM PREPARING ================= -->
-<div id="examPreparingOverlay" class="hidden" role="status" aria-live="polite" aria-label="กำลังเตรียมข้อสอบ">
+<div id="examPreparingOverlay" class="hidden" role="status" aria-live="polite" aria-label="กำลังเตรียมข้อสอบ" data-i18n-aria="กำลังเตรียมข้อสอบ">
   <div class="exam-preparing-card">
     <span class="exam-preparing-spinner" aria-hidden="true"></span>
-    <strong>กำลังเตรียมข้อสอบ...</strong>
-    <span>กรุณารอสักครู่ และไม่ต้องกดซ้ำ</span>
+    <strong data-i18n="กำลังเตรียมข้อสอบ...">กำลังเตรียมข้อสอบ...</strong>
+    <span data-i18n="กรุณารอสักครู่ และไม่ต้องกดซ้ำ">กรุณารอสักครู่ และไม่ต้องกดซ้ำ</span>
   </div>
 </div>
 
 <!-- ================= COUNTDOWN ================= -->
 <div id="countdownOverlay" class="hidden">
   <div id="countdownNumber">3</div>
-  <div id="countdownLabel">เตรียมตัว...</div>
+  <div id="countdownLabel" data-i18n="เตรียมตัว...">เตรียมตัว...</div>
 </div>
 
 <!-- ================= EXAM SHELL ================= -->
 <div id="examScreen" class="hidden">
   <div class="topbar">
     <div class="topbar-left">
-      <span class="topbar-title" id="topTitle">รายการส่วนข้อสอบ</span>
+      <span class="topbar-title" id="topTitle" data-i18n="รายการส่วนข้อสอบ">รายการส่วนข้อสอบ</span>
       <span class="name-tag" id="nameTag"></span>
-      <span class="tag" id="tabSwitchTag">สลับแท็บ: 0 ครั้ง</span>
-      <span class="tag" id="fullscreenExitTag">ออกจากเต็มจอ: 0 ครั้ง</span>
-      <span class="tag" id="rightClickTag">คลิกขวา: 0 ครั้ง</span>
-      <span class="tag" id="copyTag">คัดลอก: 0 ครั้ง</span>
+      <span class="tag" id="tabSwitchTag" data-i18n="สลับแท็บ: 0 ครั้ง">สลับแท็บ: 0 ครั้ง</span>
+      <span class="tag" id="fullscreenExitTag" data-i18n="ออกจากเต็มจอ: 0 ครั้ง">ออกจากเต็มจอ: 0 ครั้ง</span>
+      <span class="tag" id="rightClickTag" data-i18n="คลิกขวา: 0 ครั้ง">คลิกขวา: 0 ครั้ง</span>
+      <span class="tag" id="copyTag" data-i18n="คัดลอก: 0 ครั้ง">คัดลอก: 0 ครั้ง</span>
       <span class="tag badge-warn" id="reloadTag" style="display:none;"></span>
-      <span class="tag autosave" id="autosaveTag">💾 บันทึกอัตโนมัติพร้อมใช้งาน</span>
+      <span class="tag autosave" id="autosaveTag" data-i18n="💾 บันทึกอัตโนมัติพร้อมใช้งาน">💾 บันทึกอัตโนมัติพร้อมใช้งาน</span>
     </div>
     <div class="timer" id="timerDisplay">60:00</div>
     <div class="topbar-right">
       <button class="icon-btn" id="themeToggleBtnInline">🌙</button>
-      <span id="hubActions"><button class="icon-btn" style="background:var(--blue);color:#fff;" id="endExamBtn" disabled title="ต้องบันทึกคำตอบอย่างน้อย 1 ส่วนก่อน">จบการสอบและส่งคำตอบ</button></span>
-      <span id="sectionActions" class="hidden"><button class="icon-btn" id="backToHubBtn">← รายการส่วนข้อสอบ</button></span>
+      <span id="hubActions"><button class="icon-btn" style="background:var(--blue);color:#fff;" id="endExamBtn" disabled title="ต้องบันทึกคำตอบอย่างน้อย 1 ส่วนก่อน" data-i18n-title="ต้องบันทึกคำตอบอย่างน้อย 1 ส่วนก่อน" data-i18n="จบการสอบและส่งคำตอบ">จบการสอบและส่งคำตอบ</button></span>
+      <span id="sectionActions" class="hidden"><button class="icon-btn" id="backToHubBtn" data-i18n="← รายการส่วนข้อสอบ">← รายการส่วนข้อสอบ</button></span>
     </div>
   </div>
 
   <div class="hub-wrap" id="hubView">
     <div class="hub-inner">
-      <h2 id="hubQTitle">โจทย์: -</h2>
+      <h2 id="hubQTitle" data-i18n="โจทย์: -">โจทย์: -</h2>
       <p class="sub" id="hubQTagline"></p>
-      <div class="hub-note">เลือกทำส่วนใดก่อนก็ได้ เวลารวม 60 นาทีใช้ร่วมกันทุกส่วน คะแนนจะไม่แสดงทันที — ตรวจสอบผลได้ภายหลังจากหน้าแรกของระบบ</div>
+      <div class="hub-note" data-i18n="เลือกทำส่วนใดก่อนก็ได้ เวลารวม 60 นาทีใช้ร่วมกันทุกส่วน คะแนนจะไม่แสดงทันที — ตรวจสอบผลได้ภายหลังจากหน้าแรกของระบบ">เลือกทำส่วนใดก่อนก็ได้ เวลารวม 60 นาทีใช้ร่วมกันทุกส่วน คะแนนจะไม่แสดงทันที — ตรวจสอบผลได้ภายหลังจากหน้าแรกของระบบ</div>
       <div class="lv-grid" id="lvGrid"></div>
     </div>
   </div>
@@ -190,11 +194,11 @@
   <div id="levelResultModal" class="hidden">
     <div class="modal-card" style="text-align:center;">
       <div class="modal-check">✅</div>
-      <h3 id="modalTitle">บันทึกคำตอบแล้ว</h3>
-      <p>คำตอบของคุณในส่วนนี้ถูกบันทึกไว้เรียบร้อยแล้ว คุณสามารถกลับมาแก้ไขได้ก่อนจบการสอบ</p>
+      <h3 id="modalTitle" data-i18n="บันทึกคำตอบแล้ว">บันทึกคำตอบแล้ว</h3>
+      <p data-i18n="คำตอบของคุณในส่วนนี้ถูกบันทึกไว้เรียบร้อยแล้ว คุณสามารถกลับมาแก้ไขได้ก่อนจบการสอบ">คำตอบของคุณในส่วนนี้ถูกบันทึกไว้เรียบร้อยแล้ว คุณสามารถกลับมาแก้ไขได้ก่อนจบการสอบ</p>
       <div class="modal-actions">
-        <button class="btn btn-ghost" id="modalStayBtn" style="flex:1;">แก้ไขต่อ</button>
-        <button class="btn btn-primary" id="modalHubBtn" style="flex:1;">กลับไปหน้ารายการ</button>
+        <button class="btn btn-ghost" id="modalStayBtn" style="flex:1;" data-i18n="แก้ไขต่อ">แก้ไขต่อ</button>
+        <button class="btn btn-primary" id="modalHubBtn" style="flex:1;" data-i18n="กลับไปหน้ารายการ">กลับไปหน้ารายการ</button>
       </div>
     </div>
   </div>
@@ -202,28 +206,28 @@
   <div id="submitConfirmModal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="submitConfirmTitle">
     <div class="modal-card submit-confirm-card" style="text-align:center;">
       <div class="modal-check" style="color:var(--amber);">✦</div>
-      <h3 id="submitConfirmTitle">ยืนยันการส่งข้อสอบ</h3>
-      <p>หลังจากนี้จะไม่สามารถแก้ไขคำตอบได้อีก กรุณาตรวจสอบให้เรียบร้อยก่อนส่ง</p>
-      <div class="modal-actions"><button class="btn btn-ghost" id="cancelExamSubmitBtn" type="button" style="flex:1;">กลับไปตรวจคำตอบ</button><button class="btn btn-primary" id="confirmExamSubmitBtn" type="button" style="flex:1;">ยืนยันส่งข้อสอบ</button></div>
+      <h3 id="submitConfirmTitle" data-i18n="ยืนยันการส่งข้อสอบ">ยืนยันการส่งข้อสอบ</h3>
+      <p data-i18n="หลังจากนี้จะไม่สามารถแก้ไขคำตอบได้อีก กรุณาตรวจสอบให้เรียบร้อยก่อนส่ง">หลังจากนี้จะไม่สามารถแก้ไขคำตอบได้อีก กรุณาตรวจสอบให้เรียบร้อยก่อนส่ง</p>
+      <div class="modal-actions"><button class="btn btn-ghost" id="cancelExamSubmitBtn" type="button" style="flex:1;" data-i18n="กลับไปตรวจคำตอบ">กลับไปตรวจคำตอบ</button><button class="btn btn-primary" id="confirmExamSubmitBtn" type="button" style="flex:1;" data-i18n="ยืนยันส่งข้อสอบ">ยืนยันส่งข้อสอบ</button></div>
     </div>
   </div>
 
   <div id="tabWarningModal" class="hidden">
     <div class="modal-card" style="text-align:center;border:2px solid var(--red);">
       <div class="modal-check" style="color:var(--amber);">⚠️</div>
-      <h3>ตรวจพบการสลับหน้าจอ</h3>
-      <p id="tabWarningText">ระบบจะล้างคำตอบเมื่อสลับหน้าจอครบ 3 ครั้ง และส่งข้อสอบอัตโนมัติเมื่อครบ 5 ครั้ง</p>
+      <h3 data-i18n="ตรวจพบการสลับหน้าจอ">ตรวจพบการสลับหน้าจอ</h3>
+      <p id="tabWarningText" data-i18n="ระบบจะล้างคำตอบเมื่อสลับหน้าจอครบ 3 ครั้ง และส่งข้อสอบอัตโนมัติเมื่อครบ 5 ครั้ง">ระบบจะล้างคำตอบเมื่อสลับหน้าจอครบ 3 ครั้ง และส่งข้อสอบอัตโนมัติเมื่อครบ 5 ครั้ง</p>
       <div class="modal-actions">
-        <button class="btn btn-primary" id="tabWarningAckBtn" style="flex:1;">เข้าใจแล้ว กลับไปทำข้อสอบต่อ</button>
+        <button class="btn btn-primary" id="tabWarningAckBtn" style="flex:1;" data-i18n="เข้าใจแล้ว กลับไปทำข้อสอบต่อ">เข้าใจแล้ว กลับไปทำข้อสอบต่อ</button>
       </div>
     </div>
   </div>
   <div id="splitScreenWarning" class="hidden">
     <div class="modal-card" style="text-align:center;border:2px solid var(--red);">
       <div class="modal-check" style="color:var(--amber);">⚠️</div>
-      <h3>ตรวจพบหน้าต่างสอบมีขนาดเล็กผิดปกติ</h3>
-      <p>ไม่อนุญาตให้แบ่งหน้าจอระหว่างทำข้อสอบ กรุณาขยายหน้าต่างให้เต็มพื้นที่ หรือกดกลับเข้าสู่โหมดเต็มจอ</p>
-      <button class="btn btn-primary" id="restoreFullscreenBtn" type="button">กลับเข้าเต็มจอ</button>
+      <h3 data-i18n="ตรวจพบหน้าต่างสอบมีขนาดเล็กผิดปกติ">ตรวจพบหน้าต่างสอบมีขนาดเล็กผิดปกติ</h3>
+      <p data-i18n="ไม่อนุญาตให้แบ่งหน้าจอระหว่างทำข้อสอบ กรุณาขยายหน้าต่างให้เต็มพื้นที่ หรือกดกลับเข้าสู่โหมดเต็มจอ">ไม่อนุญาตให้แบ่งหน้าจอระหว่างทำข้อสอบ กรุณาขยายหน้าต่างให้เต็มพื้นที่ หรือกดกลับเข้าสู่โหมดเต็มจอ</p>
+      <button class="btn btn-primary" id="restoreFullscreenBtn" type="button" data-i18n="กลับเข้าเต็มจอ">กลับเข้าเต็มจอ</button>
     </div>
   </div>
 </div>
@@ -232,18 +236,19 @@
 <div id="finalScreen" class="screen-wrap hidden">
   <div class="card">
     <div class="modal-check">✅</div>
-    <span class="eyebrow" id="finalHeadline">ส่งคำตอบเรียบร้อยแล้ว</span>
-    <h1>คุณได้ส่งคำตอบเรียบร้อยแล้ว</h1>
-    <p class="lead" id="finalSummaryText">ระบบได้บันทึกคำตอบของคุณเข้าสู่ระบบเรียบร้อยแล้ว</p>
-    <div class="secret-note">🔒 คะแนนของคุณถูกเก็บเป็นความลับ ตรวจสอบผลได้ภายหลังผ่านเมนู "ตรวจสอบผลคะแนน" ที่หน้าแรกของระบบ</div>
+    <span class="eyebrow" id="finalHeadline" data-i18n="ส่งคำตอบเรียบร้อยแล้ว">ส่งคำตอบเรียบร้อยแล้ว</span>
+    <h1 data-i18n="คุณได้ส่งคำตอบเรียบร้อยแล้ว">คุณได้ส่งคำตอบเรียบร้อยแล้ว</h1>
+    <p class="lead" id="finalSummaryText" data-i18n="ระบบได้บันทึกคำตอบของคุณเข้าสู่ระบบเรียบร้อยแล้ว">ระบบได้บันทึกคำตอบของคุณเข้าสู่ระบบเรียบร้อยแล้ว</p>
+    <div class="secret-note" data-i18n='🔒 คะแนนของคุณถูกเก็บเป็นความลับ ตรวจสอบผลได้ภายหลังผ่านเมนู "ตรวจสอบผลคะแนน" ที่หน้าแรกของระบบ'>🔒 คะแนนของคุณถูกเก็บเป็นความลับ ตรวจสอบผลได้ภายหลังผ่านเมนู "ตรวจสอบผลคะแนน" ที่หน้าแรกของระบบ</div>
     <div class="final-list" id="finalList"></div>
     <div class="start-actions">
       <span></span>
-      <button class="btn btn-primary" id="restartAllBtn">เลือกวิชาอื่น</button>
+      <button class="btn btn-primary" id="restartAllBtn" data-i18n="เลือกวิชาอื่น">เลือกวิชาอื่น</button>
     </div>
   </div>
 </div>
 
 <script src="/assets/student-main.js?v=20260829-3"></script>
+<script>if(window.I18N)I18N.initLangToggle('langToggleBtn');</script>
 </body>
 </html>
