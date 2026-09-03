@@ -147,7 +147,7 @@ test('result tables label totals with each exam actual maximum score', async () 
   for (const response of [adminScript, teacherScript]) {
     assert.equal(response.status, 200);
     assert.match(response.body, /function resultScoreMax\(/);
-    assert.match(response.body, /<th>รวม\/\$\{scoreMax\}<\/th>/);
+    assert.match(response.body, /<th>(?:รวม|\$\{tr\('รวม'\)\})\/\$\{scoreMax\}<\/th>/);
     assert.doesNotMatch(response.body, /<th>รวม\/20<\/th>/);
   }
 });
