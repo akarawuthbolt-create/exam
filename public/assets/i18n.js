@@ -37,7 +37,7 @@
     'นาที': 'minutes',
     '🎯 คะแนนเต็ม': '🎯 Full score',
     'คะแนน': 'points',
-    '👩‍🏫 สำหรับครูผู้สอน': '👩‍🏫 For teachers',
+    'สำหรับครูผู้สอน': 'For teachers',
     '📝 3 รูปแบบ': '📝 3 formats',
     'ปรนัย/จับคู่/อัตนัย': 'MCQ / Matching / Written',
     '🔒 คะแนน': '🔒 Score',
