@@ -37,6 +37,7 @@
     'นาที': 'minutes',
     '🎯 คะแนนเต็ม': '🎯 Full score',
     'คะแนน': 'points',
+    '👩‍🏫 สำหรับครูผู้สอน': '👩‍🏫 For teachers',
     '📝 3 รูปแบบ': '📝 3 formats',
     'ปรนัย/จับคู่/อัตนัย': 'MCQ / Matching / Written',
     '🔒 คะแนน': '🔒 Score',
@@ -44,8 +45,8 @@
     'คำชี้แจง': 'Instructions',
     'ใช้ <b>รหัสนักเรียน</b> ในการเข้าสู่ระบบ ระบบจะดึงชื่อ-สกุลและรายวิชาที่คุณมีสิทธิสอบขึ้นมาให้อัตโนมัติ':
       'Log in using your <b>student ID</b>. The system automatically retrieves your name and the subjects you are eligible to take.',
-    'ข้อสอบปรนัยแสดงทีละข้อ เลือกคำตอบแล้วกด "ถัดไป" หรือคลิกหมายเลขข้อเพื่อข้ามไปข้อใดก็ได้':
-      'Multiple-choice questions are shown one at a time. Choose an answer and press "Next", or click a question number to jump to it.',
+    'ข้อสอบปรนัยแสดงทีละข้อ เลือกคำตอบแล้วระบบจะไปข้อถัดไปให้อัตโนมัติ หรือคลิกหมายเลขข้อเพื่อข้ามไปข้อใดก็ได้':
+      'Multiple-choice questions are shown one at a time. Choose an answer and the system will move to the next one automatically, or click a question number to jump to it.',
     'ต้องตอบให้ครบทุกข้อในทุกส่วนก่อนจึงจะส่งคำตอบได้ ระบบจะพาไปยังข้อที่ยังไม่ได้ตอบให้อัตโนมัติ':
       'All questions in every section must be answered before submitting. The system will automatically take you to any unanswered question.',
     '<b>คะแนนจะไม่แสดงให้เห็นทันที</b> เพื่อรักษาความลับของข้อสอบ ตรวจสอบผลได้ภายหลังด้วยรหัสนักเรียนของคุณ':
