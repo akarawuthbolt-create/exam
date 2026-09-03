@@ -35,3 +35,17 @@ test('monitor reports shared session store failure and recovery', async () => {
   assert.deepEqual(alerts, ['session_store_down', 'session_store_recovered']);
   assert.equal(monitor.status().sessions.engine, 'Redis');
 });
+
+test('monitor skips its checks during quiet hours instead of pinging the database', async () => {
+  let pings = 0;
+  const monitor = createSystemMonitor({
+    pingDatabase: async () => { pings++; return { status: 'connected', engine: 'SQLite', latencyMs: 1 }; },
+    runtimeMetrics: { snapshot: () => ({ totalRequests: 0, errorRatePercent: 0 }) },
+    submissionGate: { snapshot: () => ({ pending: 0, maxPending: 500 }) },
+    alertManager: { send: async () => {} },
+    isQuietHours: () => true
+  });
+  await monitor.check();
+  assert.equal(pings, 0);
+  assert.equal(monitor.status().skippedForQuietHours, true);
+});

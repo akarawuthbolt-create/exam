@@ -32,6 +32,7 @@ const { createSubmissionGate } = require('./src/submission-gate');
 const { createAlertManager } = require('./src/alerts');
 const { createBackupService } = require('./src/backup');
 const { createSystemMonitor } = require('./src/system-monitor');
+const { createQuietHoursCheck } = require('./src/quiet-hours');
 const { createJobQueue } = require('./src/job-queue');
 const { createRestoreDrill } = require('./src/restore-drill');
 const { createScoreEmailService } = require('./src/score-email');
@@ -129,7 +130,8 @@ jobQueue.register('database_backup', async () => {
   return result;
 });
 const enqueueBackup = () => jobQueue.enqueue('database_backup', { maxAttempts: 3, timeoutMs: 300_000, dedupeKey: 'automatic-backup' });
-const systemMonitor = createSystemMonitor({ pingDatabase, sessionStore, runtimeMetrics, submissionGate, alertManager, intervalMs: config.MONITOR_INTERVAL_SECONDS * 1000, databaseTimeoutMs: config.DATABASE_READINESS_TIMEOUT_MS, errorRateThreshold: config.ALERT_ERROR_RATE_PERCENT, queuePercentThreshold: config.ALERT_QUEUE_PERCENT });
+const isQuietHours = createQuietHoursCheck({ enabled: config.QUIET_HOURS_ENABLED, startHour: config.QUIET_HOURS_START_HOUR, endHour: config.QUIET_HOURS_END_HOUR, timeZone: config.QUIET_HOURS_TIMEZONE });
+const systemMonitor = createSystemMonitor({ pingDatabase, sessionStore, runtimeMetrics, submissionGate, alertManager, intervalMs: config.MONITOR_INTERVAL_SECONDS * 1000, databaseTimeoutMs: config.DATABASE_READINESS_TIMEOUT_MS, errorRateThreshold: config.ALERT_ERROR_RATE_PERCENT, queuePercentThreshold: config.ALERT_QUEUE_PERCENT, isQuietHours });
 app.use(runtimeMetrics.middleware);
 app.use(express.json({ limit: '2mb' }));
 

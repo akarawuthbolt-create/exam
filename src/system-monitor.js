@@ -1,14 +1,17 @@
-function createSystemMonitor({ pingDatabase, sessionStore, runtimeMetrics, submissionGate, alertManager, intervalMs = 60_000, databaseTimeoutMs = 3000, errorRateThreshold = 5, queuePercentThreshold = 80, now = () => Date.now() } = {}) {
+function createSystemMonitor({ pingDatabase, sessionStore, runtimeMetrics, submissionGate, alertManager, intervalMs = 60_000, databaseTimeoutMs = 3000, errorRateThreshold = 5, queuePercentThreshold = 80, now = () => Date.now(), isQuietHours = () => false } = {}) {
   let timer = null;
   let checking = false;
   let previousDatabaseStatus = null;
   let previousSessionStatus = null;
   let lastCheckAt = null;
+  let skippedForQuietHours = false;
   let database = { status: 'unknown' };
   let sessions = { status: 'unknown' };
 
   async function check() {
     if (checking) return;
+    if (isQuietHours(now())) { skippedForQuietHours = true; return; }
+    skippedForQuietHours = false;
     checking = true;
     lastCheckAt = new Date(now()).toISOString();
     try {
@@ -51,7 +54,7 @@ function createSystemMonitor({ pingDatabase, sessionStore, runtimeMetrics, submi
     timer.unref?.();
   }
   function stop() { if (timer) clearInterval(timer); timer = null; }
-  function status() { return { enabled: true, intervalSeconds: Math.round(intervalMs / 1000), lastCheckAt, database, sessions }; }
+  function status() { return { enabled: true, intervalSeconds: Math.round(intervalMs / 1000), lastCheckAt, skippedForQuietHours, database, sessions }; }
   return { check, start, stop, status };
 }
 

@@ -13,6 +13,11 @@ function enabled(value, fallback = false) {
   return String(value).toLowerCase() === 'true';
 }
 
+function hourOfDay(value, fallback) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 0 && parsed <= 23 ? parsed : fallback;
+}
+
 module.exports = {
   ROOT_DIR,
   DATA_DIR,
@@ -40,6 +45,13 @@ module.exports = {
   RESTORE_DRILL_MAX_BYTES: positiveNumber(process.env.RESTORE_DRILL_MAX_BYTES, 250 * 1024 * 1024),
   ALERT_WEBHOOK_URL: process.env.ALERT_WEBHOOK_URL || '',
   MONITOR_INTERVAL_SECONDS: positiveNumber(process.env.MONITOR_INTERVAL_SECONDS, 300),
+  // Skip the periodic database/session health-check ping during these off-hours (no
+  // real exam traffic expected then) so an idle Railway Postgres plugin isn't kept
+  // artificially busy overnight. Wraps past midnight when start > end.
+  QUIET_HOURS_ENABLED: enabled(process.env.QUIET_HOURS_ENABLED, true),
+  QUIET_HOURS_START_HOUR: hourOfDay(process.env.QUIET_HOURS_START_HOUR, 23),
+  QUIET_HOURS_END_HOUR: hourOfDay(process.env.QUIET_HOURS_END_HOUR, 7),
+  QUIET_HOURS_TIMEZONE: process.env.QUIET_HOURS_TIMEZONE || 'Asia/Bangkok',
   ALERT_COOLDOWN_MINUTES: positiveNumber(process.env.ALERT_COOLDOWN_MINUTES, 15),
   ALERT_ERROR_RATE_PERCENT: positiveNumber(process.env.ALERT_ERROR_RATE_PERCENT, 5),
   ALERT_QUEUE_PERCENT: positiveNumber(process.env.ALERT_QUEUE_PERCENT, 80),
