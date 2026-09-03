@@ -37,6 +37,7 @@
     'นาที': 'minutes',
     '🎯 คะแนนเต็ม': '🎯 Full score',
     'คะแนน': 'points',
+    '👩‍🏫 สำหรับครูผู้สอน': '👩‍🏫 For teachers',
     '📝 3 รูปแบบ': '📝 3 formats',
     'ปรนัย/จับคู่/อัตนัย': 'MCQ / Matching / Written',
     '🔒 คะแนน': '🔒 Score',
@@ -44,8 +45,8 @@
     'คำชี้แจง': 'Instructions',
     'ใช้ <b>รหัสนักเรียน</b> ในการเข้าสู่ระบบ ระบบจะดึงชื่อ-สกุลและรายวิชาที่คุณมีสิทธิสอบขึ้นมาให้อัตโนมัติ':
       'Log in using your <b>student ID</b>. The system automatically retrieves your name and the subjects you are eligible to take.',
-    'ข้อสอบปรนัยแสดงทีละข้อ เลือกคำตอบแล้วกด "ถัดไป" หรือคลิกหมายเลขข้อเพื่อข้ามไปข้อใดก็ได้':
-      'Multiple-choice questions are shown one at a time. Choose an answer and press "Next", or click a question number to jump to it.',
+    'ข้อสอบปรนัยแสดงทีละข้อ เลือกคำตอบแล้วระบบจะไปข้อถัดไปให้อัตโนมัติ หรือคลิกหมายเลขข้อเพื่อข้ามไปข้อใดก็ได้':
+      'Multiple-choice questions are shown one at a time. Choose an answer and the system will move to the next one automatically, or click a question number to jump to it.',
     'ต้องตอบให้ครบทุกข้อในทุกส่วนก่อนจึงจะส่งคำตอบได้ ระบบจะพาไปยังข้อที่ยังไม่ได้ตอบให้อัตโนมัติ':
       'All questions in every section must be answered before submitting. The system will automatically take you to any unanswered question.',
     '<b>คะแนนจะไม่แสดงให้เห็นทันที</b> เพื่อรักษาความลับของข้อสอบ ตรวจสอบผลได้ภายหลังด้วยรหัสนักเรียนของคุณ':
@@ -601,6 +602,29 @@
     'กำลังสร้าง PDF...': 'Generating PDF...',
     'สร้าง PDF ไม่สำเร็จ': 'Failed to generate PDF',
     '🧩 แก้ไขชุดข้อสอบ': '🧩 Edit exam set',
+
+    // ---- teacher-main.js: question bank ----
+    '📚 คลังคำถามปรนัย': '📚 Multiple-choice question bank',
+    'เลือกข้อที่เคยบันทึกไว้เพื่อเพิ่มเข้าชุดข้อสอบนี้ ไม่ต้องพิมพ์ซ้ำ': "Pick previously saved questions to add to this exam set — no need to retype them",
+    'ค้นหาคำถามหรือชื่อวิชา': 'Search question or subject name',
+    '➕ เพิ่มข้อที่เลือก': '➕ Add selected',
+    '📚 เลือกจากคลังคำถาม': '📚 Choose from question bank',
+    '💾 บันทึกข้อทั้งหมดในส่วนนี้เข้าคลัง': '💾 Save all questions in this section to the bank',
+    'เพิ่มเข้าคลัง': 'Added to bank',
+    'ไม่พบข้อคำถามที่ตรงกับคำค้นหา': 'No questions match the search',
+    'ตัวเลือก': 'choices',
+    'ลบออกจากคลัง': 'Remove from bank',
+    'ลบข้อนี้ออกจากคลังถาวร?': 'Permanently remove this question from the bank?',
+    'เลือกแล้ว': 'Selected',
+    'เพิ่มจากคลัง': 'Added from bank',
+    'ข้อแล้ว': 'question(s)',
+
+    // ---- teacher-main.js: MC choice pool (more than 4 choices) ----
+    'มีตัวเลือกมากกว่า': 'This question has more than',
+    'ข้อ — ระบบจะสุ่มเลือกมาแสดงคนละ': 'choices — the system will randomly show',
+    'ข้อ (รวมเฉลยเสมอ) ให้นักเรียนแต่ละคน': 'to each student (always including the correct one)',
+    'ลบตัวเลือกนี้': 'Remove this choice',
+    '+ เพิ่มตัวเลือก': '+ Add choice',
   };
 
   var lang = 'th';

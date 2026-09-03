@@ -13,6 +13,7 @@
 <body>
 
 <div class="top-toggle-group">
+  <a class="theme-toggle" id="goTeacherBtn" href="/teacher" data-i18n="👩‍🏫 สำหรับครูผู้สอน">👩‍🏫 สำหรับครูผู้สอน</a>
   <button class="theme-toggle lang-toggle" id="langToggleBtn" type="button">🌐 EN</button>
   <button class="theme-toggle" id="themeToggleBtn" data-i18n="โหมดมืด">🌙 โหมดมืด</button>
 </div>
@@ -43,7 +44,7 @@
       <h3 data-i18n="คำชี้แจง">คำชี้แจง</h3>
       <ul>
         <li data-i18n="ใช้ <b>รหัสนักเรียน</b> ในการเข้าสู่ระบบ ระบบจะดึงชื่อ-สกุลและรายวิชาที่คุณมีสิทธิสอบขึ้นมาให้อัตโนมัติ">ใช้ <b>รหัสนักเรียน</b> ในการเข้าสู่ระบบ ระบบจะดึงชื่อ-สกุลและรายวิชาที่คุณมีสิทธิสอบขึ้นมาให้อัตโนมัติ</li>
-        <li data-i18n='ข้อสอบปรนัยแสดงทีละข้อ เลือกคำตอบแล้วกด "ถัดไป" หรือคลิกหมายเลขข้อเพื่อข้ามไปข้อใดก็ได้'>ข้อสอบปรนัยแสดงทีละข้อ เลือกคำตอบแล้วกด "ถัดไป" หรือคลิกหมายเลขข้อเพื่อข้ามไปข้อใดก็ได้</li>
+        <li data-i18n="ข้อสอบปรนัยแสดงทีละข้อ เลือกคำตอบแล้วระบบจะไปข้อถัดไปให้อัตโนมัติ หรือคลิกหมายเลขข้อเพื่อข้ามไปข้อใดก็ได้">ข้อสอบปรนัยแสดงทีละข้อ เลือกคำตอบแล้วระบบจะไปข้อถัดไปให้อัตโนมัติ หรือคลิกหมายเลขข้อเพื่อข้ามไปข้อใดก็ได้</li>
         <li data-i18n="ต้องตอบให้ครบทุกข้อในทุกส่วนก่อนจึงจะส่งคำตอบได้ ระบบจะพาไปยังข้อที่ยังไม่ได้ตอบให้อัตโนมัติ">ต้องตอบให้ครบทุกข้อในทุกส่วนก่อนจึงจะส่งคำตอบได้ ระบบจะพาไปยังข้อที่ยังไม่ได้ตอบให้อัตโนมัติ</li>
         <li data-i18n="<b>คะแนนจะไม่แสดงให้เห็นทันที</b> เพื่อรักษาความลับของข้อสอบ ตรวจสอบผลได้ภายหลังด้วยรหัสนักเรียนของคุณ"><b>คะแนนจะไม่แสดงให้เห็นทันที</b> เพื่อรักษาความลับของข้อสอบ ตรวจสอบผลได้ภายหลังด้วยรหัสนักเรียนของคุณ</li>
         <li class="integrity-warning" data-i18n="⚠️ <strong>ห้ามคัดลอกข้อความ คลิกขวา สลับแท็บ หรือออกจากโหมดเต็มจอโดยเด็ดขาด</strong><br><span>ระบบจะบันทึกเหตุการณ์ที่เกิดขึ้นระหว่างทำข้อสอบ</span>">⚠️ <strong>ห้ามคัดลอกข้อความ คลิกขวา สลับแท็บ หรือออกจากโหมดเต็มจอโดยเด็ดขาด</strong><br><span>ระบบจะบันทึกเหตุการณ์ที่เกิดขึ้นระหว่างทำข้อสอบ</span></li>
@@ -172,6 +173,7 @@
     </div>
     <div class="timer" id="timerDisplay">60:00</div>
     <div class="topbar-right">
+      <button class="icon-btn lang-toggle" id="langToggleBtnInline" type="button">🌐 EN</button>
       <button class="icon-btn" id="themeToggleBtnInline">🌙</button>
       <span id="hubActions"><button class="icon-btn" style="background:var(--blue);color:#fff;" id="endExamBtn" disabled title="ต้องบันทึกคำตอบอย่างน้อย 1 ส่วนก่อน" data-i18n-title="ต้องบันทึกคำตอบอย่างน้อย 1 ส่วนก่อน" data-i18n="จบการสอบและส่งคำตอบ">จบการสอบและส่งคำตอบ</button></span>
       <span id="sectionActions" class="hidden"><button class="icon-btn" id="backToHubBtn" data-i18n="← รายการส่วนข้อสอบ">← รายการส่วนข้อสอบ</button></span>
@@ -248,6 +250,6 @@
   </div>
 </div>
 
-<script src="/assets/student-main.js?v=20260829-3"></script>
+<script src="/assets/student-main.js?v=20260902-2"></script>
 </body>
 </html>

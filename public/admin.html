@@ -7,7 +7,7 @@
 <script src="/assets/admin-boot.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/admin.css?v=20260829-3">
+<link rel="stylesheet" href="/assets/admin.css?v=20260902-1">
 </head>
 <body>
 
@@ -27,7 +27,7 @@
 </div>
 
 <dialog class="session-expired-dialog" id="sessionExpiredDialog"><div class="session-expired-card"><div class="session-expired-icon">🔒</div><h2>หมดเวลาการเข้าสู่ระบบ</h2><p>เพื่อความปลอดภัย กรุณาเข้าสู่ระบบผู้ดูแลใหม่อีกครั้ง</p><button class="btn btn-primary" type="button" id="sessionReloginBtn">เข้าสู่ระบบใหม่</button></div></dialog>
-<dialog class="teacher-password-dialog" id="manageTeacherDialog"><div class="teacher-password-card"><div class="teacher-password-hero"><div class="teacher-password-icon">👩‍🏫</div><div><span class="teacher-password-eyebrow">จัดการบัญชีอาจารย์</span><h2 id="manageTeacherName">-</h2><p id="manageTeacherUsername">-</p></div></div><div class="teacher-password-field"><label for="manageTeacherDepartment">สาขาวิชา</label><input class="teacher-manage-input" type="text" id="manageTeacherDepartment" maxlength="150" placeholder="เช่น เทคโนโลยีสารสนเทศ"></div><div class="teacher-password-field"><label for="manageTeacherEmail">อีเมลรับรายงานคะแนน</label><input class="teacher-manage-input" type="email" id="manageTeacherEmail" placeholder="teacher@school.ac.th"></div><div id="manageTeacherError" class="teacher-password-error" role="alert"></div><div class="teacher-manage-secondary"><button class="btn btn-ghost btn-sm" type="button" id="manageTeacherResetPassword">🔑 รีเซ็ตรหัสผ่าน</button><button class="btn btn-danger btn-sm" type="button" id="manageTeacherDelete">ลบบัญชี</button></div><div class="teacher-password-actions"><button class="btn btn-ghost" type="button" id="cancelManageTeacher">ยกเลิก</button><button class="btn btn-primary" type="button" id="saveManageTeacher">บันทึกข้อมูล</button></div></div></dialog>
+<dialog class="teacher-password-dialog" id="manageTeacherDialog"><div class="teacher-password-card"><div class="teacher-password-hero"><div class="teacher-password-icon">👩‍🏫</div><div><span class="teacher-password-eyebrow">จัดการบัญชีอาจารย์</span><h2 id="manageTeacherName">-</h2><p id="manageTeacherUsername">-</p></div></div><div class="teacher-password-field"><label for="manageTeacherDepartment">สาขาวิชา</label><input class="teacher-manage-input" type="text" id="manageTeacherDepartment" maxlength="150" placeholder="เช่น เทคโนโลยีสารสนเทศ"></div><div class="teacher-password-field"><label for="manageTeacherEmail">อีเมลรับรายงานคะแนน</label><input class="teacher-manage-input" type="email" id="manageTeacherEmail" placeholder="teacher@school.ac.th"></div><div id="manageTeacherError" class="teacher-password-error" role="alert"></div><div class="teacher-manage-secondary"><button class="btn btn-ghost btn-sm" type="button" id="manageTeacherResetPassword">🔑 รีเซ็ตรหัสผ่าน</button><button class="btn btn-ghost btn-sm" type="button" id="manageTeacherResetLockout" title="ใช้เมื่ออาจารย์พิมพ์รหัสผ่านผิดหลายครั้งจนถูกล็อก 15 นาที">🔓 ปลดล็อกการเข้าสู่ระบบ</button><button class="btn btn-danger btn-sm" type="button" id="manageTeacherDelete">ลบบัญชี</button></div><div class="teacher-password-actions"><button class="btn btn-ghost" type="button" id="cancelManageTeacher">ยกเลิก</button><button class="btn btn-primary" type="button" id="saveManageTeacher">บันทึกข้อมูล</button></div></div></dialog>
 <dialog class="teacher-password-dialog" id="resetTeacherPasswordDialog"><div class="teacher-password-card"><div class="teacher-password-hero"><div class="teacher-password-icon">🔑</div><div><span class="teacher-password-eyebrow">จัดการบัญชีอาจารย์</span><h2>ตั้งรหัสผ่านใหม่</h2><p>สำหรับ <b id="resetTeacherName">-</b></p></div></div><div class="teacher-password-notice">🛡️ หลังบันทึก อาจารย์จะออกจากระบบทุกอุปกรณ์และต้องเข้าสู่ระบบด้วยรหัสใหม่</div><div class="teacher-password-field"><label for="resetTeacherPassword">รหัสผ่านใหม่</label><div class="password-input-wrap"><input type="password" id="resetTeacherPassword" autocomplete="new-password" minlength="8" maxlength="128" placeholder="อย่างน้อย 8 ตัวอักษร"><button type="button" class="password-visibility-btn" data-toggle-password="resetTeacherPassword" aria-label="แสดงหรือซ่อนรหัสผ่าน">👁</button></div><small>ใช้ตัวอักษรอย่างน้อย 8 ตัว</small></div><div class="teacher-password-field"><label for="resetTeacherPasswordConfirm">ยืนยันรหัสผ่านใหม่</label><div class="password-input-wrap"><input type="password" id="resetTeacherPasswordConfirm" autocomplete="new-password" minlength="8" maxlength="128" placeholder="กรอกรหัสผ่านอีกครั้ง"><button type="button" class="password-visibility-btn" data-toggle-password="resetTeacherPasswordConfirm" aria-label="แสดงหรือซ่อนรหัสผ่าน">👁</button></div></div><div id="resetTeacherPasswordError" class="teacher-password-error" role="alert"></div><div class="teacher-password-actions"><button class="btn btn-ghost" type="button" id="cancelTeacherPasswordReset">ยกเลิก</button><button class="btn btn-primary" type="button" id="confirmTeacherPasswordReset">บันทึกรหัสผ่านใหม่</button></div></div></dialog>
 
 <!-- ================= ADMIN SCREEN ================= -->
@@ -101,9 +101,14 @@
           <h3>📁 นำเข้า/ส่งออกไฟล์</h3>
           <p class="panel-sub">นำเข้า Excel ที่มีหัวคอลัมน์: รหัสนักเรียน, ชื่อ, นามสกุล, ห้อง — รหัสซ้ำจะอัปเดตข้อมูลเดิมโดยไม่ลบ PIN</p>
           <div class="editor-actions" style="justify-content:flex-start;flex-wrap:wrap;">
+            <button type="button" class="btn btn-ghost btn-sm" id="downloadStudentTemplateBtn">📄 ดาวน์โหลดไฟล์ตัวอย่าง Excel</button>
             <input type="file" id="studentExcelFile" accept=".xlsx,.xls" style="max-width:260px;">
             <button class="btn btn-primary btn-sm" id="importStudentsExcelBtn">นำเข้า Excel</button>
             <button class="btn btn-ghost btn-sm" id="exportStudentsBtn">⬇ ส่งออกรายชื่อ Excel</button>
+          </div>
+        </div>
+        <div class="panel" id="systemBackupPanel">
+          <div class="editor-actions" style="justify-content:flex-start;flex-wrap:wrap;">
             <button class="btn btn-ghost btn-sm" id="downloadBackupBtn">🛡️ สำรองข้อมูลระบบ</button>
           </div>
           <div class="restore-system-card"><div><b>♻️ กู้คืนข้อมูลทั้งระบบ</b><p>ใช้ไฟล์ <code>exam-system-backup.json</code> ที่ดาวน์โหลดจากระบบ ข้อมูลปัจจุบันจะถูกแทนที่ทั้งหมด</p></div><input type="file" id="restoreBackupFile" accept=".json,application/json" hidden><button class="btn btn-danger btn-sm" id="selectRestoreBackupBtn" type="button">เลือกไฟล์เพื่อกู้คืน</button></div>
@@ -130,9 +135,8 @@
         <div class="toolbar-row">
           <div>
             <h2>บัญชีอาจารย์ผู้สอน</h2>
-            <p class="sub" style="margin:0;">อาจารย์ที่มีบัญชีสามารถเข้าสู่ระบบที่ <code id="teacherLoginUrlText">/teacher</code> เพื่อจัดการเฉพาะข้อสอบและผลสอบของวิชาตัวเองเท่านั้น</p>
+            <p class="sub" style="margin:0;">อาจารย์ที่มีบัญชีสามารถเข้าสู่ระบบที่ <code id="teacherLoginUrlText">/teacher</code> เพื่อจัดการเฉพาะข้อสอบและผลสอบของวิชาตัวเองเท่านั้น (ส่งออกรายชื่อ Excel ย้ายไปอยู่ในหน้าตั้งค่า)</p>
           </div>
-          <div class="editor-actions"><button class="btn btn-ghost btn-sm" id="exportTeachersBtn">⬇ ส่งออกรายชื่อ Excel</button></div>
         </div>
         <div class="panel">
           <h3>+ เพิ่มบัญชีอาจารย์</h3>
@@ -212,8 +216,9 @@
             <p class="panel-sub">ดูและจับคู่ห้องทั้งหมดก่อนสร้างประวัติห้องของปีใหม่</p>
             <button class="btn btn-primary btn-sm" id="openPromotionDialogBtn" type="button">จัดการเลื่อนชั้น →</button>
           </div>
-          <button class="panel settings-menu-card" id="openStudentFilesDialogBtn" type="button"><div><h3>📁 นำเข้า / ส่งออกข้อมูล</h3><p class="panel-sub">นำเข้ารายชื่อนักเรียนจาก Excel, ส่งออกรายชื่อ และสำรองข้อมูลระบบ</p></div><span class="btn btn-primary btn-sm">จัดการไฟล์ →</span></button>
-          <button class="panel settings-menu-card" id="openTeacherImportDialogBtn" type="button"><div><h3>📥 นำเข้าบัญชีอาจารย์จาก Excel</h3><p class="panel-sub">เพิ่มบัญชีอาจารย์หลายรายการพร้อมกันด้วยไฟล์ตัวอย่างที่กำหนดคอลัมน์ไว้แล้ว</p></div><span class="btn btn-primary btn-sm">จัดการบัญชี →</span></button>
+          <button class="panel settings-menu-card" id="openStudentFilesDialogBtn" type="button"><div><h3>📁 นำเข้า / ส่งออกข้อมูลนักเรียน</h3><p class="panel-sub">นำเข้ารายชื่อนักเรียนจาก Excel และส่งออกรายชื่อ</p></div><span class="btn btn-primary btn-sm">จัดการไฟล์ →</span></button>
+          <button class="panel settings-menu-card" id="openTeacherImportDialogBtn" type="button"><div><h3>📥 นำเข้า / ส่งออกบัญชีอาจารย์</h3><p class="panel-sub">เพิ่มบัญชีอาจารย์หลายรายการพร้อมกันด้วยไฟล์ตัวอย่างที่กำหนดคอลัมน์ไว้แล้ว หรือส่งออกรายชื่อเป็น Excel</p></div><span class="btn btn-primary btn-sm">จัดการบัญชี →</span></button>
+          <button class="panel settings-menu-card" id="openSystemBackupDialogBtn" type="button"><div><h3>🛡️ สำรอง / กู้คืนข้อมูลระบบ</h3><p class="panel-sub">ดาวน์โหลดไฟล์สำรองข้อมูลทั้งระบบ หรือกู้คืนจากไฟล์สำรองที่เคยดาวน์โหลดไว้</p></div><span class="btn btn-primary btn-sm">จัดการข้อมูล →</span></button>
           <div class="panel" id="adminAccountPanel">
             <h3>บัญชีผู้ดูแล</h3>
             <p class="panel-sub">ออกจากระบบเมื่อใช้งานบนเครื่องสาธารณะหรือใช้งานเสร็จแล้ว</p>
@@ -235,18 +240,26 @@
 
 <dialog class="google-import-dialog settings-dialog" id="studentFilesDialog">
   <div class="google-import-dialog-inner">
-    <div class="google-import-dialog-head"><div><h3>📁 นำเข้า / ส่งออกข้อมูล</h3><p>นำเข้ารายชื่อนักเรียน สำรองข้อมูล และกู้คืนข้อมูลทั้งระบบ</p></div><button class="btn btn-ghost btn-sm" id="closeStudentFilesDialogBtn" type="button">✕</button></div>
+    <div class="google-import-dialog-head"><div><h3>📁 นำเข้า / ส่งออกข้อมูลนักเรียน</h3><p>นำเข้ารายชื่อนักเรียนจาก Excel และส่งออกรายชื่อ</p></div><button class="btn btn-ghost btn-sm" id="closeStudentFilesDialogBtn" type="button">✕</button></div>
     <div id="studentFilesDialogBody"></div>
+  </div>
+</dialog>
+
+<dialog class="google-import-dialog settings-dialog" id="systemBackupDialog">
+  <div class="google-import-dialog-inner">
+    <div class="google-import-dialog-head"><div><h3>🛡️ สำรอง / กู้คืนข้อมูลระบบ</h3><p>สำรองข้อมูลทั้งระบบเป็นไฟล์เดียว หรือกู้คืนจากไฟล์สำรองที่เคยดาวน์โหลดไว้</p></div><button class="btn btn-ghost btn-sm" id="closeSystemBackupDialogBtn" type="button">✕</button></div>
+    <div id="systemBackupDialogBody"></div>
   </div>
 </dialog>
 
 <dialog class="google-import-dialog settings-dialog" id="teacherImportDialog">
   <div class="google-import-dialog-inner">
-    <div class="google-import-dialog-head"><div><h3>📥 นำเข้าบัญชีอาจารย์จาก Excel</h3><p>ดาวน์โหลดไฟล์ตัวอย่าง กรอกข้อมูลตามคอลัมน์ แล้วเลือกไฟล์เพื่อนำเข้าบัญชีหลายรายการพร้อมกัน</p></div><button class="btn btn-ghost btn-sm" id="closeTeacherImportDialogBtn" type="button">✕</button></div>
+    <div class="google-import-dialog-head"><div><h3>📥 นำเข้า / ส่งออกบัญชีอาจารย์</h3><p>ดาวน์โหลดไฟล์ตัวอย่าง กรอกข้อมูลตามคอลัมน์ แล้วเลือกไฟล์เพื่อนำเข้าบัญชีหลายรายการพร้อมกัน หรือส่งออกรายชื่อทั้งหมดเป็น Excel</p></div><button class="btn btn-ghost btn-sm" id="closeTeacherImportDialogBtn" type="button">✕</button></div>
     <div class="editor-actions" style="justify-content:flex-start;flex-wrap:wrap;">
-      <a class="btn btn-ghost btn-sm" id="downloadTeacherTemplateBtn" href="/api/teachers/import-template.xlsx">ดาวน์โหลดไฟล์ตัวอย่าง Excel</a>
+      <button type="button" class="btn btn-ghost btn-sm" id="downloadTeacherTemplateBtn">📄 ดาวน์โหลดไฟล์ตัวอย่าง Excel</button>
       <input type="file" id="teacherExcelFile" accept=".xlsx" class="filter-select">
       <button class="btn btn-primary btn-sm" id="importTeachersExcelBtn" type="button">นำเข้าบัญชี</button>
+      <button class="btn btn-ghost btn-sm" id="exportTeachersBtn" type="button">⬇ ส่งออกรายชื่อ Excel</button>
     </div>
     <div id="teacherImportReport"></div>
   </div>
@@ -307,7 +320,7 @@
   </div>
 </div>
 
-<script src="/assets/admin-main.js?v=20260829-4"></script>
+<script src="/assets/admin-main.js?v=20260902-3"></script>
 <script src="/assets/learning-plan-import.js?v=20260727-1"></script>
 <script src="/assets/admin-learning-plans.js?v=20260727-1"></script>
 </body>

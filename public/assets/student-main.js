@@ -19,9 +19,10 @@ document.getElementById('themeToggleBtnInline').addEventListener('click', toggle
   if(!saved) saved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
   applyTheme(saved);
 })();
-/* the floating corner toggle only makes sense outside the exam shell (which has its own inline toggle) */
+/* the floating corner toggles only make sense outside the exam shell (which has its own inline toggles) */
 function setFloatingThemeButtonVisible(visible){
   document.getElementById('themeToggleBtn').classList.toggle('hidden', !visible);
+  document.getElementById('langToggleBtn').classList.toggle('hidden', !visible);
 }
 
 /* ============ API CLIENT ============ */
@@ -112,6 +113,10 @@ function initMcStateIfNeeded(){
   if(q.shuffleQuestions) order = shuffleArray(order);
   const choiceOrder = {};
   qs.forEach(qq=>{
+    // The server may only send a subset of a larger choice pool to display (always
+    // including the correct one) — when it does, use that order as-is; it's already
+    // randomized per student, so there's nothing left for the client to shuffle.
+    if(Array.isArray(qq.displayIndexes)){ choiceOrder[qq.id] = qq.displayIndexes; return; }
     let idxs = qq.choices.map((_,i)=>i);
     if(q.shuffleChoices) idxs = shuffleArray(idxs);
     choiceOrder[qq.id] = idxs;

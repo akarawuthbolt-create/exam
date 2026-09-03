@@ -91,6 +91,50 @@ function haveAllExamSchedulesEnded(schedules, now = Date.now()) {
   return endTimes.every(Number.isFinite) && Math.max(...endTimes) < now;
 }
 
+// A question may carry more choices than are shown at once (a "distractor pool").
+// Only this many are displayed per student, always including the correct one, so
+// that a bigger pool doesn't just mean a longer list for every student to read.
+const MAX_DISPLAY_CHOICES = 4;
+
+// Deterministic (not cryptographic) 32-bit string hash, used only to seed which
+// distractors a given student sees — same student + question always gets the
+// same subset, but different students get different ones.
+function hashSeed(text) {
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+function seededRandom(seed) {
+  let state = seed || 1;
+  return () => {
+    state = Math.imul(state ^ (state >>> 15), state | 1);
+    state ^= state + Math.imul(state ^ (state >>> 7), state | 61);
+    return ((state ^ (state >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function seededShuffle(array, random) {
+  const result = array.slice();
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+function displayIndexesForChoices(question, seedKey) {
+  const total = (question.choices || []).length;
+  if (total <= MAX_DISPLAY_CHOICES) return null;
+  const random = seededRandom(hashSeed(seedKey));
+  const correctIndex = question.answer;
+  const otherIndexes = seededShuffle(
+    Array.from({ length: total }, (_, i) => i).filter(i => i !== correctIndex),
+    random
+  ).slice(0, MAX_DISPLAY_CHOICES - 1);
+  return seededShuffle([correctIndex, ...otherIndexes], random);
+}
+
 function sanitizeSetForStudent(set, classRoom, studentId) {
   const schedule = getExamSchedule(set, classRoom, studentId);
   return {
@@ -101,7 +145,7 @@ function sanitizeSetForStudent(set, classRoom, studentId) {
     shuffleChoices: !!set.shuffleChoices, availableUntil: schedule?.availableUntil || null,
     lateAccessRequired: isPastDeadline(set, classRoom, studentId),
     sections: {
-      mc: { title: set.sections.mc.title, desc: set.sections.mc.desc, questions: set.sections.mc.questions.map(q => ({ id: q.id, text: q.text, choices: q.choices, points: q.points, resources: q.resources || null })) },
+      mc: { title: set.sections.mc.title, desc: set.sections.mc.desc, questions: set.sections.mc.questions.map(q => ({ id: q.id, text: q.text, choices: q.choices, points: q.points, resources: q.resources || null, displayIndexes: displayIndexesForChoices(q, `${studentId}:${q.id}`) })) },
       matching: { title: set.sections.matching.title, desc: set.sections.matching.desc, left: set.sections.matching.left, right: set.sections.matching.right, pointsEach: set.sections.matching.pointsEach },
       written: { title: set.sections.written.title, desc: set.sections.written.desc, questions: filterWrittenQuestionsForClass(set.sections.written, classRoom).map(q => {
         const isCode = q.answerType === 'code';

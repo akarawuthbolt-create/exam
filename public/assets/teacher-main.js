@@ -884,7 +884,7 @@ function bindEditorPanelEvents(section, index){
     else if(section==='matching') saveMatchingPairFromEditor(index);
     else if(section==='written') saveWrittenQuestionFromEditor(index);
   });
-  if(section==='mc') bindMcResourceUpload();
+  if(section==='mc'){ bindMcResourceUpload(); bindMcChoiceEditingEvents(); }
   if(section==='written') { bindWrittenResourceUpload(); document.getElementById('qeWAnswerType')?.addEventListener('change',event=>{const isCode=event.target.value==='code';document.getElementById('qeWKeywordsWrap').style.display=isCode?'none':'';document.getElementById('qeWCodeAnswerWrap').style.display=isCode?'':'none';document.getElementById('qeWAttachmentWrap').style.display=isCode?'none':'';}); }
 }
 
@@ -901,6 +901,10 @@ function renderMcPanel(){
     </div>
     <div class="compact-list" id="mcCompactList"></div>
     <button class="add-row-btn" id="addMcBtn" type="button">${tr('+ เพิ่มข้อปรนัย')}</button>
+    <div class="editor-actions" style="margin-top:8px;justify-content:center;">
+      <button class="btn btn-ghost btn-sm" id="loadMcFromBankBtn" type="button">${tr('📚 เลือกจากคลังคำถาม')}</button>
+      <button class="btn btn-ghost btn-sm" id="saveMcToBankBtn" type="button">${tr('💾 บันทึกข้อทั้งหมดในส่วนนี้เข้าคลัง')}</button>
+    </div>
     <button class="add-row-btn" id="toggleMcImportBtn" type="button" style="margin-top:8px;border-color:#A78BFA;color:var(--indigo);">${tr('✨ นำเข้าข้อปรนัยจาก ChatGPT')}</button>
     <div class="mc-import-box hidden" id="mcImportBox">
       <h4>${tr('1. สร้างข้อสอบด้วย ChatGPT')}</h4><p>${tr('คัดลอก Prompt นี้ไปวางใน ChatGPT แล้วแก้ไขหัวข้อหรือจำนวนข้อได้ตามต้องการ')}</p>
@@ -911,7 +915,7 @@ function renderMcPanel(){
       <div class="editor-actions"><button class="btn btn-ghost btn-sm" id="previewMcImportBtn" type="button">${tr('ตรวจรูปแบบ')}</button><button class="btn btn-primary btn-sm" id="applyMcImportBtn" type="button" disabled>${tr('เพิ่มข้อที่ตรวจแล้ว')}</button></div>
       <div class="mc-import-preview" id="mcImportPreview"></div>
     </div>
-    <div class="editor-actions"><button class="btn btn-primary" id="saveSetFromMcBtn" type="button">${tr('💾 บันทึกชุดข้อสอบ')}</button></div>
+    <div class="editor-actions"><button class="btn btn-primary" id="saveSetFromMcBtn" type="button" style="width:100%;">${tr('💾 บันทึกชุดข้อสอบ')}</button></div>
     <div id="mcEditorSlot"></div>
   </div>`;
   renderMcCompactList();
@@ -921,6 +925,7 @@ function renderMcPanel(){
   });
   document.getElementById('addMcBtn').addEventListener('click', ()=> openQuestionEditor('mc', null));
   bindMcImportEvents();
+  bindQuestionBankEvents();
   document.getElementById('saveSetFromMcBtn').addEventListener('click', saveEditingSet);
   renderOpenEditorIfNeeded('mc');
 }
@@ -1040,24 +1045,81 @@ function bindQuestionFileImportEvents(){
   apply.addEventListener('click',()=>{if(!questionFilePreview?.questions.length)return;const draft=googleFormsDraftSet(questionFilePreview);dialog.close();openEditor(null,draft);showToast(`นำเข้าข้อสอบ ${questionFilePreview.questions.length} ข้อแล้ว กรุณาตรวจเฉลยและคะแนนก่อนบันทึก`);});
 }
 bindQuestionFileImportEvents();
+const questionBankDialog = document.getElementById('questionBankDialog');
+let questionBankCache = null;
+let questionBankSelected = new Set();
 function bindQuestionBankEvents(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
   document.getElementById('saveMcToBankBtn').addEventListener('click', async ()=>{
     if(!editingSet.sections.mc.questions.length){ showToast('ยังไม่มีข้อปรนัยให้เก็บ'); return; }
-    try{ const result=await apiFetch('/api/teacher/question-bank',{method:'POST',body:{questions:editingSet.sections.mc.questions.map(question=>({...question,courseName:editingSet.courseName||editingSet.title||''}))},auth:true}); showToast(`เพิ่มเข้าคลัง ${result.added} ข้อ`); }catch(error){ showToast(error.message); }
+    try{ const result=await apiFetch('/api/teacher/question-bank',{method:'POST',body:{questions:editingSet.sections.mc.questions.map(question=>({...question,courseName:editingSet.courseName||editingSet.title||''}))},auth:true}); showToast(tr('เพิ่มเข้าคลัง')+` ${result.added} `+tr('ข้อ')); }catch(error){ showToast(error.message); }
   });
-  document.getElementById('loadMcFromBankBtn').addEventListener('click', async ()=>{
-    try{
-      const questions=await apiFetch('/api/teacher/question-bank',{auth:true});
-      if(!questions.length){ showToast('คลังข้อสอบยังว่าง'); return; }
-      const choices=questions.map((question,index)=>`${index+1}. ${question.text}`).join('\n');
-      const selected=prompt(`พิมพ์หมายเลขข้อที่ต้องการ คั่นด้วยจุลภาค\n\n${choices}`); if(!selected) return;
-      const indexes=[...new Set(selected.split(',').map(value=>parseInt(value.trim(),10)-1).filter(index=>index>=0&&index<questions.length))];
-      if(!indexes.length){ showToast('ไม่พบหมายเลขข้อที่เลือก'); return; }
-      editingSet.sections.mc.questions.push(...indexes.map(index=>{const question=questions[index];return {id:uid('mc'),text:question.text,choices:question.choices.slice(),answer:question.answer,points:0};}));
-      applyPointDistribution('mc'); renderMcPanel(); showToast(`เพิ่มจากคลัง ${indexes.length} ข้อแล้ว`);
-    }catch(error){ showToast(error.message); }
-  });
+  document.getElementById('loadMcFromBankBtn').addEventListener('click', openQuestionBankDialog);
 }
+async function openQuestionBankDialog(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
+  questionBankSelected = new Set();
+  document.getElementById('questionBankSearchInput').value = '';
+  const list = document.getElementById('questionBankList');
+  list.innerHTML = `<div class="loading-note">${tr('กำลังโหลด...')}</div>`;
+  questionBankDialog.showModal();
+  try{
+    questionBankCache = await apiFetch('/api/teacher/question-bank',{auth:true});
+  }catch(error){
+    list.innerHTML = `<div class="empty-note">${escapeHtml(error.message)}</div>`;
+    return;
+  }
+  renderQuestionBankList();
+}
+function renderQuestionBankList(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
+  const list = document.getElementById('questionBankList');
+  const query = document.getElementById('questionBankSearchInput').value.trim().toLowerCase();
+  const items = (questionBankCache||[]).filter(q => !query || q.text.toLowerCase().includes(query) || (q.courseName||'').toLowerCase().includes(query));
+  if(!(questionBankCache||[]).length){ list.innerHTML = `<div class="empty-note">${tr('คลังข้อสอบยังว่าง')}</div>`; updateQuestionBankSelectedCount(); return; }
+  if(!items.length){ list.innerHTML = `<div class="empty-note">${tr('ไม่พบข้อคำถามที่ตรงกับคำค้นหา')}</div>`; updateQuestionBankSelectedCount(); return; }
+  list.innerHTML = items.map(q=>`
+    <label class="question-bank-row">
+      <input type="checkbox" data-bank-id="${escapeAttr(q.id)}" ${questionBankSelected.has(q.id)?'checked':''}>
+      <span class="qb-info">
+        <span class="qb-title">${escapeHtml(truncateText(q.text,140))}</span>
+        <span class="qb-meta">${q.courseName?escapeHtml(q.courseName)+' · ':''}${q.choices.length} ${tr('ตัวเลือก')}</span>
+      </span>
+      <button type="button" class="btn btn-ghost btn-sm" data-bank-delete="${escapeAttr(q.id)}" title="${tr('ลบออกจากคลัง')}">🗑️</button>
+    </label>`).join('');
+  list.querySelectorAll('[data-bank-id]').forEach(input=>input.addEventListener('change', ()=>{
+    if(input.checked) questionBankSelected.add(input.dataset.bankId); else questionBankSelected.delete(input.dataset.bankId);
+    updateQuestionBankSelectedCount();
+  }));
+  list.querySelectorAll('[data-bank-delete]').forEach(button=>button.addEventListener('click', async (event)=>{
+    event.preventDefault(); event.stopPropagation();
+    if(!confirm(tr('ลบข้อนี้ออกจากคลังถาวร?'))) return;
+    const id = button.dataset.bankDelete;
+    try{
+      await apiFetch('/api/teacher/question-bank/'+encodeURIComponent(id),{method:'DELETE',auth:true});
+      questionBankCache = questionBankCache.filter(q=>q.id!==id);
+      questionBankSelected.delete(id);
+      renderQuestionBankList();
+    }catch(error){ showToast(error.message); }
+  }));
+  updateQuestionBankSelectedCount();
+}
+function updateQuestionBankSelectedCount(){
+  const tr = window.I18N ? window.I18N.t : (s=>s);
+  document.getElementById('questionBankSelectedCount').textContent = questionBankSelected.size ? `${tr('เลือกแล้ว')} ${questionBankSelected.size} ${tr('ข้อ')}` : '';
+  document.getElementById('addSelectedBankQuestionsBtn').disabled = !questionBankSelected.size;
+}
+document.getElementById('questionBankSearchInput').addEventListener('input', renderQuestionBankList);
+document.getElementById('closeQuestionBankDialog').addEventListener('click', ()=>questionBankDialog.close());
+document.getElementById('addSelectedBankQuestionsBtn').addEventListener('click', ()=>{
+  const tr = window.I18N ? window.I18N.t : (s=>s);
+  const chosen = (questionBankCache||[]).filter(q=>questionBankSelected.has(q.id));
+  if(!chosen.length) return;
+  editingSet.sections.mc.questions.push(...chosen.map(question=>({id:uid('mc'), text:question.text, choices:question.choices.slice(), answer:question.answer, points:0, resources:question.resources?JSON.parse(JSON.stringify(question.resources)):undefined})));
+  applyPointDistribution('mc'); renderMcPanel();
+  showToast(tr('เพิ่มจากคลัง')+` ${chosen.length} `+tr('ข้อแล้ว'));
+  questionBankDialog.close();
+});
 function parseChatGptMc(text){
   const questions=[]; const errors=[]; let current=null; let target=null;
   const answerIndex = token => ({'ก':0,'ข':1,'ค':2,'ง':3,'a':0,'b':1,'c':2,'d':3,'1':0,'2':1,'3':2,'4':3}[String(token).trim().toLowerCase()]);
@@ -1131,25 +1193,61 @@ function renderMcCompactList(){
     renderMcPanel();
   }));
 }
+const MC_MIN_CHOICES = 4;
+const MC_MAX_CHOICES = 8;
+const MC_DISPLAY_CHOICES = 4;
 function mcEditorPanelHtml(index){
   const tr = window.I18N ? window.I18N.t : (s=>s);
   const s = editingSet.sections.mc;
   const isNew = index===null;
-  const q = isNew ? {text:'', choices:['','','',''], answer:0} : s.questions[index];
+  const q = isNew ? {text:''} : s.questions[index];
+  if(!Array.isArray(openQEditor.draftMcChoices)) openQEditor.draftMcChoices = isNew ? ['','','',''] : s.questions[index].choices.slice();
+  if(!Number.isInteger(openQEditor.draftAnswer)) openQEditor.draftAnswer = isNew ? 0 : s.questions[index].answer;
+  const choices = openQEditor.draftMcChoices;
+  const answer = openQEditor.draftAnswer;
+  const extraNote = choices.length > MC_DISPLAY_CHOICES
+    ? `<p class="panel-sub" style="margin:8px 0 0;">${tr('มีตัวเลือกมากกว่า')} ${MC_DISPLAY_CHOICES} ${tr('ข้อ — ระบบจะสุ่มเลือกมาแสดงคนละ')} ${MC_DISPLAY_CHOICES} ${tr('ข้อ (รวมเฉลยเสมอ) ให้นักเรียนแต่ละคน')}</p>`
+    : '';
   return `<div class="q-editor-panel">
     <div class="q-editor-title">${isNew?tr('เพิ่มข้อปรนัยใหม่'):tr('แก้ไขข้อที่')+' '+(index+1)}</div>
     <div class="field"><label>${tr('โจทย์')}</label><textarea id="qeMcText" placeholder="${tr('พิมพ์คำถาม...')}">${escapeHtml(q.text)}</textarea></div>
     ${mcResourceEditorHtml(q,isNew)}
-    ${q.choices.map((c,ci)=>`
+    ${choices.map((c,ci)=>`
       <div class="choice-edit-row">
-        <input type="radio" name="qeMcAns" data-ci="${ci}" ${q.answer===ci?'checked':''} title="${tr('ทำเครื่องหมายคำตอบที่ถูกต้อง')}">
+        <input type="radio" name="qeMcAns" data-ci="${ci}" ${answer===ci?'checked':''} title="${tr('ทำเครื่องหมายคำตอบที่ถูกต้อง')}">
         <input type="text" class="qeMcChoice" data-ci="${ci}" value="${escapeAttr(c)}" placeholder="${tr('ตัวเลือกที่')} ${ci+1}">
+        ${choices.length>MC_MIN_CHOICES?`<button type="button" class="btn btn-ghost btn-sm" data-remove-choice="${ci}" title="${tr('ลบตัวเลือกนี้')}">✕</button>`:''}
       </div>`).join('')}
+    ${choices.length<MC_MAX_CHOICES?`<button class="add-row-btn" id="qeAddChoiceBtn" type="button">${tr('+ เพิ่มตัวเลือก')}</button>`:''}
+    ${extraNote}
     <div class="editor-actions">
       <button class="btn btn-ghost btn-sm" id="qeCancelBtn" type="button">${tr('ยกเลิก')}</button>
       <button class="btn btn-primary btn-sm" id="qeSaveBtn" type="button">${isNew?tr('เพิ่มข้อนี้'):tr('บันทึกการแก้ไข')}</button>
     </div>
   </div>`;
+}
+function syncMcDraftChoicesFromDom(){
+  const inputs = document.querySelectorAll('.qeMcChoice');
+  if(!inputs.length) return;
+  openQEditor.draftMcChoices = Array.from(inputs).map(input=>input.value);
+  const checked = document.querySelector('input[name="qeMcAns"]:checked');
+  openQEditor.draftAnswer = checked ? parseInt(checked.dataset.ci,10) : 0;
+}
+function bindMcChoiceEditingEvents(){
+  const addBtn = document.getElementById('qeAddChoiceBtn');
+  if(addBtn) addBtn.addEventListener('click', ()=>{
+    syncMcDraftChoicesFromDom();
+    openQEditor.draftMcChoices.push('');
+    renderOpenEditorIfNeeded('mc');
+  });
+  document.querySelectorAll('[data-remove-choice]').forEach(button=>button.addEventListener('click', ()=>{
+    syncMcDraftChoicesFromDom();
+    const removeIndex = parseInt(button.dataset.removeChoice,10);
+    openQEditor.draftMcChoices.splice(removeIndex,1);
+    if(openQEditor.draftAnswer===removeIndex) openQEditor.draftAnswer=0;
+    else if(openQEditor.draftAnswer>removeIndex) openQEditor.draftAnswer -= 1;
+    renderOpenEditorIfNeeded('mc');
+  }));
 }
 function mcResourceEditorHtml(q,isNew){
   const tr = window.I18N ? window.I18N.t : (s=>s);
@@ -1782,13 +1880,12 @@ async function updateRosterClassOptions(reset=true){
   const select=document.getElementById('rosterClassSelect'); if(!select) return;
   if(reset){selectedRosterClasses=[];renderSelectedRosterClasses();}
   select.disabled=true;
-  if(!set){select.innerHTML='<option value="">เลือกห้อง</option>';document.getElementById('addRosterClassBtn').disabled=true;return;}
+  if(!set){select.innerHTML='<option value="">เลือกห้อง</option>';return;}
   let source=set.assignedClasses||[];
   if(!source.length){try{source=await apiGetClasses();}catch(error){showToast(error.message);source=[];}}
   const classes=[...new Set(source)].sort((a,b)=>String(a).localeCompare(String(b),'th',{numeric:true}));
   select.innerHTML='<option value="">เลือกห้อง</option>'+classes.filter(room=>!selectedRosterClasses.includes(room)).map(room=>`<option value="${escapeAttr(room)}">${escapeHtml(room)}</option>`).join('');
   select.disabled=!classes.length;
-  document.getElementById('addRosterClassBtn').disabled=true;
 }
 function initRosterTab(){
   populateRosterSetOptions();
@@ -1810,8 +1907,28 @@ function compactRosterRoomNames(rooms){
   groups.forEach((prefixes,suffix)=>result.push(`${prefixes.join('.')}.${suffix}`));
   return result.join(', ');
 }
+function rosterRoomSuffix(room){
+  const text=String(room||''),match=text.match(/^([^.]+)\.(.+)$/);
+  return match ? match[2] : text;
+}
+// Rooms that share the same trailing number (e.g. "สม.151" and "สช.151") print
+// together as one combined roster; rooms whose number differs (e.g. "สม.151"
+// vs "สม.141") always stay on separate pages/sections.
+function groupRostersBySuffix(rosters){
+  const groups=new Map();
+  rosters.forEach(data=>{
+    const suffix=rosterRoomSuffix(data.classRoom);
+    if(!groups.has(suffix)) groups.set(suffix,[]);
+    groups.get(suffix).push(data);
+  });
+  return [...groups.values()].map(group=>{
+    if(group.length===1) return group[0];
+    const students=group.flatMap(data=>data.students||[]).map((student,index)=>({...student, number:index+1}));
+    return {...group[0], classRoom:group.map(data=>data.classRoom).join(', '), students};
+  });
+}
 function buildRosterPrintHtml(rosters,options){
-  const list=Array.isArray(rosters)?rosters:[rosters],first=list[0]||{},exam=first.exam||{},totalRows=list.reduce((sum,data)=>sum+(data.students||[]).length,0),units=totalRows+(list.length*9)+8,scale=Math.max(.55,Math.min(1,44/Math.max(1,units))),documentHeight=274/scale;
+  const list=groupRostersBySuffix(Array.isArray(rosters)?rosters:[rosters]),first=list[0]||{},exam=first.exam||{},totalRows=list.reduce((sum,data)=>sum+(data.students||[]).length,0),units=totalRows+(list.length*9)+8,scale=Math.max(.55,Math.min(1,44/Math.max(1,units))),documentHeight=274/scale;
   const sections=list.map(data=>{const students=data.students||[],blankRows=list.length===1?Math.max(5,18-students.length):1,rows=students.map(student=>{const studentId=String(student.studentId||'');return `<tr><td>${student.number}</td><td class="student-id${studentId.length>8?' student-id-long':''}">${escapeHtml(studentId)}</td><td class="student-name">${escapeHtml(`${student.firstName||''} ${student.lastName||''}`.trim())}</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;}).join('')+Array.from({length:blankRows},()=>'<tr><td>&nbsp;</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>').join(''),period=data.examPeriod?`รอบ ${data.examPeriod}`:'';return `<section class="roster-block"><header class="header"><div class="school"><img class="school-logo" src="/assets/college-logo.jpg" alt="ตราวิทยาลัย"><div><h1>วิทยาลัยเทคโนโลยีจรัลสนิทวงศ์</h1><p>18 ซอย จรัญสนิทวงศ์ 41 แขวงอรุณอมรินทร์ เขตบางกอกน้อย กรุงเทพมหานคร 10700</p><p class="class-line">${escapeHtml(data.educationLevel||'-')} ${escapeHtml(data.classRoom)} &nbsp; ${escapeHtml(period)}</p></div></div><div class="exam-head"><h2>ห้องสอบที่ ${escapeHtml(options.examRoom||'-')}</h2><strong>ใบรายชื่อสอบ${escapeHtml(data.exam?.examType||'')}</strong><p>ปีการศึกษา ${escapeHtml(data.exam?.academicYear||'-')}</p><p>สาขาวิชา ${escapeHtml(data.program||'-')}</p></div></header><table><thead><tr><th>เลขที่</th><th>รหัสนักศึกษา</th><th>ชื่อ - นามสกุล</th><th>เก็บ</th><th>กลาง</th><th>ปลาย</th><th>รวม</th><th>เกรด</th><th>ลายเซ็น</th></tr></thead><tbody>${rows}</tbody></table></section>`;}).join('');
   const scheduleGroups=new Map();list.forEach(data=>{const item=data.exam||{},key=`${item.availableFrom||''}|${item.availableUntil||''}|${options.examRoom||''}`;if(!scheduleGroups.has(key))scheduleGroups.set(key,{exam:item,rooms:[]});scheduleGroups.get(key).rooms.push(data.classRoom);});
   const scheduleLines=[...scheduleGroups.values()].map(group=>{const item=group.exam,time=(item.availableFrom||item.availableUntil)?`${rosterTime(item.availableFrom)} - ${rosterTime(item.availableUntil)}`:'ไม่กำหนดเวลา',roomLabel=list.length>1?compactRosterRoomNames(group.rooms):'';return `<p><span class="label">วันสอบ ${escapeHtml(roomLabel)}</span> ${escapeHtml(thaiRosterDate(item.availableFrom))} &nbsp; เวลา ${escapeHtml(time)} &nbsp; ห้องสอบ ${escapeHtml(options.examRoom||'-')}</p>`;}).join('');
@@ -1821,8 +1938,7 @@ function buildRosterPrintHtml(rosters,options){
   </style></head><body onload="Promise.resolve(document.fonts&&document.fonts.ready).then(function(){setTimeout(function(){window.focus();window.print()},100)})"><div class="print-tools"><span>หากหน้าต่างพิมพ์ไม่เปิดอัตโนมัติ ให้กดปุ่มนี้ หรือกด Ctrl+P</span><button type="button" onclick="window.focus();window.print()">เปิดหน้าพิมพ์</button></div><main class="document">${sections}<section class="details">${scheduleLines}<p><span class="label">อาจารย์ผู้สอน</span> ${escapeHtml(exam.teacherName||'-')}</p><p><span class="label">รายวิชา</span> ${escapeHtml(exam.courseName||exam.title||'-')}</p><p><span class="label">ลิงก์สอบ</span> <span class="exam-link">${escapeHtml(options.examLink||exam.examLink||'-')}</span></p></section></main></body></html>`;
 }
 document.getElementById('rosterSetSelect').addEventListener('change',updateRosterClassOptions);
-document.getElementById('rosterClassSelect').addEventListener('change',event=>{document.getElementById('addRosterClassBtn').disabled=!event.target.value;});
-document.getElementById('addRosterClassBtn').addEventListener('click',()=>{const select=document.getElementById('rosterClassSelect'),room=select.value;if(!room||selectedRosterClasses.includes(room))return;selectedRosterClasses.push(room);renderSelectedRosterClasses();updateRosterClassOptions(false);});
+document.getElementById('rosterClassSelect').addEventListener('change',event=>{const room=event.target.value;if(!room||selectedRosterClasses.includes(room))return;selectedRosterClasses.push(room);renderSelectedRosterClasses();updateRosterClassOptions(false);});
 document.getElementById('printRosterBtn').addEventListener('click',async()=>{
   const setKey=document.getElementById('rosterSetSelect').value;
   if(!setKey||!selectedRosterClasses.length){showToast('กรุณาเลือกชุดข้อสอบและเพิ่มห้องอย่างน้อย 1 ห้อง');return;}
