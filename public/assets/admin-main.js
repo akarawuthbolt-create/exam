@@ -124,6 +124,7 @@ async function apiImportTeachersExcel(file){
 }
 async function apiDeleteTeacher(id){ return apiFetch('/api/teachers/'+encodeURIComponent(id), { method:'DELETE', admin:true }); }
 async function apiResetTeacherPassword(id,password){ return apiFetch('/api/teachers/'+encodeURIComponent(id)+'/password', { method:'PATCH', body:{password}, admin:true }); }
+async function apiResetTeacherLoginLockouts(){ return apiFetch('/api/teacher/login-lockouts/reset', { method:'POST', admin:true }); }
 async function apiUpdateTeacherProfile(id,department,email){ return apiFetch('/api/teachers/'+encodeURIComponent(id)+'/profile', { method:'PATCH', body:{department,email}, admin:true }); }
 async function apiGetScoreEmailStatus(){ return apiFetch('/api/admin/score-emails/status', { admin:true }); }
 async function apiSendScoreEmail(teacherId){ return apiFetch('/api/admin/score-emails/'+encodeURIComponent(teacherId)+'/send', { method:'POST', admin:true }); }
@@ -511,6 +512,13 @@ document.getElementById('saveManageTeacher').addEventListener('click',async()=>{
   try{await apiUpdateTeacherProfile(manageTeacherId,department,email);document.getElementById('manageTeacherDialog').close();await refreshTeachers();showToast('บันทึกข้อมูลอาจารย์แล้ว');}catch(e){error.textContent=e.message;}finally{button.disabled=false;}
 });
 document.getElementById('manageTeacherResetPassword').addEventListener('click',()=>{const teacher=TEACHERS_LIST.find(item=>item.id===manageTeacherId);document.getElementById('manageTeacherDialog').close();openTeacherPasswordReset(manageTeacherId,teacher?`${teacher.firstName} ${teacher.lastName}`:'-');});
+document.getElementById('manageTeacherResetLockout').addEventListener('click',async event=>{
+  const button=event.currentTarget, original=button.textContent, error=document.getElementById('manageTeacherError');
+  button.disabled=true;error.textContent='';
+  try{await apiResetTeacherLoginLockouts();showToast('ปลดล็อกการเข้าสู่ระบบของอาจารย์ทุกคนแล้ว');}
+  catch(e){error.textContent=e.message;}
+  finally{button.disabled=false;button.textContent=original;}
+});
 document.getElementById('manageTeacherDelete').addEventListener('click',async()=>{if(!confirm('ลบบัญชีอาจารย์นี้? ชุดข้อสอบที่เคยสร้างไว้จะยังอยู่แต่จะไม่ผูกกับบัญชีนี้อีกต่อไป'))return;try{await apiDeleteTeacher(manageTeacherId);document.getElementById('manageTeacherDialog').close();await refreshTeachers();showToast('ลบบัญชีอาจารย์แล้ว');}catch(e){document.getElementById('manageTeacherError').textContent=e.message;}});
 let resetTeacherId='';
 function openTeacherPasswordReset(id,name){

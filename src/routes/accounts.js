@@ -187,6 +187,11 @@ function registerAccountRoutes(app, dependencies) {
     res.json({ ok: true });
   });
 
+  app.post('/api/teacher/login-lockouts/reset', requireAdmin, (req, res) => {
+    teacherLoginFailures.clear();
+    res.json({ ok: true });
+  });
+
   app.post('/api/teacher/login', async (req, res) => {
     const { username, password } = req.body || {};
     if (!username || !password) return res.status(400).json({ error: 'invalid_payload', message: 'กรุณากรอก username และ password' });
