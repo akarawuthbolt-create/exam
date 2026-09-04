@@ -227,8 +227,8 @@ html.restoring-session #startScreen{visibility:hidden;}html.restoring-session bo
 .student-identity-confirm-card .identity-warning{color:var(--red);font-weight:700;text-align:left;margin:0 0 12px;}
 .student-identity-confirm-card .name-input{margin:0 0 10px;text-align:center;font-size:17px;letter-spacing:.08em;}
 .student-identity-confirm-card .id-error{text-align:left;margin:0 0 10px;}
-.btn-identity-edit{background:#FFF7ED;border:1.5px solid #FDBA74;color:#9A3412;}
-.btn-identity-edit:hover{background:#FFEDD5;border-color:#FB923C;}
+.btn-identity-edit{background:transparent;border:1px solid var(--line);color:var(--ink);}
+.btn-identity-edit:hover{border-color:var(--blue);color:var(--blue);}
 .identity-forgot-pin{display:flex;width:100%;margin:10px 0 0;padding:9px 12px;align-items:center;justify-content:center;background:transparent;border:0;border-top:1px solid var(--line);border-radius:0;color:var(--blue);font-size:12.5px;box-shadow:none;}
 .identity-forgot-pin:hover{background:rgba(37,99,235,.04);}
 .student-identity-confirm-card .modal-actions{justify-content:center;align-items:stretch;}
