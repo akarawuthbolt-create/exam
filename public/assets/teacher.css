@@ -69,7 +69,12 @@ html[data-theme="dark"] .mini-card,html[data-theme="dark"] .editor-box,html[data
 .deadline-card .field{margin:0;min-width:0;}
 .exam-schedule-card{margin:10px 0;padding:15px;border:1px solid #93C5FD;border-radius:16px;background:#EFF6FF;box-shadow:0 8px 18px -18px rgba(37,99,235,.7);}
 .exam-schedule-card.afternoon{border-color:#FBBF24;background:#FFFBEB;}.exam-schedule-card.cooperative{border-color:#A78BFA;background:#F5F3FF;}
-.schedule-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}.schedule-card-head h4{margin:0;font-size:15px;}.schedule-card-head p{margin:3px 0 0;font-size:12px;color:var(--sub);}
+.exam-schedule-card.collapsed{padding-bottom:15px;}
+.schedule-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:4px;}.schedule-card-head h4{margin:0;font-size:15px;}.schedule-card-head p{margin:3px 0 0;font-size:12px;color:var(--sub);}
+.schedule-toggle-btn{flex:none;white-space:nowrap;}
+.schedule-summary-line{margin:0 0 4px;font-size:12.5px;color:var(--ink);opacity:.85;}
+.exam-schedule-card.expanded .schedule-summary-line{margin-bottom:12px;}
+.schedule-card-body{margin-top:8px;}
 .schedule-room-field{margin-bottom:12px!important;}.schedule-time-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:end;}.schedule-time-grid .field{min-width:0;margin:0;}.schedule-time-grid input{min-width:0;}
 .schedule-late-code-field{max-width:320px;margin:12px 0 0!important;}
 .field input[type=datetime-local].date-time-input{background:rgba(255,255,255,.9);border:1.5px solid #C7D2FE;border-radius:11px;padding:12px 42px 12px 13px;color:var(--ink);font-weight:600;letter-spacing:.01em;box-shadow:0 2px 7px -6px rgba(15,23,42,.45);cursor:pointer;transition:border-color .15s,box-shadow .15s;background-image:linear-gradient(135deg,transparent,transparent);}
