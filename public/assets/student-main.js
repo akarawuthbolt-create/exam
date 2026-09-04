@@ -806,7 +806,8 @@ function renderSection(){
       const r = matched[item.id];
       const isPending = matchPendingLeft===item.id;
       const badge = r ? (badgeFor[item.id+'|'+r] || '') : '';
-      return `<div class="match-item ${isPending?'pending':''} ${r?'matched':''}" data-side="left" data-id="${item.id}">
+      const colorClass = r ? `match-c${((badge-1)%8)+1}` : '';
+      return `<div class="match-item ${isPending?'pending':''} ${r?'matched':''} ${colorClass}" data-side="left" data-id="${item.id}">
         ${r?`<span class="match-badge">${badge}</span>`:`<span class="noBadge"></span>`}<span>${escapeHtml(item.text)}</span></div>`;
     }).join('');
     html += `</div><div class="match-col" id="matchRightCol"><h4>รายการ ข</h4>`;
@@ -814,7 +815,8 @@ function renderSection(){
       let matchedLeft = null;
       Object.entries(matched).forEach(([lid,rid])=>{ if(rid===item.id) matchedLeft = lid; });
       const badge = matchedLeft ? (badgeFor[matchedLeft+'|'+item.id] || '') : '';
-      return `<div class="match-item ${matchedLeft?'matched':''}" data-side="right" data-id="${item.id}">
+      const colorClass = matchedLeft ? `match-c${((badge-1)%8)+1}` : '';
+      return `<div class="match-item ${matchedLeft?'matched':''} ${colorClass}" data-side="right" data-id="${item.id}">
         ${matchedLeft?`<span class="match-badge">${badge}</span>`:`<span class="noBadge"></span>`}<span>${escapeHtml(item.text)}</span></div>`;
     }).join('');
     html += `</div></div>
