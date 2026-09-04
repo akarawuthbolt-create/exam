@@ -53,5 +53,5 @@ function validateStudentPayload(body) {
 }
 
 module.exports = {
-  validateExamSetPayload, validateTeacherPayload, validateStudentPayload, sendValidationError
+  validateExamSetPayload, validateTeacherPayload, validateStudentPayload, sendValidationError, USERNAME_PATTERN
 };

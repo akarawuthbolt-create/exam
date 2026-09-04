@@ -262,6 +262,35 @@ test('teacher password reset is admin-only and validates password strength', asy
   assert.equal(JSON.parse(weak.body).error, 'weak_password');
 });
 
+test('admin can rename a teacher username, rejecting invalid formats and duplicates', async () => {
+  const unauthorized = await request('/api/teachers/teacher-missing/username', { method: 'PATCH', body: { username: 'newname' } });
+  assert.equal(unauthorized.status, 401);
+
+  const otherUsername = `rename_taken_${Date.now()}`;
+  const other = await request('/api/teachers', { method: 'POST', headers: { 'x-admin-key': ADMIN_KEY }, body: { firstName: 'คนอื่น', lastName: 'มีชื่ออยู่แล้ว', username: otherUsername, department: 'ทดสอบ', password: 'Teacher123!', email: '' } });
+  assert.equal(other.status, 201);
+
+  const created = await request('/api/teachers', { method: 'POST', headers: { 'x-admin-key': ADMIN_KEY }, body: { firstName: 'ทดสอบ', lastName: 'เปลี่ยนชื่อ', username: `rename_test_${Date.now()}`, department: 'ทดสอบ', password: 'Teacher123!', email: '' } });
+  assert.equal(created.status, 201);
+  const teacherId = JSON.parse(created.body).id;
+
+  const invalid = await request(`/api/teachers/${teacherId}/username`, { method: 'PATCH', headers: { 'x-admin-key': ADMIN_KEY }, body: { username: 'a' } });
+  assert.equal(invalid.status, 400);
+  assert.equal(JSON.parse(invalid.body).error, 'invalid_username');
+
+  const duplicate = await request(`/api/teachers/${teacherId}/username`, { method: 'PATCH', headers: { 'x-admin-key': ADMIN_KEY }, body: { username: otherUsername } });
+  assert.equal(duplicate.status, 409);
+  assert.equal(JSON.parse(duplicate.body).error, 'duplicate');
+
+  const newUsername = `renamed_${Date.now()}`;
+  const renamed = await request(`/api/teachers/${teacherId}/username`, { method: 'PATCH', headers: { 'x-admin-key': ADMIN_KEY }, body: { username: newUsername } });
+  assert.equal(renamed.status, 200);
+  assert.deepEqual(JSON.parse(renamed.body), { ok: true, username: newUsername });
+
+  const teachers = await request('/api/teachers', { headers: { 'x-admin-key': ADMIN_KEY } });
+  assert.equal(JSON.parse(teachers.body).some(item => item.id === teacherId && item.username === newUsername), true);
+});
+
 test('teacher results require a teacher session', async () => {
   const response = await request('/api/teacher/results');
   assert.equal(response.status, 401);

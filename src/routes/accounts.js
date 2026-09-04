@@ -1,7 +1,7 @@
 const MAX_LOGIN_FAILURES = 5;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const express = require('express');
-const { validateTeacherPayload, sendValidationError } = require('../validation');
+const { validateTeacherPayload, sendValidationError, USERNAME_PATTERN } = require('../validation');
 const { validateRestoredBackup } = require('../restore-drill');
 const { buildTeacherImportTemplate, buildTeacherExport, parseTeacherImport, validateTeacherImportRows } = require('../teacher-import');
 
@@ -114,6 +114,21 @@ function registerAccountRoutes(app, dependencies) {
     await writeDB(db);
     await removeTeacherSessions(teacher.id);
     res.json({ ok: true });
+  });
+
+  app.patch('/api/teachers/:id/username', requireAdmin, async (req, res) => {
+    const username = String(req.body?.username || '').trim();
+    if (!USERNAME_PATTERN.test(username)) return res.status(400).json({ error: 'invalid_username', message: 'username ต้องมี 3-50 ตัว และใช้เฉพาะอักษรอังกฤษ ตัวเลข . _ หรือ -' });
+    const db = readDB();
+    const teacher = db.teachers.find(item => item.id === req.params.id);
+    if (!teacher) return res.status(404).json({ error: 'not_found', message: 'ไม่พบบัญชีอาจารย์นี้' });
+    if (db.teachers.some(item => item.id !== teacher.id && item.username === username)) {
+      return res.status(409).json({ error: 'duplicate', message: 'มี username นี้อยู่ในระบบแล้ว' });
+    }
+    teacher.username = username;
+    await writeDB(db);
+    await removeTeacherSessions(teacher.id);
+    res.json({ ok: true, username });
   });
 
   app.get('/api/teachers/import-template.xlsx', requireAdmin, async (req, res) => {
