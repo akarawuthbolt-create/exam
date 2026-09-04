@@ -872,8 +872,12 @@ function renderMcSection(){
   const choicesHtml = dispOrder.map(origIdx=>{
     const c = qq.choices[origIdx];
     const isPicked = picked===origIdx;
+    const choiceImage = Array.isArray(qq.choiceImages) ? qq.choiceImages[origIdx] : null;
+    const choiceImageHtml = choiceImage && (()=>{ try { return new URL(choiceImage.url).protocol==='https:'; } catch(_) { return false; } })()
+      ? `<img class="choice-item-image" src="${escapeHtml(choiceImage.url)}" alt="${escapeHtml(choiceImage.name||'')}" loading="lazy">`
+      : '';
     return `<label class="choice-item ${isPicked?'picked':''}" data-origidx="${origIdx}">
-      <input type="radio" name="mcCurrent" ${isPicked?'checked':''}> <span>${escapeHtml(c)}</span>
+      <input type="radio" name="mcCurrent" ${isPicked?'checked':''}> <span>${escapeHtml(c)}</span>${choiceImageHtml}
       ${isPicked?`<button type="button" class="choice-clear-btn" data-clear="1" title="${(window.I18N?window.I18N.t('ยกเลิกคำตอบข้อนี้'):'ยกเลิกคำตอบข้อนี้')}">✕</button>`:''}
     </label>`;
   }).join('');
