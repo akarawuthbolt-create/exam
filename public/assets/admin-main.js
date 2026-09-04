@@ -1363,34 +1363,21 @@ function applyGoogleQuestionsToSet(target,preview){
   target.sections.written.questions.push(...written.map(question=>({id:uid('w'),text:question.text,keywords:(question.keywords||[]).slice(),answerType:'text',maxPoints:Number(question.sourcePoints)||0,resources:question.resources||{attachments:[]}})));
   return {mc:mc.length,written:written.length};
 }
-function setGoogleFormsConnection(connectionId){
-  googleFormsConnectionId=connectionId;
-  if(googleFormsPoll) clearInterval(googleFormsPoll);
-  googleFormsPoll=null;
-  const note=document.getElementById('googleFormsConnectionNote'); if(note) note.textContent='เชื่อมต่อ Google แล้ว — วางลิงก์แบบทดสอบเพื่อเริ่มตรวจสอบ';
-  showToast('เชื่อมต่อ Google สำเร็จ');
-}
 function waitForGoogleFormsConnection(requestId){
   if(googleFormsPoll) clearInterval(googleFormsPoll);
   let tries=0;
-  googleFormsPoll=setInterval(async()=>{ try{ const status=await apiGoogleFormsStatus(requestId); if(status.connected) return setGoogleFormsConnection(status.connectionId); if(++tries>=60){ clearInterval(googleFormsPoll); googleFormsPoll=null; } }catch(_){ clearInterval(googleFormsPoll); googleFormsPoll=null; } },1000);
+  googleFormsPoll=setInterval(async()=>{
+    try{
+      const status=await apiGoogleFormsStatus(requestId);
+      if(status.connected) return setGoogleFormsConnection(status.connectionId);
+      if(++tries>=60){ clearInterval(googleFormsPoll); googleFormsPoll=null; showToast('เชื่อมต่อ Google ไม่สำเร็จภายในเวลาที่กำหนด กรุณาลองเชื่อมต่อใหม่อีกครั้ง'); }
+    }catch(_){ clearInterval(googleFormsPoll); googleFormsPoll=null; showToast('เชื่อมต่อ Google ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง'); }
+  },1000);
 }
 window.addEventListener('message', event=>{
   if(event.origin!==window.location.origin || event.data?.type!=='google-forms-connected') return;
   setGoogleFormsConnection(event.data.connectionId);
 });
-function bindGoogleFormsImportEvents(){
-  const box=document.getElementById('googleFormsImportBox');
-  document.getElementById('toggleGoogleFormsImportBtn').addEventListener('click', ()=>box.classList.toggle('hidden'));
-  document.getElementById('connectGoogleFormsBtn').addEventListener('click', async()=>{ try{ const result=await apiStartGoogleForms(); const popup=window.open(result.authorizationUrl,'googleFormsAuth','width=560,height=700'); if(!popup) showToast('กรุณาอนุญาตให้เปิดหน้าต่างเชื่อมต่อ Google'); else waitForGoogleFormsConnection(result.requestId); }catch(error){ showToast(error.message); } });
-  document.getElementById('previewGoogleFormsBtn').addEventListener('click', async()=>{
-    const output=document.getElementById('googleFormsPreview'); const formUrl=document.getElementById('googleFormsUrl').value.trim();
-    if(!googleFormsConnectionId){ showToast('กรุณาเชื่อมต่อ Google ก่อน'); return; } if(!formUrl){ showToast('กรุณาวางลิงก์ Google Forms'); return; }
-    output.textContent='กำลังตรวจสอบแบบฟอร์ม...';
-    try{ googleFormsPreview=await apiPreviewGoogleForm(googleFormsConnectionId,formUrl); document.getElementById('applyGoogleFormsBtn').disabled=!googleFormsPreview.questions.length; output.innerHTML=googleFormsPreviewHtml(googleFormsPreview); }catch(error){ googleFormsPreview=null; document.getElementById('applyGoogleFormsBtn').disabled=true; output.textContent=error.message; }
-  });
-  document.getElementById('applyGoogleFormsBtn').addEventListener('click', async()=>{ if(!googleFormsPreview?.questions.length) return; const button=document.getElementById('applyGoogleFormsBtn'),formUrl=document.getElementById('googleFormsUrl').value.trim(); button.disabled=true;button.textContent='กำลังนำเข้าและเก็บรูป...';try{const imported=await apiImportGoogleForm(googleFormsConnectionId,formUrl),counts=applyGoogleQuestionsToSet(editingSet,imported);renderMcPanel();showToast(`นำเข้าแล้ว: ปรนัย ${counts.mc} · อัตนัย ${counts.written}${imported.warnings?.length?' · รูปบางรายการไม่สำเร็จ':''}`);}catch(error){showToast(error.message);}finally{button.disabled=false;button.textContent='นำเข้าและตั้งค่าชุดข้อสอบ';} });
-}
 function updateGoogleFormsSetDialog(){
   const connected=Boolean(googleFormsConnectionId);
   document.getElementById('googleFormsConnectStep').classList.toggle('hidden',connected);
@@ -1432,18 +1419,25 @@ function bindGoogleFormsSetImportEvents(){
     try{const result=await apiStartGoogleForms();const popup=window.open(result.authorizationUrl,'googleFormsAuth','width=560,height=700');if(!popup)showToast('กรุณาอนุญาตให้เปิดหน้าต่างเชื่อมต่อ Google');else waitForGoogleFormsConnection(result.requestId);}catch(error){showToast(error.message);}
   };
   document.getElementById('connectGoogleFormsSetBtn').addEventListener('click',reconnectGoogleForms);
-  document.getElementById('previewGoogleFormsSetBtn').addEventListener('click',async()=>{
+  const previewGoogleFormsSet=async()=>{
     const output=document.getElementById('googleFormsSetPreview'); const formUrl=document.getElementById('googleFormsSetUrl').value.trim();
     if(!googleFormsConnectionId){showToast('กรุณาเชื่อมต่อ Google ก่อน');return;} if(!formUrl){showToast('กรุณาวางลิงก์ Google Forms');return;}
     output.textContent='กำลังตรวจสอบแบบฟอร์ม...';
     try{googleFormsPreview=await apiPreviewGoogleForm(googleFormsConnectionId,formUrl);document.getElementById('applyGoogleFormsSetBtn').disabled=!googleFormsPreview.questions.length;output.innerHTML=googleFormsPreviewHtml(googleFormsPreview);showGoogleFormsSetReview(true);}catch(error){googleFormsPreview=null;document.getElementById('applyGoogleFormsSetBtn').disabled=true;output.textContent=error.message;}
-  });
+  };
+  document.getElementById('previewGoogleFormsSetBtn').addEventListener('click',previewGoogleFormsSet);
   document.getElementById('listGoogleFormsSetBtn').addEventListener('click',async()=>{
     if(!googleFormsConnectionId){showToast('กรุณาเชื่อมต่อ Google ก่อน');return;}
     const output=document.getElementById('googleFormsListPreview');output.textContent='กำลังโหลดรายการ Google Forms...';
     try{const result=await apiListGoogleForms(),forms=result.forms||[];output.innerHTML=forms.length?forms.map(form=>`<button type="button" class="btn btn-ghost btn-sm" style="display:block;width:100%;text-align:left;margin:6px 0;" data-google-form-url="${escapeAttr(form.editUrl)}">📝 ${escapeHtml(form.title)}<small style="display:block;color:var(--sub);margin-top:3px;">แก้ไขล่าสุด ${form.modifiedTime?escapeHtml(new Date(form.modifiedTime).toLocaleString('th-TH')):'-'}</small></button>`).join(''):'ไม่พบ Google Forms ในบัญชีนี้';}catch(error){output.textContent=error.message;}
   });
-  document.getElementById('googleFormsListPreview').addEventListener('click',event=>{const button=event.target.closest('[data-google-form-url]');if(!button)return;button.classList.add('google-form-choice-loading');button.insertAdjacentHTML('beforeend','<span class="google-forms-loading">กำลังตรวจสอบข้อสอบ...</span>');document.getElementById('googleFormsSetUrl').value=button.dataset.googleFormUrl;document.getElementById('previewGoogleFormsSetBtn').click();});
+  document.getElementById('googleFormsListPreview').addEventListener('click',async event=>{
+    const button=event.target.closest('[data-google-form-url]');if(!button||button.classList.contains('google-form-choice-loading'))return;
+    button.classList.add('google-form-choice-loading');
+    button.insertAdjacentHTML('beforeend','<span class="google-forms-loading">กำลังตรวจสอบข้อสอบ...</span>');
+    document.getElementById('googleFormsSetUrl').value=button.dataset.googleFormUrl;
+    try{ await previewGoogleFormsSet(); } finally { button.classList.remove('google-form-choice-loading'); button.querySelector('.google-forms-loading')?.remove(); }
+  });
   document.getElementById('applyGoogleFormsSetBtn').addEventListener('click',async()=>{
     if(!googleFormsPreview?.questions.length)return;
     const button=document.getElementById('applyGoogleFormsSetBtn'),formUrl=document.getElementById('googleFormsSetUrl').value.trim();button.disabled=true;button.textContent='กำลังนำเข้าและเก็บรูป...';
