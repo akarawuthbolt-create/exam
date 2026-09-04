@@ -262,6 +262,18 @@ test('teacher password reset is admin-only and validates password strength', asy
   assert.equal(JSON.parse(weak.body).error, 'weak_password');
 });
 
+test('teacher profile update allows an empty email', async () => {
+  const created = await request('/api/teachers', { method: 'POST', headers: { 'x-admin-key': ADMIN_KEY }, body: { firstName: 'ไม่มี', lastName: 'อีเมล', username: `no_email_${Date.now()}`, department: 'ทดสอบ', password: 'Teacher123!', email: '' } });
+  assert.equal(created.status, 201);
+  const teacherId = JSON.parse(created.body).id;
+  const updated = await request(`/api/teachers/${teacherId}/profile`, { method: 'PATCH', headers: { 'x-admin-key': ADMIN_KEY }, body: { department: 'ภาษาต่างประเทศ', email: '' } });
+  assert.equal(updated.status, 200);
+  assert.deepEqual(JSON.parse(updated.body), { ok: true, department: 'ภาษาต่างประเทศ', email: '' });
+  const invalidEmail = await request(`/api/teachers/${teacherId}/profile`, { method: 'PATCH', headers: { 'x-admin-key': ADMIN_KEY }, body: { department: 'ภาษาต่างประเทศ', email: 'not-an-email' } });
+  assert.equal(invalidEmail.status, 400);
+  assert.equal(JSON.parse(invalidEmail.body).error, 'invalid_email');
+});
+
 test('admin can rename a teacher username, rejecting invalid formats and duplicates', async () => {
   const unauthorized = await request('/api/teachers/teacher-missing/username', { method: 'PATCH', body: { username: 'newname' } });
   assert.equal(unauthorized.status, 401);

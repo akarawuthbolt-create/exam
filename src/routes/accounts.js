@@ -176,7 +176,7 @@ function registerAccountRoutes(app, dependencies) {
     const department = String(req.body?.department || '').trim();
     const email = String(req.body?.email || '').trim().toLowerCase();
     if (!department || department.length > 150) return res.status(400).json({ error: 'invalid_department', message: 'สาขาวิชาต้องมี 1-150 ตัวอักษร' });
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'invalid_email', message: 'รูปแบบอีเมลไม่ถูกต้อง' });
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'invalid_email', message: 'รูปแบบอีเมลไม่ถูกต้อง' });
     const db = readDB(); const teacher = db.teachers.find(item => item.id === req.params.id);
     if (!teacher) return res.status(404).json({ error: 'not_found', message: 'ไม่พบบัญชีอาจารย์นี้' });
     teacher.department = department; teacher.email = email;

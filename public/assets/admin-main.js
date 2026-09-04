@@ -508,7 +508,7 @@ function openManageTeacher(id){
 document.getElementById('cancelManageTeacher').addEventListener('click',()=>document.getElementById('manageTeacherDialog').close());
 document.getElementById('saveManageTeacher').addEventListener('click',async()=>{
   const username=document.getElementById('manageTeacherUsername').value.trim(),department=document.getElementById('manageTeacherDepartment').value.trim(),email=document.getElementById('manageTeacherEmail').value.trim(),error=document.getElementById('manageTeacherError'),button=document.getElementById('saveManageTeacher');
-  if(!username||!department||!email){error.textContent='กรุณากรอก Username สาขาวิชา และอีเมลให้ครบ';return;}
+  if(!username||!department){error.textContent='กรุณากรอก Username และสาขาวิชาให้ครบ';return;}
   button.disabled=true;error.textContent='';
   try{
     const teacher=TEACHERS_LIST.find(item=>item.id===manageTeacherId);
