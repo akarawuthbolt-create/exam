@@ -292,7 +292,9 @@ const hubView = document.getElementById('hubView');
 const sectionView = document.getElementById('sectionView');
 const hubActions = document.getElementById('hubActions');
 const sectionActions = document.getElementById('sectionActions');
-function hideAllTopScreens(){ [startScreen,loginScreen,checkScoreScreen,selectScreen,pinRecoveryScreen,examScreen,finalScreen].forEach(s=>s.classList.add('hidden')); }
+const goTeacherBtn = document.getElementById('goTeacherBtn');
+function hideAllTopScreens(){ [startScreen,loginScreen,checkScoreScreen,selectScreen,pinRecoveryScreen,examScreen,finalScreen].forEach(s=>s.classList.add('hidden')); goTeacherBtn?.classList.add('hidden'); }
+function showStartScreen(){ hideAllTopScreens(); startScreen.classList.remove('hidden'); goTeacherBtn?.classList.remove('hidden'); }
 async function examSystemIsClosed(){
   try{
     const response=await fetch('/api/system/exam-access',{cache:'no-store'});
@@ -312,7 +314,7 @@ document.getElementById('goLoginBtn').addEventListener('click', ()=>{
   document.getElementById('studentIdInput').value=''; document.getElementById('loginError').style.display='none';
   document.getElementById('studentIdInput').focus();
 });
-document.getElementById('backToStartBtn').addEventListener('click', ()=>{ hideAllTopScreens(); startScreen.classList.remove('hidden'); });
+document.getElementById('backToStartBtn').addEventListener('click', showStartScreen);
 document.getElementById('backToLoginBtn').addEventListener('click', async ()=>{
   if(document.fullscreenElement) document.exitFullscreen?.().catch(()=>{});
   stopSelectAutoRefresh();
@@ -327,7 +329,7 @@ document.getElementById('backToLoginBtn').addEventListener('click', async ()=>{
   document.getElementById('studentIdInput').value='';
   document.getElementById('confirmQBtn').disabled=true;
   history.replaceState({},'',location.pathname);
-  hideAllTopScreens(); startScreen.classList.remove('hidden');
+  showStartScreen();
 });
 
 document.getElementById('goCheckScoreBtn').addEventListener('click', ()=>{
@@ -335,7 +337,7 @@ document.getElementById('goCheckScoreBtn').addEventListener('click', ()=>{
   document.getElementById('checkIdInput').value=''; document.getElementById('checkError').style.display='none';
   document.getElementById('scoreListWrap').innerHTML='';
 });
-document.getElementById('backFromCheckBtn').addEventListener('click', ()=>{ hideAllTopScreens(); startScreen.classList.remove('hidden'); });
+document.getElementById('backFromCheckBtn').addEventListener('click', showStartScreen);
 async function doCheckScore(){
   const val = document.getElementById('checkIdInput').value.trim();
   const errBox = document.getElementById('checkError');
