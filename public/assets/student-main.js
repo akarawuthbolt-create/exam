@@ -821,8 +821,7 @@ function renderSection(){
       return `<div class="match-item ${matchedLeft?'matched':''} ${colorClass}" data-side="right" data-id="${item.id}">
         ${matchedLeft?`<span class="match-badge">${badge}</span>`:`<span class="noBadge"></span>`}<span>${escapeHtml(item.text)}</span></div>`;
     }).join('');
-    html += `</div></div>
-      <div class="section-actions" style="margin-top:14px;"><button class="btn btn-ghost" id="clearMatchBtn">${(window.I18N?window.I18N.t:s2=>s2)('ล้างการจับคู่ทั้งหมด')}</button></div>`;
+    html += `</div></div>`;
   } else if(sec==='written'){
     const answeredCount = s.questions.filter(qq=>draftAnswers.written[qq.id] && draftAnswers.written[qq.id].trim()).length;
     html += `<div class="progress-badge ${answeredCount===s.questions.length?'complete':''}">ตอบแล้ว ${answeredCount}/${s.questions.length} ข้อ</div>`;
@@ -835,7 +834,10 @@ function renderSection(){
     }).join('');
   }
 
-  html += `<div class="section-actions"><button class="btn btn-primary" id="submitSectionBtn">${(window.I18N?window.I18N.t:s2=>s2)('บันทึกคำตอบส่วนนี้')}</button></div>`;
+  const tr0 = window.I18N ? window.I18N.t : (s2=>s2);
+  html += sec==='matching'
+    ? `<div class="mc-complete-actions"><button class="btn btn-ghost" id="clearMatchBtn">${tr0('ล้างการจับคู่ทั้งหมด')}</button><button class="btn btn-primary" id="submitSectionBtn">${tr0('บันทึกคำตอบส่วนนี้')}</button></div>`
+    : `<div class="section-actions mc-submit-row"><button class="btn btn-primary" id="submitSectionBtn">${tr0('บันทึกคำตอบส่วนนี้')}</button></div>`;
   inner.innerHTML = html;
   bindSectionEvents();
 }
