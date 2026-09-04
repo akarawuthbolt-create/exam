@@ -42,10 +42,13 @@ function createAssetStorage({ url, serviceRoleKey, bucket }) {
 
   async function ensureBucket() {
     const response = await storageFetch(`${url}/storage/v1/bucket`, { method: 'POST', headers: { ...headers(), 'Content-Type': 'application/json' }, body: JSON.stringify({ id: bucket, name: bucket, public: true, file_size_limit: MAX_ASSET_BYTES, allowed_mime_types: [...ALLOWED_TYPES] }) });
-    if (!response.ok && response.status !== 409) {
-      const detail = await response.text().catch(() => '');
-      throw Object.assign(new Error(`ไม่สามารถสร้างพื้นที่เก็บไฟล์ได้ (HTTP ${response.status}${detail ? `: ${detail.slice(0, 300)}` : ''})${invalidKeyFormatHint(detail)}`), { code: 'storage_bucket_failed' });
-    }
+    if (response.ok || response.status === 409) return;
+    const detail = await response.text().catch(() => '');
+    // Supabase Storage sometimes reports a duplicate bucket with HTTP 400 and a body
+    // code of BucketAlreadyExists/Duplicate instead of an actual HTTP 409 — treat that
+    // as success too, since the bucket already existing is exactly what we want.
+    if (/BucketAlreadyExists/i.test(detail) || /"statusCode"\s*:\s*"?409"?/.test(detail)) return;
+    throw Object.assign(new Error(`ไม่สามารถสร้างพื้นที่เก็บไฟล์ได้ (HTTP ${response.status}${detail ? `: ${detail.slice(0, 300)}` : ''})${invalidKeyFormatHint(detail)}`), { code: 'storage_bucket_failed' });
   }
 
   async function upload({ buffer, contentType, fileName, owner }) {
