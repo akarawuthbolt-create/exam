@@ -90,6 +90,8 @@ async function apiGetResults(setKey, examType, academicYear, semester){
 async function apiGetQuestionAnalysis(setKey){ return apiFetch('/api/question-analysis?setKey='+encodeURIComponent(setKey), { admin:true }); }
 async function apiGetAuditLogs(setKey){ return apiFetch('/api/audit-logs'+(setKey?('?setKey='+encodeURIComponent(setKey)):''), { admin:true }); }
 async function apiGetOperations(){ return apiFetch('/api/admin/operations', { admin:true }); }
+async function apiGetSystemReports(){ return apiFetch('/api/admin/system-reports', { admin:true }); }
+async function apiDeleteSystemReport(id){ return apiFetch('/api/admin/system-reports/'+encodeURIComponent(id), { method:'DELETE', admin:true }); }
 async function apiGetExamPulse(){ return apiFetch('/api/admin/exam-pulse', { admin:true }); }
 async function apiRescueExamDraft(key,reason){ return apiFetch('/api/admin/exam-pulse/'+encodeURIComponent(key)+'/rescue', { method:'POST', body:{reason}, admin:true }); }
 async function apiDeleteExamPulseDraft(key,reason){ return apiFetch('/api/admin/exam-pulse/'+encodeURIComponent(key), { method:'DELETE', body:{reason}, admin:true }); }
@@ -327,7 +329,7 @@ function openAdminTab(tab, options={}){
     if(tab==='dashboard') refreshDashboard();
     if(tab==='library') renderLibrarySetList();
     if(tab==='test-links') renderTestLinkSelector();
-    if(tab==='operations'){ refreshOperations(); startOperationsStream(); startExamPulse(); } else { stopOperationsStream(); stopExamPulse(); }
+    if(tab==='operations'){ refreshOperations(); refreshSystemReports(); startOperationsStream(); startExamPulse(); } else { stopOperationsStream(); stopExamPulse(); }
     if(tab==='results') refreshResults();
     if(tab==='score-emails') refreshScoreEmails();
     if(tab==='students') refreshStudents();
@@ -425,6 +427,23 @@ async function refreshOperations(){
   }catch(error){ wrap.innerHTML='<div class="empty-note">ตรวจสอบระบบไม่สำเร็จ: '+escapeHtml(error.message)+'</div>'; }
 }
 document.getElementById('refreshOperationsBtn').addEventListener('click', refreshOperations);
+async function refreshSystemReports(){
+  const wrap=document.getElementById('systemReportsWrap');
+  if(!wrap) return;
+  try{
+    const reports=await apiGetSystemReports();
+    wrap.innerHTML=reports.length?reports.map(report=>`
+      <div class="mini-card" style="margin:0 0 10px;">
+        <div class="toolbar-row"><div><h4 style="margin:0 0 4px;">${escapeHtml(report.teacherName)}</h4><div class="panel-sub">${escapeHtml(new Date(report.createdAt).toLocaleString('th-TH'))}</div></div><button class="btn btn-ghost btn-sm" type="button" data-dismiss-report="${escapeAttr(report.id)}">✕ ปิดเรื่อง</button></div>
+        <p style="margin:8px 0 0;white-space:pre-wrap;">${escapeHtml(report.message)}</p>
+      </div>`).join('') : '<div class="empty-note">ยังไม่มีการแจ้งปัญหาจากอาจารย์</div>';
+    wrap.querySelectorAll('[data-dismiss-report]').forEach(button=>button.addEventListener('click',async()=>{
+      button.disabled=true;
+      try{ await apiDeleteSystemReport(button.dataset.dismissReport); refreshSystemReports(); }
+      catch(error){ showToast(error.message); button.disabled=false; }
+    }));
+  }catch(error){ wrap.innerHTML='<div class="empty-note">โหลดรายการแจ้งปัญหาไม่สำเร็จ: '+escapeHtml(error.message)+'</div>'; }
+}
 function pulseAge(seconds){if(seconds===null||seconds===undefined)return '-';return seconds<60?`${seconds} วินาที`:`${Math.floor(seconds/60)} นาที`}
 function pulseRemaining(seconds){if(seconds===null||seconds===undefined)return '-';if(seconds<=0)return 'หมดเวลาแล้ว';return `${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')} นาที`}
 let examPulseTimer=null;
@@ -1200,7 +1219,6 @@ function renderExamSchedules(){
   if(picker){picker.innerHTML=buildGroupedClassOptions(knownClasses.filter(room=>!s.assignedClasses.includes(room)&&classEducationLevelForName(room)===s.educationLevel&&(!selectedPeriod||classPeriods[room]===selectedPeriod)));}
   if(!s.examSchedules.length){host.innerHTML='<div class="mini-card" style="margin:14px 0;"><h3 style="margin:0 0 4px;">🗓️ รอบสอบแยกตามห้อง</h3><p class="panel-sub">เลือกห้องด้านล่างก่อน ระบบจะแยกห้องเข้ารอบตามรอบเรียนที่ตั้งไว้ให้ทันที</p></div>';return;}
   host.innerHTML=`<div class="mini-card" style="margin:14px 0;"><h3 style="margin:0 0 4px;">🗓️ รอบสอบแยกตามห้อง</h3><p class="panel-sub">ระบบจัดกลุ่มตามรอบเรียนของห้องอัตโนมัติ กำหนดวันและเวลาเฉพาะเมื่อจำเป็น — เว้นว่างไว้เพื่อเปิดสอบตลอดเวลา</p>${s.examSchedules.map((item,index)=>{const period=classPeriods[item.classes[0]],kind=period==='บ่าย'?'afternoon':period==='ทวิภาคี'?'cooperative':'';const expanded=scheduleExpandedNames.has(item.name);const otherSchedules=s.examSchedules.filter(other=>other.name!==item.name);return `<div class="exam-schedule-card ${kind} ${expanded?'expanded':'collapsed'}"><div class="schedule-card-head"><div><h4>${scheduleTitleLine(item)}</h4><p>${item.manualSplit?'แยกเวลาสอบเฉพาะห้องนี้':'แสดงจากรอบเรียนที่กำหนดให้ห้อง'}</p></div><button type="button" class="btn btn-ghost btn-sm schedule-toggle-btn" data-toggle-schedule="${escapeAttr(item.name)}">${expanded?'▲ ย่อ':'▼ แก้ไข'}</button></div><p class="schedule-summary-line">${scheduleSummaryLine(item)}</p><div class="schedule-card-body"${expanded?'':' hidden'}><div class="field schedule-room-field"><label>ห้องในรอบนี้</label><div class="chip-row">${item.classes.map((room,roomIndex)=>item.manualSplit?`<span class="chip room-chip split"><button type="button" class="chip-room-label" data-merge-room="${index}" title="คลิกเพื่อรวมห้องนี้กลับเข้ารอบเรียนเดิม">↩ ${escapeHtml(room)}</button><button type="button" data-remove-schedule-room="${index}:${roomIndex}">✕</button></span>`:(item.classes.length>1?`<span class="chip room-chip"><button type="button" class="chip-room-label" data-split-room="${index}:${roomIndex}" title="คลิกเพื่อแยกห้องนี้เป็นรอบเวลาของตัวเอง">${escapeHtml(room)} ⏱</button><button type="button" data-remove-schedule-room="${index}:${roomIndex}">✕</button></span>`:`<span class="chip">${escapeHtml(room)}<button type="button" data-remove-schedule-room="${index}:${roomIndex}">✕</button></span>`)).join('')}</div></div>${otherSchedules.length?`<div class="schedule-sync-row"><select data-sync-time-source="${index}"><option value="">ให้สอบพร้อมกับรอบอื่น...</option>${otherSchedules.map(other=>`<option value="${escapeAttr(other.name)}">${escapeHtml(other.classes&&other.classes.length?other.classes.join(', '):other.name)}</option>`).join('')}</select><button type="button" class="btn btn-ghost btn-sm" data-sync-time-btn="${index}">🔗 ใช้เวลาเดียวกัน</button></div>`:''}<div class="schedule-time-grid"><div class="field"><label>วันเริ่มสอบ</label><input type="text" data-schedule-start-date="${index}" value="${formatExamDate(item.availableFrom)}" placeholder="dd/mm/yyyy"></div><div class="field"><label>เวลาเริ่มสอบ</label><input type="text" data-schedule-start-time="${index}" value="${formatExamTime(item.availableFrom)}" placeholder="09.00"></div><div class="field"><label>วันสิ้นสุด</label><input type="text" data-schedule-end-date="${index}" value="${formatExamDate(item.availableUntil)}" placeholder="dd/mm/yyyy"></div><div class="field"><label>เวลาสิ้นสุด</label><input type="text" data-schedule-end-time="${index}" value="${formatExamTime(item.availableUntil)}" placeholder="10.00"></div></div></div></div>`;}).join('')}</div>`;
-  host.querySelectorAll('.exam-schedule-card').forEach((card,index)=>{const item=s.examSchedules[index];const body=card.querySelector('.schedule-card-body');const field=document.createElement('div');field.className='field schedule-late-code-field';field.innerHTML=`<label>รหัสเข้าสอบหลังเกินเวลาทำข้อสอบหรือเข้าสอบย้อนหลัง (ถ้ามี)</label><input type="text" data-schedule-late-code="${index}" value="${escapeAttr(item.lateAccessCode||'')}" placeholder="เช่น LATE2569">`;body.append(field);});
   host.querySelectorAll('.exam-schedule-card').forEach((card,index)=>{
     const item=s.examSchedules[index]; item.studentIds=Array.isArray(item.studentIds)?item.studentIds:[];
     const body=card.querySelector('.schedule-card-body');
@@ -1213,9 +1231,8 @@ function renderExamSchedules(){
     if(scheduleExpandedNames.has(name)) scheduleExpandedNames.delete(name); else scheduleExpandedNames.add(name);
     renderExamSchedules();
   }));
-  const sync=index=>{const item=s.examSchedules[index];item.availableFrom=parseExamDateTime(host.querySelector(`[data-schedule-start-date="${index}"]`).value,host.querySelector(`[data-schedule-start-time="${index}"]`).value);item.availableUntil=parseExamDateTime(host.querySelector(`[data-schedule-end-date="${index}"]`).value,host.querySelector(`[data-schedule-end-time="${index}"]`).value);item.lateAccessCode=host.querySelector(`[data-schedule-late-code="${index}"]`).value.trim();};
-  host.querySelectorAll('[data-schedule-start-date],[data-schedule-start-time],[data-schedule-end-date],[data-schedule-end-time],[data-schedule-late-code]').forEach(input=>input.addEventListener('change',()=>sync(Number(input.dataset.scheduleStartDate??input.dataset.scheduleStartTime??input.dataset.scheduleEndDate??input.dataset.scheduleEndTime??input.dataset.scheduleLateCode))));
-  host.querySelectorAll('[data-schedule-late-code]').forEach(input=>input.addEventListener('input',()=>{s.examSchedules[Number(input.dataset.scheduleLateCode)].lateAccessCode=input.value.trim();}));
+  const sync=index=>{const item=s.examSchedules[index];item.availableFrom=parseExamDateTime(host.querySelector(`[data-schedule-start-date="${index}"]`).value,host.querySelector(`[data-schedule-start-time="${index}"]`).value);item.availableUntil=parseExamDateTime(host.querySelector(`[data-schedule-end-date="${index}"]`).value,host.querySelector(`[data-schedule-end-time="${index}"]`).value);};
+  host.querySelectorAll('[data-schedule-start-date],[data-schedule-start-time],[data-schedule-end-date],[data-schedule-end-time]').forEach(input=>input.addEventListener('change',()=>sync(Number(input.dataset.scheduleStartDate??input.dataset.scheduleStartTime??input.dataset.scheduleEndDate??input.dataset.scheduleEndTime))));
   host.querySelectorAll('[data-remove-schedule-room]').forEach(button=>button.addEventListener('click',()=>{const [index,room]=button.dataset.removeScheduleRoom.split(':').map(Number),name=s.examSchedules[index].classes[room];s.assignedClasses=s.assignedClasses.filter(item=>item!==name);syncExamSchedulesFromAssignedClasses();renderExamSchedules();renderClassChips();}));
   host.querySelectorAll('[data-split-room]').forEach(button=>button.addEventListener('click',()=>{const [index,roomIdx]=button.dataset.splitRoom.split(':').map(Number);splitRoomIntoOwnSchedule(index,roomIdx);}));
   host.querySelectorAll('[data-merge-room]').forEach(button=>button.addEventListener('click',()=>{mergeRoomBackToSchedule(Number(button.dataset.mergeRoom));}));
