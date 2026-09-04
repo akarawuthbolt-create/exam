@@ -1,16 +1,7 @@
 const { activeResitAccess } = require('../resit');
 const { checkExamReadiness } = require('../exam-readiness');
-const crypto = require('crypto');
 function registerPublicExamRoutes(app, { readDB, readDBView, examTypes, sanitizeSetForStudent, getExamSchedule, hasExamAccess, isPastDeadline, isBeforeStart, requireStudent }) {
   app.get('/api/exam-types', (req, res) => res.json(examTypes));
-
-  app.get('/api/test-exam/:key', (req, res) => {
-    const token = String(req.query.token || '');
-    const set = readDB().sets.find(item => item.key === req.params.key);
-    const hash = crypto.createHash('sha256').update(token).digest('hex');
-    if (!set || !token || !set.testAccessHash || set.testAccessHash.length !== hash.length || !crypto.timingSafeEqual(Buffer.from(set.testAccessHash), Buffer.from(hash))) return res.status(404).json({ error: 'not_found' });
-    res.json({ ...sanitizeSetForStudent(set, '', ''), testMode: true });
-  });
 
   app.get('/api/sets', requireStudent, (req, res) => {
     const db = readDBView ? readDBView() : readDB();

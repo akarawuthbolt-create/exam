@@ -38,11 +38,6 @@ function registerAdminSetRoutes(app, { readDB, writeDB, requireAdmin, examTypes,
     await writeDB(db);
     res.json({ ok: true, quickOpen: set.quickOpen, quickOpenedAt: set.quickOpenedAt });
   });
-  app.post('/api/sets/:key/test-link', requireAdmin, async (req, res) => {
-    const db = readDB(), set = db.sets.find(item => item.key === req.params.key); if (!set) return res.status(404).json({ error: 'not_found' });
-    const token = crypto.randomBytes(24).toString('base64url'); set.testAccessHash = crypto.createHash('sha256').update(token).digest('hex'); set.updatedAt = new Date().toISOString(); await writeDB(db);
-    res.json({ url: `/test-exam.html?setKey=${encodeURIComponent(set.key)}&token=${encodeURIComponent(token)}` });
-  });
   app.post('/api/sets/:key/open-absentees', requireAdmin, async (req, res) => {
     const db=readDB(),set=db.sets.find(item=>item.key===req.params.key);if(!set)return res.status(404).json({error:'not_found'});
     const schedules=(set.examSchedules||[]).filter(item=>!item.absenceOnly);
