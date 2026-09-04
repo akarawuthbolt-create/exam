@@ -1275,7 +1275,7 @@ function bindEditorPanelEvents(section, index){
     else if(section==='matching') saveMatchingPairFromEditor(index);
     else if(section==='written') saveWrittenQuestionFromEditor(index);
   });
-  if(section==='mc') bindMcResourceUpload();
+  if(section==='mc'){ bindMcResourceUpload(); bindMcChoiceImageEvents(); }
   if(section==='written') { bindWrittenResourceUpload(); document.getElementById('qeWAnswerType')?.addEventListener('change',event=>{const isCode=event.target.value==='code';document.getElementById('qeWKeywordsWrap').style.display=isCode?'none':'';document.getElementById('qeWCodeAnswerWrap').style.display=isCode?'':'none';document.getElementById('qeWAttachmentWrap').style.display=isCode?'none':'';}); }
 }
 
@@ -1524,6 +1524,9 @@ function mcEditorPanelHtml(index){
   const s = editingSet.sections.mc;
   const isNew = index===null;
   const q = isNew ? {text:'', choices:['','','',''], answer:0} : s.questions[index];
+  if(!Array.isArray(openQEditor.mcChoiceImages)) openQEditor.mcChoiceImages = (Array.isArray(q.choiceImages) ? q.choiceImages.slice() : q.choices.map(()=>null));
+  while(openQEditor.mcChoiceImages.length < q.choices.length) openQEditor.mcChoiceImages.push(null);
+  const choiceImages = openQEditor.mcChoiceImages;
   return `<div class="q-editor-panel">
     <div class="q-editor-title">${isNew?'เพิ่มข้อปรนัยใหม่':'แก้ไขข้อที่ '+(index+1)}</div>
     <div class="field"><label>โจทย์</label><textarea id="qeMcText" placeholder="พิมพ์คำถาม...">${escapeHtml(q.text)}</textarea></div>
@@ -1532,12 +1535,44 @@ function mcEditorPanelHtml(index){
       <div class="choice-edit-row">
         <input type="radio" name="qeMcAns" data-ci="${ci}" ${q.answer===ci?'checked':''} title="ทำเครื่องหมายคำตอบที่ถูกต้อง">
         <input type="text" class="qeMcChoice" data-ci="${ci}" value="${escapeAttr(c)}" placeholder="ตัวเลือกที่ ${ci+1}">
+        <span id="choiceImgSlot-${ci}">${choiceImageSlotHtml(choiceImages[ci],ci)}</span>
       </div>`).join('')}
     <div class="editor-actions">
       <button class="btn btn-ghost btn-sm" id="qeCancelBtn" type="button">ยกเลิก</button>
       <button class="btn btn-primary btn-sm" id="qeSaveBtn" type="button">${isNew?'เพิ่มข้อนี้':'บันทึกการแก้ไข'}</button>
     </div>
   </div>`;
+}
+function choiceImageSlotHtml(img,ci){
+  return img
+    ? `<span class="choice-image-thumb-wrap"><img class="choice-image-thumb" src="${escapeAttr(img.url)}" alt="${escapeHtml(img.name||'')}"><button type="button" class="btn btn-ghost btn-sm" data-remove-choice-image="${ci}" title="ลบรูปตัวเลือกนี้">✕🖼️</button></span>`
+    : `<label class="btn btn-ghost btn-sm choice-image-upload-btn" title="เพิ่มรูปในตัวเลือกนี้">🖼️+<input type="file" accept="image/*" class="qeMcChoiceImageInput" data-ci="${ci}" hidden></label>`;
+}
+function refreshChoiceImageSlot(ci){
+  const slot=document.getElementById(`choiceImgSlot-${ci}`);
+  if(!slot) return;
+  slot.innerHTML = choiceImageSlotHtml(openQEditor.mcChoiceImages[ci],ci);
+  bindMcChoiceImageEvents();
+}
+function bindMcChoiceImageEvents(){
+  document.querySelectorAll('.qeMcChoiceImageInput').forEach(input=>{
+    if(input.dataset.bound) return; input.dataset.bound='1';
+    input.addEventListener('change',async()=>{
+      const file=input.files?.[0]; if(!file) return;
+      const ci=parseInt(input.dataset.ci,10);
+      input.disabled=true;
+      try{ const asset=await apiUploadQuestionAsset(file); openQEditor.mcChoiceImages[ci]=asset; refreshChoiceImageSlot(ci); showToast('อัปโหลดรูปตัวเลือกแล้ว'); }
+      catch(error){ showToast(error.message); input.disabled=false; }
+    });
+  });
+  document.querySelectorAll('[data-remove-choice-image]').forEach(button=>{
+    if(button.dataset.bound) return; button.dataset.bound='1';
+    button.addEventListener('click', ()=>{
+      const ci=parseInt(button.dataset.removeChoiceImage,10);
+      openQEditor.mcChoiceImages[ci]=null;
+      refreshChoiceImageSlot(ci);
+    });
+  });
 }
 function mcResourceEditorHtml(q,isNew){
   const resources=isNew?(openQEditor.resources||(openQEditor.resources={attachments:[]})):(q.resources||(q.resources={attachments:[]}));
@@ -1582,8 +1617,11 @@ function saveMcQuestionFromEditor(index){
   const s = editingSet.sections.mc;
   const old=index===null?{}:s.questions[index];
   const resources=openQEditor.resources||old.resources||{attachments:[]};
-  if(index===null) s.questions.push({id:uid('mc'), text, choices, answer, points:0, resources});
-  else Object.assign(s.questions[index], {text, choices, answer, resources});
+  const choiceImagesRaw=(openQEditor.mcChoiceImages||[]).slice(0,choices.length);
+  while(choiceImagesRaw.length<choices.length) choiceImagesRaw.push(null);
+  const choiceImages=choiceImagesRaw.some(Boolean)?choiceImagesRaw:undefined;
+  if(index===null) s.questions.push({id:uid('mc'), text, choices, answer, points:0, resources, choiceImages});
+  else Object.assign(s.questions[index], {text, choices, answer, resources, choiceImages});
   applyPointDistribution('mc');
   closeQuestionEditor();
 }

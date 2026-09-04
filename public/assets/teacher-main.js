@@ -898,7 +898,7 @@ function bindEditorPanelEvents(section, index){
     else if(section==='matching') saveMatchingPairFromEditor(index);
     else if(section==='written') saveWrittenQuestionFromEditor(index);
   });
-  if(section==='mc'){ bindMcResourceUpload(); bindMcChoiceEditingEvents(); }
+  if(section==='mc'){ bindMcResourceUpload(); bindMcChoiceEditingEvents(); bindMcChoiceImageEvents(); }
   if(section==='written') { bindWrittenResourceUpload(); document.getElementById('qeWAnswerType')?.addEventListener('change',event=>{const isCode=event.target.value==='code';document.getElementById('qeWKeywordsWrap').style.display=isCode?'none':'';document.getElementById('qeWCodeAnswerWrap').style.display=isCode?'':'none';document.getElementById('qeWAttachmentWrap').style.display=isCode?'none':'';}); }
 }
 
@@ -1217,7 +1217,10 @@ function mcEditorPanelHtml(index){
   const q = isNew ? {text:''} : s.questions[index];
   if(!Array.isArray(openQEditor.draftMcChoices)) openQEditor.draftMcChoices = isNew ? ['','','',''] : s.questions[index].choices.slice();
   if(!Number.isInteger(openQEditor.draftAnswer)) openQEditor.draftAnswer = isNew ? 0 : s.questions[index].answer;
+  if(!Array.isArray(openQEditor.draftMcChoiceImages)) openQEditor.draftMcChoiceImages = isNew ? openQEditor.draftMcChoices.map(()=>null) : (Array.isArray(s.questions[index].choiceImages) ? s.questions[index].choiceImages.slice() : s.questions[index].choices.map(()=>null));
+  while(openQEditor.draftMcChoiceImages.length < openQEditor.draftMcChoices.length) openQEditor.draftMcChoiceImages.push(null);
   const choices = openQEditor.draftMcChoices;
+  const choiceImages = openQEditor.draftMcChoiceImages;
   const answer = openQEditor.draftAnswer;
   const extraNote = choices.length > MC_DISPLAY_CHOICES
     ? `<p class="panel-sub" style="margin:8px 0 0;">${tr('มีตัวเลือกมากกว่า')} ${MC_DISPLAY_CHOICES} ${tr('ข้อ — ระบบจะสุ่มเลือกมาแสดงคนละ')} ${MC_DISPLAY_CHOICES} ${tr('ข้อ (รวมเฉลยเสมอ) ให้นักเรียนแต่ละคน')}</p>`
@@ -1226,12 +1229,18 @@ function mcEditorPanelHtml(index){
     <div class="q-editor-title">${isNew?tr('เพิ่มข้อปรนัยใหม่'):tr('แก้ไขข้อที่')+' '+(index+1)}</div>
     <div class="field"><label>${tr('โจทย์')}</label><textarea id="qeMcText" placeholder="${tr('พิมพ์คำถาม...')}">${escapeHtml(q.text)}</textarea></div>
     ${mcResourceEditorHtml(q,isNew)}
-    ${choices.map((c,ci)=>`
+    ${choices.map((c,ci)=>{
+      const img = choiceImages[ci];
+      const imageHtml = img
+        ? `<span class="choice-image-thumb-wrap"><img class="choice-image-thumb" src="${escapeAttr(img.url)}" alt="${escapeHtml(img.name||'')}"><button type="button" class="btn btn-ghost btn-sm" data-remove-choice-image="${ci}" title="${tr('ลบรูปตัวเลือกนี้')}">✕🖼️</button></span>`
+        : `<label class="btn btn-ghost btn-sm choice-image-upload-btn" title="${tr('เพิ่มรูปในตัวเลือกนี้')}">🖼️+<input type="file" accept="image/*" class="qeMcChoiceImageInput" data-ci="${ci}" hidden></label>`;
+      return `
       <div class="choice-edit-row">
         <input type="radio" name="qeMcAns" data-ci="${ci}" ${answer===ci?'checked':''} title="${tr('ทำเครื่องหมายคำตอบที่ถูกต้อง')}">
         <input type="text" class="qeMcChoice" data-ci="${ci}" value="${escapeAttr(c)}" placeholder="${tr('ตัวเลือกที่')} ${ci+1}">
+        ${imageHtml}
         ${choices.length>MC_MIN_CHOICES?`<button type="button" class="btn btn-ghost btn-sm" data-remove-choice="${ci}" title="${tr('ลบตัวเลือกนี้')}">✕</button>`:''}
-      </div>`).join('')}
+      </div>`;}).join('')}
     ${choices.length<MC_MAX_CHOICES?`<button class="add-row-btn" id="qeAddChoiceBtn" type="button">${tr('+ เพิ่มตัวเลือก')}</button>`:''}
     ${extraNote}
     <div class="editor-actions">
@@ -1252,14 +1261,32 @@ function bindMcChoiceEditingEvents(){
   if(addBtn) addBtn.addEventListener('click', ()=>{
     syncMcDraftChoicesFromDom();
     openQEditor.draftMcChoices.push('');
+    openQEditor.draftMcChoiceImages.push(null);
     renderOpenEditorIfNeeded('mc');
   });
   document.querySelectorAll('[data-remove-choice]').forEach(button=>button.addEventListener('click', ()=>{
     syncMcDraftChoicesFromDom();
     const removeIndex = parseInt(button.dataset.removeChoice,10);
     openQEditor.draftMcChoices.splice(removeIndex,1);
+    openQEditor.draftMcChoiceImages.splice(removeIndex,1);
     if(openQEditor.draftAnswer===removeIndex) openQEditor.draftAnswer=0;
     else if(openQEditor.draftAnswer>removeIndex) openQEditor.draftAnswer -= 1;
+    renderOpenEditorIfNeeded('mc');
+  }));
+}
+function bindMcChoiceImageEvents(){
+  document.querySelectorAll('.qeMcChoiceImageInput').forEach(input=>input.addEventListener('change',async()=>{
+    const file=input.files?.[0]; if(!file) return;
+    syncMcDraftChoicesFromDom();
+    const ci=parseInt(input.dataset.ci,10);
+    input.disabled=true;
+    try{ const asset=await apiUploadQuestionAsset(file); openQEditor.draftMcChoiceImages[ci]=asset; renderOpenEditorIfNeeded('mc'); showToast('อัปโหลดรูปตัวเลือกแล้ว'); }
+    catch(error){ showToast(error.message); input.disabled=false; }
+  }));
+  document.querySelectorAll('[data-remove-choice-image]').forEach(button=>button.addEventListener('click', ()=>{
+    syncMcDraftChoicesFromDom();
+    const ci=parseInt(button.dataset.removeChoiceImage,10);
+    openQEditor.draftMcChoiceImages[ci]=null;
     renderOpenEditorIfNeeded('mc');
   }));
 }
@@ -1308,8 +1335,11 @@ function saveMcQuestionFromEditor(index){
   const s = editingSet.sections.mc;
   const old=index===null?{}:s.questions[index];
   const resources=openQEditor.resources||old.resources||{attachments:[]};
-  if(index===null) s.questions.push({id:uid('mc'), text, choices, answer, points:0, resources});
-  else Object.assign(s.questions[index], {text, choices, answer, resources});
+  const choiceImagesRaw=(openQEditor.draftMcChoiceImages||[]).slice(0,choices.length);
+  while(choiceImagesRaw.length<choices.length) choiceImagesRaw.push(null);
+  const choiceImages=choiceImagesRaw.some(Boolean)?choiceImagesRaw:undefined;
+  if(index===null) s.questions.push({id:uid('mc'), text, choices, answer, points:0, resources, choiceImages});
+  else Object.assign(s.questions[index], {text, choices, answer, resources, choiceImages});
   applyPointDistribution('mc');
   closeQuestionEditor();
 }
