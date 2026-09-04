@@ -996,8 +996,17 @@ let googleFormsConnectionId = null;
 let googleFormsPreview = null;
 let googleFormsPoll = null;
 function googleFormsPreviewHtml(preview){
-  const cards=(preview.questions||[]).map((question,index)=>`<div class="google-form-question-preview"><div><span class="status-pill">${question.type==='written'?'อัตนัย':'ปรนัย'}</span>${question.sourceNumber?`<span class="google-form-source-number">เลขข้อเดิม ${escapeHtml(question.sourceNumber)}</span>`:''}</div><b>ข้อ ${index+1}. ${escapeHtml(question.text||'ไม่มีข้อความคำถาม')}</b><small>${question.type==='written'?`คำตอบข้อความ${question.keywords?.length?' · มีแนวคำตอบ':''}`:`${question.choices?.length||0} ตัวเลือก · มีเฉลย`} · ${Number(question.sourcePoints)||0} คะแนน${question.pointsMissing?' <span class="google-form-points-missing">⚠️ ไม่ได้กำหนดคะแนนใน Google Forms ตั้งเป็น 1 คะแนนชั่วคราว กรุณาตรวจสอบหลังนำเข้า</span>':''}${question.images?.length?` · มีรูป ${question.images.length} รูป`:''}</small>${question.images?.length?`<div class="google-form-preview-images">${question.images.map(image=>`<img src="${escapeAttr(image.contentUri)}" alt="${escapeAttr(image.altText||'รูปประกอบคำถาม')}" loading="lazy">`).join('')}</div>`:''}</div>`).join('');
+  const cards=(preview.questions||[]).map((question,index)=>`<div class="google-form-question-preview"><button type="button" class="google-form-question-remove" data-remove-question-index="${question.__previewIndex}" title="ลบข้อนี้ออกจากการนำเข้า" aria-label="ลบข้อนี้ออกจากการนำเข้า">✕</button><div><span class="status-pill">${question.type==='written'?'อัตนัย':'ปรนัย'}</span>${question.sourceNumber?`<span class="google-form-source-number">เลขข้อเดิม ${escapeHtml(question.sourceNumber)}</span>`:''}</div><b>ข้อ ${index+1}. ${escapeHtml(question.text||'ไม่มีข้อความคำถาม')}</b><small>${question.type==='written'?`คำตอบข้อความ${question.keywords?.length?' · มีแนวคำตอบ':''}`:`${question.choices?.length||0} ตัวเลือก · มีเฉลย`} · ${Number(question.sourcePoints)||0} คะแนน${question.pointsMissing?' <span class="google-form-points-missing">⚠️ ไม่ได้กำหนดคะแนนใน Google Forms ตั้งเป็น 1 คะแนนชั่วคราว กรุณาตรวจสอบหลังนำเข้า</span>':''}${question.images?.length?` · มีรูป ${question.images.length} รูป`:''}</small>${question.images?.length?`<div class="google-form-preview-images">${question.images.map(image=>`<img src="${escapeAttr(image.contentUri)}" alt="${escapeAttr(image.altText||'รูปประกอบคำถาม')}" loading="lazy">`).join('')}</div>`:''}</div>`).join('');
   return `<div class="google-form-preview-summary"><span class="ok">นำเข้าได้ ${preview.questions?.length||0} ข้อ</span><span>ปรนัย ${preview.counts?.mc||0}</span><span>อัตนัย ${preview.counts?.written||0}</span><span>รูป ${preview.counts?.images||0}</span>${preview.counts?.pointsMissing?`<span class="warn">ไม่มีคะแนน ${preview.counts.pointsMissing}</span>`:''}</div>${cards}${preview.skipped?.length?`<div class="bad google-form-skipped">ข้าม ${preview.skipped.length} ข้อ: ${preview.skipped.map(item=>escapeHtml(item.title+' — '+item.reason)).join(' · ')}</div>`:''}`;
+}
+function recountGoogleFormsPreview(preview){
+  const questions=preview.questions||[];
+  preview.counts={
+    mc:questions.filter(question=>question.type==='mc').length,
+    written:questions.filter(question=>question.type==='written').length,
+    images:questions.reduce((total,question)=>total+(question.images?.length||0),0),
+    pointsMissing:questions.filter(question=>question.pointsMissing).length,
+  };
 }
 function applyGoogleQuestionsToSet(target,preview){
   const mc=(preview.questions||[]).filter(question=>question.type==='mc');
@@ -1066,9 +1075,18 @@ function bindGoogleFormsSetImportEvents(){
     const output=document.getElementById('googleFormsSetPreview'); const formUrl=document.getElementById('googleFormsSetUrl').value.trim();
     if(!googleFormsConnectionId){showToast('กรุณาเชื่อมต่อ Google ก่อน');return;} if(!formUrl){showToast('กรุณาวางลิงก์ Google Forms');return;}
     output.textContent='กำลังตรวจสอบแบบฟอร์ม...';
-    try{googleFormsPreview=await apiPreviewGoogleForm(googleFormsConnectionId,formUrl);document.getElementById('applyGoogleFormsSetBtn').disabled=!googleFormsPreview.questions.length;output.innerHTML=googleFormsPreviewHtml(googleFormsPreview);showGoogleFormsSetReview(true);}catch(error){googleFormsPreview=null;document.getElementById('applyGoogleFormsSetBtn').disabled=true;output.textContent=error.message;}
+    try{googleFormsPreview=await apiPreviewGoogleForm(googleFormsConnectionId,formUrl);googleFormsPreview.questions.forEach((question,index)=>{question.__previewIndex=index;});document.getElementById('applyGoogleFormsSetBtn').disabled=!googleFormsPreview.questions.length;output.innerHTML=googleFormsPreviewHtml(googleFormsPreview);showGoogleFormsSetReview(true);}catch(error){googleFormsPreview=null;document.getElementById('applyGoogleFormsSetBtn').disabled=true;output.textContent=error.message;}
   };
   document.getElementById('previewGoogleFormsSetBtn').addEventListener('click',previewGoogleFormsSet);
+  document.getElementById('googleFormsSetPreview').addEventListener('click',event=>{
+    const button=event.target.closest('[data-remove-question-index]'); if(!button||!googleFormsPreview)return;
+    const previewIndex=Number(button.dataset.removeQuestionIndex); if(!Number.isInteger(previewIndex))return;
+    const position=googleFormsPreview.questions.findIndex(question=>question.__previewIndex===previewIndex); if(position<0)return;
+    googleFormsPreview.questions.splice(position,1);
+    recountGoogleFormsPreview(googleFormsPreview);
+    document.getElementById('googleFormsSetPreview').innerHTML=googleFormsPreviewHtml(googleFormsPreview);
+    document.getElementById('applyGoogleFormsSetBtn').disabled=!googleFormsPreview.questions.length;
+  });
   document.getElementById('listGoogleFormsSetBtn').addEventListener('click',async()=>{
     if(!googleFormsConnectionId){showToast('กรุณาเชื่อมต่อ Google ก่อน');return;}
     const output=document.getElementById('googleFormsListPreview');output.textContent='กำลังโหลดรายการ Google Forms...';
@@ -1084,7 +1102,12 @@ function bindGoogleFormsSetImportEvents(){
   document.getElementById('applyGoogleFormsSetBtn').addEventListener('click',async()=>{
     if(!googleFormsPreview?.questions.length)return;
     const button=document.getElementById('applyGoogleFormsSetBtn'),formUrl=document.getElementById('googleFormsSetUrl').value.trim();button.disabled=true;button.textContent='กำลังนำเข้าและเก็บรูป...';
-    try{const imported=await apiImportGoogleForm(googleFormsConnectionId,formUrl);dialog.close();openEditor(null,googleFormsDraftSet(imported));showToast(`นำเข้าข้อสอบ ${imported.questions.length} ข้อแล้ว${imported.warnings?.length?' · รูปบางรายการไม่สำเร็จ':''}`);}catch(error){showToast(error.message);}finally{button.disabled=false;button.textContent='นำเข้าและตั้งค่าชุดข้อสอบ';}
+    try{
+      const imported=await apiImportGoogleForm(googleFormsConnectionId,formUrl);
+      const keptIndexes=new Set(googleFormsPreview.questions.map(question=>question.__previewIndex));
+      const finalImport={...imported, questions:imported.questions.filter((question,index)=>keptIndexes.has(index))};
+      dialog.close();openEditor(null,googleFormsDraftSet(finalImport));showToast(`นำเข้าข้อสอบ ${finalImport.questions.length} ข้อแล้ว${imported.warnings?.length?' · รูปบางรายการไม่สำเร็จ':''}`);
+    }catch(error){showToast(error.message);}finally{button.disabled=false;button.textContent='นำเข้าและตั้งค่าชุดข้อสอบ';}
   });
 }
 bindGoogleFormsSetImportEvents();
