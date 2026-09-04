@@ -1275,7 +1275,7 @@ function bindEditorPanelEvents(section, index){
     else if(section==='matching') saveMatchingPairFromEditor(index);
     else if(section==='written') saveWrittenQuestionFromEditor(index);
   });
-  if(section==='mc'){ bindMcResourceUpload(); bindMcChoiceImageEvents(); }
+  if(section==='mc'){ bindMcResourceUpload(); bindMcChoiceEditingEvents(); bindMcChoiceImageEvents(); }
   if(section==='written') { bindWrittenResourceUpload(); document.getElementById('qeWAnswerType')?.addEventListener('change',event=>{const isCode=event.target.value==='code';document.getElementById('qeWKeywordsWrap').style.display=isCode?'none':'';document.getElementById('qeWCodeAnswerWrap').style.display=isCode?'':'none';document.getElementById('qeWAttachmentWrap').style.display=isCode?'none':'';}); }
 }
 
@@ -1520,59 +1520,87 @@ function renderMcCompactList(){
     renderMcPanel();
   }));
 }
+const MC_MIN_CHOICES = 4;
+const MC_MAX_CHOICES = 8;
+const MC_DISPLAY_CHOICES = 4;
 function mcEditorPanelHtml(index){
   const s = editingSet.sections.mc;
   const isNew = index===null;
-  const q = isNew ? {text:'', choices:['','','',''], answer:0} : s.questions[index];
-  if(!Array.isArray(openQEditor.mcChoiceImages)) openQEditor.mcChoiceImages = (Array.isArray(q.choiceImages) ? q.choiceImages.slice() : q.choices.map(()=>null));
-  while(openQEditor.mcChoiceImages.length < q.choices.length) openQEditor.mcChoiceImages.push(null);
-  const choiceImages = openQEditor.mcChoiceImages;
+  const q = isNew ? {text:''} : s.questions[index];
+  if(!Array.isArray(openQEditor.draftMcChoices)) openQEditor.draftMcChoices = isNew ? ['','','',''] : s.questions[index].choices.slice();
+  if(!Number.isInteger(openQEditor.draftAnswer)) openQEditor.draftAnswer = isNew ? 0 : s.questions[index].answer;
+  if(!Array.isArray(openQEditor.draftMcChoiceImages)) openQEditor.draftMcChoiceImages = isNew ? openQEditor.draftMcChoices.map(()=>null) : (Array.isArray(s.questions[index].choiceImages) ? s.questions[index].choiceImages.slice() : s.questions[index].choices.map(()=>null));
+  while(openQEditor.draftMcChoiceImages.length < openQEditor.draftMcChoices.length) openQEditor.draftMcChoiceImages.push(null);
+  const choices = openQEditor.draftMcChoices;
+  const choiceImages = openQEditor.draftMcChoiceImages;
+  const answer = openQEditor.draftAnswer;
+  const extraNote = choices.length > MC_DISPLAY_CHOICES
+    ? `<p class="panel-sub" style="margin:8px 0 0;">มีตัวเลือกมากกว่า ${MC_DISPLAY_CHOICES} ข้อ — ระบบจะสุ่มเลือกมาแสดงคนละ ${MC_DISPLAY_CHOICES} ข้อ (รวมเฉลยเสมอ) ให้นักเรียนแต่ละคน</p>`
+    : '';
   return `<div class="q-editor-panel">
     <div class="q-editor-title">${isNew?'เพิ่มข้อปรนัยใหม่':'แก้ไขข้อที่ '+(index+1)}</div>
     <div class="field"><label>โจทย์</label><textarea id="qeMcText" placeholder="พิมพ์คำถาม...">${escapeHtml(q.text)}</textarea></div>
     ${mcResourceEditorHtml(q,isNew)}
-    ${q.choices.map((c,ci)=>`
+    ${choices.map((c,ci)=>{
+      const img = choiceImages[ci];
+      const imageHtml = img
+        ? `<span class="choice-image-thumb-wrap"><img class="choice-image-thumb" src="${escapeAttr(img.url)}" alt="${escapeHtml(img.name||'')}"><button type="button" class="btn btn-ghost btn-sm" data-remove-choice-image="${ci}" title="ลบรูปตัวเลือกนี้">✕🖼️</button></span>`
+        : `<label class="btn btn-ghost btn-sm choice-image-upload-btn" title="เพิ่มรูปในตัวเลือกนี้">🖼️+<input type="file" accept="image/*" class="qeMcChoiceImageInput" data-ci="${ci}" hidden></label>`;
+      return `
       <div class="choice-edit-row">
-        <input type="radio" name="qeMcAns" data-ci="${ci}" ${q.answer===ci?'checked':''} title="ทำเครื่องหมายคำตอบที่ถูกต้อง">
+        <input type="radio" name="qeMcAns" data-ci="${ci}" ${answer===ci?'checked':''} title="ทำเครื่องหมายคำตอบที่ถูกต้อง">
         <input type="text" class="qeMcChoice" data-ci="${ci}" value="${escapeAttr(c)}" placeholder="ตัวเลือกที่ ${ci+1}">
-        <span id="choiceImgSlot-${ci}">${choiceImageSlotHtml(choiceImages[ci],ci)}</span>
-      </div>`).join('')}
+        ${imageHtml}
+        ${choices.length>MC_MIN_CHOICES?`<button type="button" class="btn btn-ghost btn-sm" data-remove-choice="${ci}" title="ลบตัวเลือกนี้">✕</button>`:''}
+      </div>`;}).join('')}
+    ${choices.length<MC_MAX_CHOICES?`<button class="add-row-btn" id="qeAddChoiceBtn" type="button">+ เพิ่มตัวเลือก</button>`:''}
+    ${extraNote}
     <div class="editor-actions">
       <button class="btn btn-ghost btn-sm" id="qeCancelBtn" type="button">ยกเลิก</button>
       <button class="btn btn-primary btn-sm" id="qeSaveBtn" type="button">${isNew?'เพิ่มข้อนี้':'บันทึกการแก้ไข'}</button>
     </div>
   </div>`;
 }
-function choiceImageSlotHtml(img,ci){
-  return img
-    ? `<span class="choice-image-thumb-wrap"><img class="choice-image-thumb" src="${escapeAttr(img.url)}" alt="${escapeHtml(img.name||'')}"><button type="button" class="btn btn-ghost btn-sm" data-remove-choice-image="${ci}" title="ลบรูปตัวเลือกนี้">✕🖼️</button></span>`
-    : `<label class="btn btn-ghost btn-sm choice-image-upload-btn" title="เพิ่มรูปในตัวเลือกนี้">🖼️+<input type="file" accept="image/*" class="qeMcChoiceImageInput" data-ci="${ci}" hidden></label>`;
+function syncMcDraftChoicesFromDom(){
+  const inputs = document.querySelectorAll('.qeMcChoice');
+  if(!inputs.length) return;
+  openQEditor.draftMcChoices = Array.from(inputs).map(input=>input.value);
+  const checked = document.querySelector('input[name="qeMcAns"]:checked');
+  openQEditor.draftAnswer = checked ? parseInt(checked.dataset.ci,10) : 0;
 }
-function refreshChoiceImageSlot(ci){
-  const slot=document.getElementById(`choiceImgSlot-${ci}`);
-  if(!slot) return;
-  slot.innerHTML = choiceImageSlotHtml(openQEditor.mcChoiceImages[ci],ci);
-  bindMcChoiceImageEvents();
+function bindMcChoiceEditingEvents(){
+  const addBtn = document.getElementById('qeAddChoiceBtn');
+  if(addBtn) addBtn.addEventListener('click', ()=>{
+    syncMcDraftChoicesFromDom();
+    openQEditor.draftMcChoices.push('');
+    openQEditor.draftMcChoiceImages.push(null);
+    renderOpenEditorIfNeeded('mc');
+  });
+  document.querySelectorAll('[data-remove-choice]').forEach(button=>button.addEventListener('click', ()=>{
+    syncMcDraftChoicesFromDom();
+    const removeIndex = parseInt(button.dataset.removeChoice,10);
+    openQEditor.draftMcChoices.splice(removeIndex,1);
+    openQEditor.draftMcChoiceImages.splice(removeIndex,1);
+    if(openQEditor.draftAnswer===removeIndex) openQEditor.draftAnswer=0;
+    else if(openQEditor.draftAnswer>removeIndex) openQEditor.draftAnswer -= 1;
+    renderOpenEditorIfNeeded('mc');
+  }));
 }
 function bindMcChoiceImageEvents(){
-  document.querySelectorAll('.qeMcChoiceImageInput').forEach(input=>{
-    if(input.dataset.bound) return; input.dataset.bound='1';
-    input.addEventListener('change',async()=>{
-      const file=input.files?.[0]; if(!file) return;
-      const ci=parseInt(input.dataset.ci,10);
-      input.disabled=true;
-      try{ const asset=await apiUploadQuestionAsset(file); openQEditor.mcChoiceImages[ci]=asset; refreshChoiceImageSlot(ci); showToast('อัปโหลดรูปตัวเลือกแล้ว'); }
-      catch(error){ showToast(error.message); input.disabled=false; }
-    });
-  });
-  document.querySelectorAll('[data-remove-choice-image]').forEach(button=>{
-    if(button.dataset.bound) return; button.dataset.bound='1';
-    button.addEventListener('click', ()=>{
-      const ci=parseInt(button.dataset.removeChoiceImage,10);
-      openQEditor.mcChoiceImages[ci]=null;
-      refreshChoiceImageSlot(ci);
-    });
-  });
+  document.querySelectorAll('.qeMcChoiceImageInput').forEach(input=>input.addEventListener('change',async()=>{
+    const file=input.files?.[0]; if(!file) return;
+    syncMcDraftChoicesFromDom();
+    const ci=parseInt(input.dataset.ci,10);
+    input.disabled=true;
+    try{ const asset=await apiUploadQuestionAsset(file); openQEditor.draftMcChoiceImages[ci]=asset; renderOpenEditorIfNeeded('mc'); showToast('อัปโหลดรูปตัวเลือกแล้ว'); }
+    catch(error){ showToast(error.message); input.disabled=false; }
+  }));
+  document.querySelectorAll('[data-remove-choice-image]').forEach(button=>button.addEventListener('click', ()=>{
+    syncMcDraftChoicesFromDom();
+    const ci=parseInt(button.dataset.removeChoiceImage,10);
+    openQEditor.draftMcChoiceImages[ci]=null;
+    renderOpenEditorIfNeeded('mc');
+  }));
 }
 function mcResourceEditorHtml(q,isNew){
   const resources=isNew?(openQEditor.resources||(openQEditor.resources={attachments:[]})):(q.resources||(q.resources={attachments:[]}));
@@ -1617,7 +1645,7 @@ function saveMcQuestionFromEditor(index){
   const s = editingSet.sections.mc;
   const old=index===null?{}:s.questions[index];
   const resources=openQEditor.resources||old.resources||{attachments:[]};
-  const choiceImagesRaw=(openQEditor.mcChoiceImages||[]).slice(0,choices.length);
+  const choiceImagesRaw=(openQEditor.draftMcChoiceImages||[]).slice(0,choices.length);
   while(choiceImagesRaw.length<choices.length) choiceImagesRaw.push(null);
   const choiceImages=choiceImagesRaw.some(Boolean)?choiceImagesRaw:undefined;
   if(index===null) s.questions.push({id:uid('mc'), text, choices, answer, points:0, resources, choiceImages});
