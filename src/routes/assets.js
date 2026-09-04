@@ -9,7 +9,8 @@ function uploadHandler(storage, ownerFor) {
       const asset = await storage.upload({ buffer: req.body, contentType: String(req.get('content-type') || '').split(';')[0].toLowerCase(), fileName, owner: ownerFor(req) });
       res.status(201).json(asset);
     } catch (error) {
-      res.status(error.code === 'storage_not_configured' ? 503 : 400).json({ error: error.code || 'upload_failed', message: error.message });
+      const serviceUnavailable = error.code === 'storage_not_configured' || error.code === 'storage_unreachable';
+      res.status(serviceUnavailable ? 503 : 400).json({ error: error.code || 'upload_failed', message: error.message });
     }
   };
 }
