@@ -47,7 +47,7 @@ async function apiTeacherLogin(username, password){
   if(!res.ok){ let msg='username หรือ password ไม่ถูกต้อง'; try{ const j = await res.json(); if(j&&j.message) msg=j.message; }catch(e){} throw new Error(msg); }
   return res.json();
 }
-async function apiChangeTeacherPassword(currentPassword, newPassword){ return apiFetch('/api/teacher/change-password', { method:'POST', body:{currentPassword, newPassword}, auth:true }); }
+async function apiChangeTeacherPassword(currentPassword, newPassword, newUsername){ return apiFetch('/api/teacher/change-password', { method:'POST', body:{currentPassword, newPassword, newUsername}, auth:true }); }
 async function apiGetAdminSets(){ return apiFetch('/api/teacher/sets', { auth:true }); }
 async function apiUploadQuestionAsset(file){
   const response=await fetch('/api/teacher/assets',{method:'POST',headers:{'x-teacher-token':teacherToken||'','Content-Type':file.type,'x-file-name':encodeURIComponent(file.name)},body:file});
@@ -143,6 +143,7 @@ async function tryAdminLogin(){
     document.getElementById('teacherNameLabel').textContent = result.firstName + ' ' + result.lastName;
     adminLoginScreen.classList.add('hidden'); adminScreen.classList.remove('hidden');
     initAdmin();
+    if(result.mustChangePassword) openForcedFirstLoginSetup();
   }catch(e){
     errBox.textContent = e.message; errBox.style.display='block';
   }
@@ -151,18 +152,38 @@ async function tryAdminLogin(){
 document.getElementById('teacherLoginForm').addEventListener('submit', (e)=>{ e.preventDefault(); tryAdminLogin(); });
 document.getElementById('pageRefreshBtn').addEventListener('click', refreshCurrentPageData);
 const changePasswordDialog = document.getElementById('changePasswordDialog');
+let isForcedFirstLoginSetup = false;
 document.getElementById('changePasswordBtn').addEventListener('click', ()=>{
+  isForcedFirstLoginSetup = false;
   document.getElementById('changePasswordForm').reset();
   document.getElementById('changePasswordError').textContent='';
+  document.getElementById('changePasswordTitle').textContent='🔐 เปลี่ยนรหัสผ่าน';
+  document.getElementById('changePasswordIntro').textContent='ใช้รหัสผ่านใหม่อย่างน้อย 8 ตัวอักษร ระบบจะออกจากอุปกรณ์อื่นเพื่อความปลอดภัย';
+  document.getElementById('changeUsernameField').classList.add('hidden');
+  document.getElementById('cancelChangePasswordBtn').classList.remove('hidden');
   changePasswordDialog.showModal();
   document.getElementById('currentPasswordInput').focus();
 });
+function openForcedFirstLoginSetup(){
+  isForcedFirstLoginSetup = true;
+  document.getElementById('changePasswordForm').reset();
+  document.getElementById('changePasswordError').textContent='';
+  document.getElementById('changePasswordTitle').textContent='🔐 ตั้งรหัสผ่านใหม่ก่อนใช้งาน';
+  document.getElementById('changePasswordIntro').textContent='เข้าสู่ระบบครั้งแรก กรุณาตั้งรหัสผ่านใหม่ (และแก้ไข username ได้ถ้าต้องการ) ก่อนใช้งานต่อ';
+  document.getElementById('changeUsernameField').classList.remove('hidden');
+  document.getElementById('newUsernameInput').value = teacherInfo?.username || '';
+  document.getElementById('cancelChangePasswordBtn').classList.add('hidden');
+  changePasswordDialog.showModal();
+  document.getElementById('currentPasswordInput').focus();
+}
+changePasswordDialog.addEventListener('cancel', event=>{ if(isForcedFirstLoginSetup) event.preventDefault(); });
 document.getElementById('cancelChangePasswordBtn').addEventListener('click', ()=>changePasswordDialog.close());
 document.getElementById('changePasswordForm').addEventListener('submit', async (event)=>{
   event.preventDefault();
   const currentPassword=document.getElementById('currentPasswordInput').value;
   const newPassword=document.getElementById('newPasswordInput').value;
   const confirmPassword=document.getElementById('confirmPasswordInput').value;
+  const newUsername=isForcedFirstLoginSetup?document.getElementById('newUsernameInput').value.trim():undefined;
   const error=document.getElementById('changePasswordError');
   const saveBtn=document.getElementById('savePasswordBtn');
   error.textContent='';
@@ -170,10 +191,12 @@ document.getElementById('changePasswordForm').addEventListener('submit', async (
   if(newPassword!==confirmPassword){ error.textContent='ยืนยันรหัสผ่านใหม่ไม่ตรงกัน'; return; }
   saveBtn.disabled=true; saveBtn.textContent='กำลังบันทึก...';
   try{
-    const result=await apiChangeTeacherPassword(currentPassword, newPassword);
+    const result=await apiChangeTeacherPassword(currentPassword, newPassword, newUsername);
     teacherToken=result.token;
+    if(teacherInfo){ if(result.username) teacherInfo.username=result.username; teacherInfo.mustChangePassword=false; }
     saveTeacherSession();
     changePasswordDialog.close();
+    isForcedFirstLoginSetup=false;
     showToast('เปลี่ยนรหัสผ่านเรียบร้อยแล้ว');
   }catch(e){ error.textContent=e.message; }
   saveBtn.disabled=false; saveBtn.textContent='บันทึกรหัสผ่าน';
@@ -194,6 +217,7 @@ async function restoreTeacherSession(){
     adminLoginScreen.classList.add('hidden'); adminScreen.classList.remove('hidden');
     document.documentElement.classList.remove('restoring-session');
     initAdmin();
+    if(teacherInfo.mustChangePassword) openForcedFirstLoginSetup();
   }catch(error){
     teacherToken=null; teacherInfo=null; clearTeacherSession();
     document.documentElement.classList.remove('restoring-session');

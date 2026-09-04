@@ -230,6 +230,20 @@ function registerStudentRoutes(app, { readDB, readDBView, writeDB, mutateDB, mut
     res.json({ ok: true });
   });
 
+  app.post('/api/students/bulk-reset-pin', requireAdmin, async (req, res) => {
+    const db = readDB();
+    for (const student of db.students) { delete student.pinHash; student.pinFailedAttempts = 0; }
+    await writeDB(db);
+    res.json({ ok: true, count: db.students.length });
+  });
+
+  app.post('/api/students/bulk-unlock-pin', requireAdmin, async (req, res) => {
+    const db = readDB();
+    for (const student of db.students) student.pinFailedAttempts = 0;
+    await writeDB(db);
+    res.json({ ok: true, count: db.students.length });
+  });
+
   // Score lookup is intentionally available by student ID from the public score-check page.
   // Scores remain null until the teacher publishes them.
   app.get('/api/students/:studentId/results', (req, res) => {

@@ -94,7 +94,7 @@ function registerAccountRoutes(app, dependencies) {
     }
     const teacher = {
       id: newId('teacher'), firstName: body.firstName.trim(), lastName: body.lastName.trim(),
-      username: body.username.trim(), department: body.department.trim(), email: String(body.email || '').trim().toLowerCase(), passwordHash: hashPassword(body.password), createdAt: new Date().toISOString()
+      username: body.username.trim(), department: body.department.trim(), email: String(body.email || '').trim().toLowerCase(), passwordHash: hashPassword(body.password), mustChangePassword: true, createdAt: new Date().toISOString()
     };
     db.teachers.push(teacher);
     await writeDB(db);
@@ -111,6 +111,7 @@ function registerAccountRoutes(app, dependencies) {
     if (!teacher) return res.status(404).json({ error: 'not_found', message: 'ไม่พบบัญชีอาจารย์นี้' });
     teacher.passwordHash = hashPassword(password);
     teacher.passwordChangedAt = new Date().toISOString();
+    teacher.mustChangePassword = true;
     await writeDB(db);
     await removeTeacherSessions(teacher.id);
     res.json({ ok: true });
@@ -155,7 +156,7 @@ function registerAccountRoutes(app, dependencies) {
       for (const body of accepted) db.teachers.push({
         id: newId('teacher'), firstName: body.firstName, lastName: body.lastName,
         username: body.username, department: body.department,
-        email: body.email.toLowerCase(), passwordHash: hashPassword(body.password), createdAt
+        email: body.email.toLowerCase(), passwordHash: hashPassword(body.password), mustChangePassword: true, createdAt
       });
       if (accepted.length) await writeDB(db);
       res.json({ imported: accepted.length, errors });
@@ -220,11 +221,11 @@ function registerAccountRoutes(app, dependencies) {
     }
     teacherLoginFailures.delete(key);
     const token = await createTeacherSession(teacher.id);
-    res.json({ token, teacherId: teacher.id, firstName: teacher.firstName, lastName: teacher.lastName, department: teacher.department || '' });
+    res.json({ token, teacherId: teacher.id, firstName: teacher.firstName, lastName: teacher.lastName, department: teacher.department || '', username: teacher.username, mustChangePassword: !!teacher.mustChangePassword });
   });
 
   app.post('/api/teacher/change-password', requireTeacher, async (req, res) => {
-    const { currentPassword, newPassword } = req.body || {};
+    const { currentPassword, newPassword, newUsername } = req.body || {};
     if (typeof currentPassword !== 'string' || typeof newPassword !== 'string') {
       return res.status(400).json({ error: 'invalid_payload', message: 'กรุณากรอกรหัสผ่านให้ครบ' });
     }
@@ -241,12 +242,20 @@ function registerAccountRoutes(app, dependencies) {
       return res.status(401).json({ error: 'invalid_credentials', message: 'รหัสผ่านเดิมไม่ถูกต้อง' });
     }
 
+    if (typeof newUsername === 'string' && newUsername.trim() && newUsername.trim() !== teacher.username) {
+      const trimmedUsername = newUsername.trim();
+      if (!USERNAME_PATTERN.test(trimmedUsername)) return res.status(400).json({ error: 'invalid_username', message: 'username ต้องมี 3-50 ตัว และใช้เฉพาะอักษรอังกฤษ ตัวเลข . _ หรือ -' });
+      if (db.teachers.some(item => item.id !== teacher.id && item.username === trimmedUsername)) return res.status(409).json({ error: 'duplicate', message: 'มี username นี้อยู่ในระบบแล้ว' });
+      teacher.username = trimmedUsername;
+    }
+
     teacher.passwordHash = hashPassword(newPassword);
     teacher.passwordChangedAt = new Date().toISOString();
+    teacher.mustChangePassword = false;
     await writeDB(db);
     await removeTeacherSessions(teacher.id);
     const token = await createTeacherSession(teacher.id);
-    res.json({ ok: true, token });
+    res.json({ ok: true, token, username: teacher.username });
   });
 
   app.post('/api/teacher/logout', requireTeacher, async (req, res) => {

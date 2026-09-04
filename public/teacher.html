@@ -122,9 +122,10 @@
 
 <dialog class="password-dialog" id="changePasswordDialog">
   <form id="changePasswordForm">
-    <h3 data-i18n="🔐 เปลี่ยนรหัสผ่าน">🔐 เปลี่ยนรหัสผ่าน</h3>
-    <p data-i18n="ใช้รหัสผ่านใหม่อย่างน้อย 8 ตัวอักษร ระบบจะออกจากอุปกรณ์อื่นเพื่อความปลอดภัย">ใช้รหัสผ่านใหม่อย่างน้อย 8 ตัวอักษร ระบบจะออกจากอุปกรณ์อื่นเพื่อความปลอดภัย</p>
+    <h3 id="changePasswordTitle" data-i18n="🔐 เปลี่ยนรหัสผ่าน">🔐 เปลี่ยนรหัสผ่าน</h3>
+    <p id="changePasswordIntro" data-i18n="ใช้รหัสผ่านใหม่อย่างน้อย 8 ตัวอักษร ระบบจะออกจากอุปกรณ์อื่นเพื่อความปลอดภัย">ใช้รหัสผ่านใหม่อย่างน้อย 8 ตัวอักษร ระบบจะออกจากอุปกรณ์อื่นเพื่อความปลอดภัย</p>
     <div class="field"><label for="currentPasswordInput" data-i18n="รหัสผ่านเดิม">รหัสผ่านเดิม</label><input type="password" id="currentPasswordInput" autocomplete="current-password" required></div>
+    <div class="field hidden" id="changeUsernameField"><label for="newUsernameInput" data-i18n="Username ใหม่ (ไม่บังคับ)">Username ใหม่ (ไม่บังคับ)</label><input type="text" id="newUsernameInput" autocomplete="username" maxlength="50"></div>
     <div class="field"><label for="newPasswordInput" data-i18n="รหัสผ่านใหม่">รหัสผ่านใหม่</label><input type="password" id="newPasswordInput" minlength="8" autocomplete="new-password" required></div>
     <div class="field"><label for="confirmPasswordInput" data-i18n="ยืนยันรหัสผ่านใหม่">ยืนยันรหัสผ่านใหม่</label><input type="password" id="confirmPasswordInput" minlength="8" autocomplete="new-password" required></div>
     <div class="password-error" id="changePasswordError"></div>
@@ -215,6 +216,6 @@
   </div>
 </div>
 
-<script src="/assets/teacher-main.js?v=20260904-9"></script>
+<script src="/assets/teacher-main.js?v=20260904-10"></script>
 </body>
 </html>

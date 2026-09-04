@@ -127,6 +127,8 @@ async function apiImportTeachersExcel(file){
 async function apiDeleteTeacher(id){ return apiFetch('/api/teachers/'+encodeURIComponent(id), { method:'DELETE', admin:true }); }
 async function apiResetTeacherPassword(id,password){ return apiFetch('/api/teachers/'+encodeURIComponent(id)+'/password', { method:'PATCH', body:{password}, admin:true }); }
 async function apiResetTeacherLoginLockouts(){ return apiFetch('/api/teacher/login-lockouts/reset', { method:'POST', admin:true }); }
+async function apiBulkResetStudentPins(){ return apiFetch('/api/students/bulk-reset-pin', { method:'POST', admin:true }); }
+async function apiBulkUnlockStudentPins(){ return apiFetch('/api/students/bulk-unlock-pin', { method:'POST', admin:true }); }
 async function apiUpdateTeacherProfile(id,department,email){ return apiFetch('/api/teachers/'+encodeURIComponent(id)+'/profile', { method:'PATCH', body:{department,email}, admin:true }); }
 async function apiUpdateTeacherUsername(id,username){ return apiFetch('/api/teachers/'+encodeURIComponent(id)+'/username', { method:'PATCH', body:{username}, admin:true }); }
 async function apiGetScoreEmailStatus(){ return apiFetch('/api/admin/score-emails/status', { admin:true }); }
@@ -506,6 +508,14 @@ async function refreshTeachers(){
     </div>`).join('');
   wrap.querySelectorAll('[data-manageteacher]').forEach(button=>button.addEventListener('click',()=>openManageTeacher(button.dataset.manageteacher)));
 }
+document.getElementById('bulkUnlockTeacherLoginBtn').addEventListener('click',async event=>{
+  if(!confirm('ปลดล็อกการเข้าสู่ระบบของอาจารย์ทุกคนที่ถูกล็อกอยู่ตอนนี้?')) return;
+  const button=event.currentTarget, original=button.textContent;
+  button.disabled=true;button.textContent='กำลังปลดล็อก...';
+  try{ await apiResetTeacherLoginLockouts(); showToast('ปลดล็อกการเข้าสู่ระบบของอาจารย์ทุกคนแล้ว'); }
+  catch(error){ showToast(error.message); }
+  finally{ button.disabled=false; button.textContent=original; }
+});
 document.getElementById('exportTeachersBtn').addEventListener('click',async event=>{
   const button=event.currentTarget, original=button.textContent;
   button.disabled=true;button.textContent='กำลังสร้างไฟล์...';
@@ -1998,6 +2008,22 @@ async function refreshStudents(){
   }));
 }
 document.getElementById('refreshStudentsBtn').addEventListener('click', refreshStudents);
+document.getElementById('bulkUnlockStudentPinBtn').addEventListener('click', async event=>{
+  if(!confirm('ปลดล็อก PIN ของนักเรียนทุกคนที่ถูกล็อกอยู่ตอนนี้? (PIN เดิมยังใช้ได้)')) return;
+  const button=event.currentTarget, original=button.textContent;
+  button.disabled=true;button.textContent='กำลังปลดล็อก...';
+  try{ await apiBulkUnlockStudentPins(); showToast('ปลดล็อก PIN ของนักเรียนทุกคนแล้ว'); }
+  catch(error){ showToast(error.message); }
+  finally{ button.disabled=false; button.textContent=original; }
+});
+document.getElementById('bulkResetStudentPinBtn').addEventListener('click', async event=>{
+  if(!confirm('รีเซ็ต PIN ของนักเรียนทุกคน? นักเรียนทุกคนจะต้องตั้ง PIN ใหม่ก่อนเข้าสอบครั้งถัดไป')) return;
+  const button=event.currentTarget, original=button.textContent;
+  button.disabled=true;button.textContent='กำลังรีเซ็ต...';
+  try{ await apiBulkResetStudentPins(); showToast('รีเซ็ต PIN ของนักเรียนทุกคนแล้ว'); refreshStudents(); }
+  catch(error){ showToast(error.message); }
+  finally{ button.disabled=false; button.textContent=original; }
+});
 document.getElementById('classFilterSelect').addEventListener('change', ()=>{studentPage=1;refreshStudents();});
 document.getElementById('studentSearchInput').addEventListener('input',()=>{studentPage=1;refreshStudents();});
 document.querySelectorAll('[data-set-room-period]').forEach(button=>button.addEventListener('click',async()=>{ const room=document.getElementById('roomPeriodSelect').value; if(!room){showToast('กรุณาเลือกห้องก่อน');return;} try{const result=await apiSetClassExamPeriod(room,button.dataset.setRoomPeriod);showToast(`กำหนดรอบ${button.dataset.setRoomPeriod} ให้ห้อง ${room} จำนวน ${result.updated} คนแล้ว`);refreshStudents();}catch(error){showToast(error.message);} }));

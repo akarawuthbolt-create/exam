@@ -126,6 +126,8 @@
         <div class="toolbar-row">
           <input class="filter-select" id="studentSearchInput" placeholder="ค้นหารหัส ชื่อ หรือห้อง" style="min-width:210px;"><select class="filter-select" id="classFilterSelect"><option value="">ทุกห้อง</option></select>
           <button class="btn btn-ghost btn-sm" id="refreshStudentsBtn">↻ รีเฟรช</button>
+          <button class="btn btn-ghost btn-sm" id="bulkUnlockStudentPinBtn" type="button">🔓 ปลดล็อก PIN นักเรียนทั้งหมด</button>
+          <button class="btn btn-danger btn-sm" id="bulkResetStudentPinBtn" type="button">🔑 รีเซ็ต PIN นักเรียนทั้งหมด</button>
         </div>
         <div id="studentsWrap"><div class="loading-note">กำลังโหลด...</div></div>
       </div>
@@ -137,6 +139,7 @@
             <h2>บัญชีอาจารย์ผู้สอน</h2>
             <p class="sub" style="margin:0;">อาจารย์ที่มีบัญชีสามารถเข้าสู่ระบบที่ <code id="teacherLoginUrlText">/teacher</code> เพื่อจัดการเฉพาะข้อสอบและผลสอบของวิชาตัวเองเท่านั้น (ส่งออกรายชื่อ Excel ย้ายไปอยู่ในหน้าตั้งค่า)</p>
           </div>
+          <button class="btn btn-ghost btn-sm" id="bulkUnlockTeacherLoginBtn" type="button">🔓 ปลดล็อกการเข้าสู่ระบบอาจารย์ทั้งหมด</button>
         </div>
         <div class="panel">
           <h3>+ เพิ่มบัญชีอาจารย์</h3>
@@ -321,7 +324,7 @@
   </div>
 </div>
 
-<script src="/assets/admin-main.js?v=20260904-12"></script>
+<script src="/assets/admin-main.js?v=20260904-13"></script>
 <script src="/assets/learning-plan-import.js?v=20260727-1"></script>
 <script src="/assets/admin-learning-plans.js?v=20260727-1"></script>
 </body>
