@@ -126,6 +126,7 @@ async function apiDeleteTeacher(id){ return apiFetch('/api/teachers/'+encodeURIC
 async function apiResetTeacherPassword(id,password){ return apiFetch('/api/teachers/'+encodeURIComponent(id)+'/password', { method:'PATCH', body:{password}, admin:true }); }
 async function apiResetTeacherLoginLockouts(){ return apiFetch('/api/teacher/login-lockouts/reset', { method:'POST', admin:true }); }
 async function apiUpdateTeacherProfile(id,department,email){ return apiFetch('/api/teachers/'+encodeURIComponent(id)+'/profile', { method:'PATCH', body:{department,email}, admin:true }); }
+async function apiUpdateTeacherUsername(id,username){ return apiFetch('/api/teachers/'+encodeURIComponent(id)+'/username', { method:'PATCH', body:{username}, admin:true }); }
 async function apiGetScoreEmailStatus(){ return apiFetch('/api/admin/score-emails/status', { admin:true }); }
 async function apiSendScoreEmail(teacherId){ return apiFetch('/api/admin/score-emails/'+encodeURIComponent(teacherId)+'/send', { method:'POST', admin:true }); }
 
@@ -498,7 +499,7 @@ function openManageTeacher(id){
   const teacher=TEACHERS_LIST.find(item=>item.id===id);if(!teacher)return;
   manageTeacherId=id;
   document.getElementById('manageTeacherName').textContent=`${teacher.firstName} ${teacher.lastName}`.trim();
-  document.getElementById('manageTeacherUsername').textContent=`username: ${teacher.username}`;
+  document.getElementById('manageTeacherUsername').value=teacher.username||'';
   document.getElementById('manageTeacherDepartment').value=teacher.department||'';
   document.getElementById('manageTeacherEmail').value=teacher.email||'';
   document.getElementById('manageTeacherError').textContent='';
@@ -506,10 +507,15 @@ function openManageTeacher(id){
 }
 document.getElementById('cancelManageTeacher').addEventListener('click',()=>document.getElementById('manageTeacherDialog').close());
 document.getElementById('saveManageTeacher').addEventListener('click',async()=>{
-  const department=document.getElementById('manageTeacherDepartment').value.trim(),email=document.getElementById('manageTeacherEmail').value.trim(),error=document.getElementById('manageTeacherError'),button=document.getElementById('saveManageTeacher');
-  if(!department||!email){error.textContent='กรุณากรอกสาขาวิชาและอีเมลให้ครบ';return;}
+  const username=document.getElementById('manageTeacherUsername').value.trim(),department=document.getElementById('manageTeacherDepartment').value.trim(),email=document.getElementById('manageTeacherEmail').value.trim(),error=document.getElementById('manageTeacherError'),button=document.getElementById('saveManageTeacher');
+  if(!username||!department||!email){error.textContent='กรุณากรอก Username สาขาวิชา และอีเมลให้ครบ';return;}
   button.disabled=true;error.textContent='';
-  try{await apiUpdateTeacherProfile(manageTeacherId,department,email);document.getElementById('manageTeacherDialog').close();await refreshTeachers();showToast('บันทึกข้อมูลอาจารย์แล้ว');}catch(e){error.textContent=e.message;}finally{button.disabled=false;}
+  try{
+    const teacher=TEACHERS_LIST.find(item=>item.id===manageTeacherId);
+    if(teacher&&username!==teacher.username) await apiUpdateTeacherUsername(manageTeacherId,username);
+    await apiUpdateTeacherProfile(manageTeacherId,department,email);
+    document.getElementById('manageTeacherDialog').close();await refreshTeachers();showToast('บันทึกข้อมูลอาจารย์แล้ว');
+  }catch(e){error.textContent=e.message;}finally{button.disabled=false;}
 });
 document.getElementById('manageTeacherResetPassword').addEventListener('click',()=>{const teacher=TEACHERS_LIST.find(item=>item.id===manageTeacherId);document.getElementById('manageTeacherDialog').close();openTeacherPasswordReset(manageTeacherId,teacher?`${teacher.firstName} ${teacher.lastName}`:'-');});
 document.getElementById('manageTeacherResetLockout').addEventListener('click',async event=>{
