@@ -17,12 +17,21 @@ test('imports multiple-choice and written Google Forms questions with images', (
     { title: 'เลือกได้หลายข้อ', questionItem: { question: { choiceQuestion: { type: 'CHECKBOX', options: [] } } } }
   ] });
   assert.equal(parsed.title, 'Quiz');
-  assert.deepEqual(parsed.questions[0], { sourceId: 'q1', type: 'mc', text: 'CPU คืออะไร', sourceNumber: '1', choices: ['แสดงผล', 'ประมวลผล', 'พิมพ์', 'บันทึก'], answer: 1, sourcePoints: 2, images: [{ contentUri: 'https://example.com/diagram.png', altText: 'แผนภาพ' }, { contentUri: 'https://example.com/cpu.png', altText: '' }] });
-  assert.deepEqual(parsed.questions[1], { sourceId: 'q2', type: 'written', text: 'อธิบายหน้าที่ของ CPU', sourceNumber: '๒', keywords: ['ประมวลผลข้อมูล'], sourcePoints: 5, images: [] });
-  assert.deepEqual(parsed.counts, { mc: 1, written: 1, images: 2 });
-  assert.equal(parsed.skipped.length, 2);
-  assert.match(parsed.skipped[0].reason, /0 คะแนน/);
-  assert.match(parsed.skipped[1].reason, /หลายคำตอบ/);
+  assert.deepEqual(parsed.questions[0], { sourceId: 'q1', type: 'mc', text: 'CPU คืออะไร', sourceNumber: '1', choices: ['แสดงผล', 'ประมวลผล', 'พิมพ์', 'บันทึก'], answer: 1, sourcePoints: 2, pointsMissing: false, images: [{ contentUri: 'https://example.com/diagram.png', altText: 'แผนภาพ' }, { contentUri: 'https://example.com/cpu.png', altText: '' }] });
+  assert.deepEqual(parsed.questions[1], { sourceId: 'q2', type: 'written', text: 'อธิบายหน้าที่ของ CPU', sourceNumber: '๒', keywords: ['ประมวลผลข้อมูล'], sourcePoints: 5, pointsMissing: false, images: [] });
+  assert.deepEqual(parsed.questions[2], { sourceId: 'q3', type: 'written', text: 'คำถามแนะนำ', sourceNumber: null, keywords: [], sourcePoints: 1, pointsMissing: true, images: [] });
+  assert.deepEqual(parsed.counts, { mc: 1, written: 2, images: 2, pointsMissing: 1 });
+  assert.equal(parsed.skipped.length, 1);
+  assert.match(parsed.skipped[0].reason, /หลายคำตอบ/);
+});
+
+test('imports a multiple-choice question with more than 4 choices', () => {
+  const parsed = parseGoogleForm({ info: { title: 'Quiz' }, items: [
+    { title: '1. เลือกภาษาโปรแกรม', questionItem: { question: { questionId: 'q1', choiceQuestion: { type: 'RADIO', options: [{ value: 'A' }, { value: 'B' }, { value: 'C' }, { value: 'D' }, { value: 'E' }] }, grading: { pointValue: 1, correctAnswers: { answers: [{ value: 'E' }] } } } } }
+  ] });
+  assert.equal(parsed.questions.length, 1);
+  assert.equal(parsed.questions[0].choices.length, 5);
+  assert.equal(parsed.questions[0].answer, 4);
 });
 
 test('strips only a leading question number', () => {
