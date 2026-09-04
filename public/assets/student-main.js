@@ -200,22 +200,29 @@ function recordIntegrityEvent(type){
 
 /* ============ ANTI-CHEAT: block right-click & copy while exam is in progress ============ */
 document.addEventListener('contextmenu', (e)=>{
-  if(app.examInProgress){ e.preventDefault(); state.rightClickAttempts++; recordIntegrityEvent('right_click'); updateCheatTags(); scheduleSave(); }
+  if(app.examInProgress){ e.preventDefault(); state.rightClickAttempts++; recordIntegrityEvent('right_click'); updateCheatTags('right_click'); scheduleSave(); }
 });
 document.addEventListener('copy', (e)=>{
-  if(app.examInProgress){ e.preventDefault(); state.copyAttempts++; recordIntegrityEvent('copy'); updateCheatTags(); scheduleSave(); }
+  if(app.examInProgress){ e.preventDefault(); state.copyAttempts++; recordIntegrityEvent('copy'); updateCheatTags('copy'); scheduleSave(); }
 });
 document.addEventListener('cut', (e)=>{
-  if(app.examInProgress){ e.preventDefault(); state.copyAttempts++; recordIntegrityEvent('copy'); updateCheatTags(); scheduleSave(); }
+  if(app.examInProgress){ e.preventDefault(); state.copyAttempts++; recordIntegrityEvent('copy'); updateCheatTags('copy'); scheduleSave(); }
 });
-function updateCheatTags(){
+function flashTag(tag){
+  if(!tag) return;
+  tag.classList.remove('tag-flash');
+  void tag.offsetWidth;
+  tag.classList.add('tag-flash');
+  setTimeout(()=>tag.classList.remove('tag-flash'), 700);
+}
+function updateCheatTags(justIncreased){
   const fs = document.getElementById('fullscreenExitTag');
   const rc = document.getElementById('rightClickTag');
   const cp = document.getElementById('copyTag');
   const tr = window.I18N ? window.I18N.t : (s=>s);
-  if(fs){ fs.textContent = tr('ออกจากเต็มจอ')+': '+state.fullscreenExitAttempts+' '+tr('ครั้ง'); fs.classList.toggle('badge-warn', state.fullscreenExitAttempts>0); }
-  if(rc){ rc.textContent = tr('คลิกขวา')+': '+state.rightClickAttempts+' '+tr('ครั้ง'); rc.classList.toggle('badge-warn', state.rightClickAttempts>0); }
-  if(cp){ cp.textContent = tr('คัดลอก')+': '+state.copyAttempts+' '+tr('ครั้ง'); cp.classList.toggle('badge-warn', state.copyAttempts>0); }
+  if(fs){ fs.textContent = tr('ออกจากเต็มจอ')+': '+state.fullscreenExitAttempts+' '+tr('ครั้ง'); fs.classList.toggle('badge-warn', state.fullscreenExitAttempts>0); if(justIncreased==='fullscreen') flashTag(fs); }
+  if(rc){ rc.textContent = tr('คลิกขวา')+': '+state.rightClickAttempts+' '+tr('ครั้ง'); rc.classList.toggle('badge-warn', state.rightClickAttempts>0); if(justIncreased==='right_click') flashTag(rc); }
+  if(cp){ cp.textContent = tr('คัดลอก')+': '+state.copyAttempts+' '+tr('ครั้ง'); cp.classList.toggle('badge-warn', state.copyAttempts>0); if(justIncreased==='copy') flashTag(cp); }
 }
 function resetAllExamAnswers(){
   draftAnswers={mc:{},matching:{},written:{}};
@@ -240,7 +247,7 @@ function registerTabSwitch(){
   if(pageIsLeaving||!app.examInProgress||app.examEnded||now-lastTabSwitchAt<600)return;
   lastTabSwitchAt=now;state.tabSwitches++;recordIntegrityEvent('tab_switch');
   const tr = window.I18N ? window.I18N.t : (s=>s);
-  const tag=document.getElementById('tabSwitchTag');tag.textContent=tr('สลับแท็บ')+': '+state.tabSwitches+' '+tr('ครั้ง');tag.classList.add('badge-warn');
+  const tag=document.getElementById('tabSwitchTag');tag.textContent=tr('สลับแท็บ')+': '+state.tabSwitches+' '+tr('ครั้ง');tag.classList.add('badge-warn');flashTag(tag);
   if(state.tabSwitches===3)resetAllExamAnswers();
   saveSession();flushServerSave();
   if(state.tabSwitches>=5){document.getElementById('tabWarningModal').classList.add('hidden');finalizeExam('tabswitch');}
@@ -263,7 +270,7 @@ document.addEventListener('fullscreenchange', ()=>{
   if(!fullscreenWasActive || !app.examInProgress || app.examEnded) return;
   state.fullscreenExitAttempts++;
   recordIntegrityEvent('fullscreen_exit');
-  updateCheatTags(); scheduleSave();
+  updateCheatTags('fullscreen'); scheduleSave();
   showToast('ตรวจพบการออกจากโหมดเต็มจอ กรุณากลับเข้าสู่โหมดเต็มจอเพื่อทำข้อสอบต่อ');
 });
 function hasSuspiciousSplitScreen(){
