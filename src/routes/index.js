@@ -22,6 +22,7 @@ const { registerSystemControlRoutes } = require('./system-control');
 const { registerScoreEmailRoutes } = require('./score-email');
 const { registerLearningPlanRoutes } = require('./learning-plans');
 const { registerQuestionFileImportRoutes } = require('./question-file-import');
+const { registerSystemReportRoutes } = require('./system-reports');
 
 function registerRoutes(app, dependencies) {
   registerHealthRoutes(app, dependencies);
@@ -48,6 +49,7 @@ function registerRoutes(app, dependencies) {
   registerResitRoutes(app, dependencies);
   registerAcademicCalendarRoutes(app, dependencies);
   registerStudentPromotionRoutes(app, dependencies);
+  registerSystemReportRoutes(app, dependencies);
 }
 
 module.exports = { registerRoutes };

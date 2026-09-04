@@ -7,7 +7,7 @@
 <script src="/assets/teacher-boot.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/teacher.css?v=20260904-5">
+<link rel="stylesheet" href="/assets/teacher.css?v=20260904-6">
 <script src="/assets/i18n.js?v=20260902-1"></script>
 </head>
 <body>
@@ -181,6 +181,20 @@
   </form>
 </dialog>
 
+<dialog class="resit-dialog" id="reportIssueDialog">
+  <form class="resit-dialog-card" id="reportIssueForm">
+    <button class="btn btn-ghost btn-sm resit-close" type="button" id="closeReportIssueDialog" aria-label="ปิด">✕</button>
+    <span class="eyebrow" data-i18n="🚨 แจ้งระบบขัดข้อง">🚨 แจ้งระบบขัดข้อง</span>
+    <h3 data-i18n="แจ้งปัญหาให้ผู้ดูแลระบบทราบ">แจ้งปัญหาให้ผู้ดูแลระบบทราบ</h3>
+    <p data-i18n="อธิบายปัญหาที่พบ เช่น หน้าไหน ทำอะไรแล้วเกิดอะไรขึ้น">อธิบายปัญหาที่พบ เช่น หน้าไหน ทำอะไรแล้วเกิดอะไรขึ้น</p>
+    <div class="field"><label for="reportIssueMessage" data-i18n="รายละเอียดปัญหา">รายละเอียดปัญหา</label><textarea id="reportIssueMessage" rows="5" required data-i18n-placeholder="พิมพ์รายละเอียดปัญหาที่นี่..." placeholder="พิมพ์รายละเอียดปัญหาที่นี่..."></textarea></div>
+    <div class="resit-error" id="reportIssueError"></div>
+    <div class="editor-actions"><button class="btn btn-ghost btn-sm" type="button" id="cancelReportIssueDialog" data-i18n="ยกเลิก">ยกเลิก</button><button class="btn btn-primary btn-sm" type="submit" id="submitReportIssueBtn" data-i18n="ส่งแจ้งปัญหา">ส่งแจ้งปัญหา</button></div>
+  </form>
+</dialog>
+
+<button class="report-issue-fab" id="reportIssueFab" type="button" title="แจ้งระบบขัดข้อง" data-i18n-title="แจ้งระบบขัดข้อง">🚨</button>
+
 <!-- ================= EXAM SET WIZARD (full-page, mirrors the student exam-taking flow) ================= -->
 <dialog class="google-import-dialog" id="googleFormsSetDialog">
   <div class="google-import-dialog-inner">
@@ -201,6 +215,6 @@
   </div>
 </div>
 
-<script src="/assets/teacher-main.js?v=20260904-6"></script>
+<script src="/assets/teacher-main.js?v=20260904-7"></script>
 </body>
 </html>
