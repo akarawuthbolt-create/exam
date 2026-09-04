@@ -38,12 +38,10 @@ function parseGoogleForm(form) {
     pendingImages = [];
     if (textQuestion) {
       const correctAnswers = (question.grading?.correctAnswers?.answers || []).map(answer => String(answer.value || '').trim()).filter(Boolean);
-      const sourcePoints = Number(question.grading?.pointValue);
-      if (!Number.isFinite(sourcePoints) || sourcePoints <= 0) {
-        skipped.push({ title: String(item.title || 'ไม่มีชื่อข้อ'), reason: 'ไม่ได้กำหนดคะแนน หรือกำหนดเป็น 0 คะแนน' });
-        continue;
-      }
-      questions.push({ sourceId: question.questionId || item.itemId || '', type: 'written', text: numbered.text, sourceNumber: numbered.sourceNumber, keywords: correctAnswers, sourcePoints, images });
+      const rawPoints = Number(question.grading?.pointValue);
+      const pointsMissing = !Number.isFinite(rawPoints) || rawPoints <= 0;
+      const sourcePoints = pointsMissing ? 1 : rawPoints;
+      questions.push({ sourceId: question.questionId || item.itemId || '', type: 'written', text: numbered.text, sourceNumber: numbered.sourceNumber, keywords: correctAnswers, sourcePoints, pointsMissing, images });
       continue;
     }
     if (!['RADIO', 'DROP_DOWN'].includes(choices.type)) {
@@ -53,22 +51,20 @@ function parseGoogleForm(form) {
     const options = (choices.options || []).map(option => String(option.value || '').trim());
     const answerValue = question.grading?.correctAnswers?.answers?.[0]?.value;
     const answer = options.indexOf(answerValue);
-    if (options.length !== 4 || options.some(option => !option) || new Set(options).size !== 4) {
-      skipped.push({ title: String(item.title || 'ไม่มีชื่อข้อ'), reason: 'ต้องมีตัวเลือกที่ไม่ซ้ำกัน 4 ตัวเลือก' });
+    if (options.length < 2 || options.some(option => !option) || new Set(options).size !== options.length) {
+      skipped.push({ title: String(item.title || 'ไม่มีชื่อข้อ'), reason: 'ต้องมีตัวเลือกที่ไม่ซ้ำกันอย่างน้อย 2 ตัวเลือก' });
       continue;
     }
     if (answer < 0) {
       skipped.push({ title: String(item.title || 'ไม่มีชื่อข้อ'), reason: 'ไม่พบเฉลยของข้อสอบ' });
       continue;
     }
-    const sourcePoints = Number(question.grading?.pointValue);
-    if (!Number.isFinite(sourcePoints) || sourcePoints <= 0) {
-      skipped.push({ title: String(item.title || 'ไม่มีชื่อข้อ'), reason: 'ไม่ได้กำหนดคะแนน หรือกำหนดเป็น 0 คะแนน' });
-      continue;
-    }
-    questions.push({ sourceId: question.questionId || item.itemId || '', type: 'mc', text: numbered.text, sourceNumber: numbered.sourceNumber, choices: options, answer, sourcePoints, images });
+    const rawPoints = Number(question.grading?.pointValue);
+    const pointsMissing = !Number.isFinite(rawPoints) || rawPoints <= 0;
+    const sourcePoints = pointsMissing ? 1 : rawPoints;
+    questions.push({ sourceId: question.questionId || item.itemId || '', type: 'mc', text: numbered.text, sourceNumber: numbered.sourceNumber, choices: options, answer, sourcePoints, pointsMissing, images });
   }
-  return { title: String(form?.info?.title || 'Google Forms'), questions, skipped, counts: { mc: questions.filter(question => question.type === 'mc').length, written: questions.filter(question => question.type === 'written').length, images: questions.reduce((sum, question) => sum + question.images.length, 0) } };
+  return { title: String(form?.info?.title || 'Google Forms'), questions, skipped, counts: { mc: questions.filter(question => question.type === 'mc').length, written: questions.filter(question => question.type === 'written').length, images: questions.reduce((sum, question) => sum + question.images.length, 0), pointsMissing: questions.filter(question => question.pointsMissing).length } };
 }
 
 module.exports = { formIdFrom, parseGoogleForm, stripQuestionNumber };
