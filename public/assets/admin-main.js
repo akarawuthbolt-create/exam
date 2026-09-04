@@ -1510,15 +1510,16 @@ function parseChatGptMc(text){
     else questions.push({text:current.text.trim(), choices, answer:current.answer});
   };
   String(text||'').replace(/\r/g,'').split('\n').forEach(line=>{
-    const question = line.match(/^\s*(\d+)\s*[.)]\s*(.+)$/);
+    if(!line.trim()) return;
+    const question = line.match(/^\s*(?:ข้อ\s*)?(\d+)\s*[.)]\s*(.+)$/);
     const choice = line.match(/^\s*([กขคงa-dA-D1-4])\s*[.)]\s*(.+)$/);
     const answer = line.match(/^\s*(?:เฉลย|คำตอบ)\s*[:：]\s*([กขคงa-dA-D1-4])/i);
     if(question){ finish(); current={number:question[1],text:question[2],choices:[],answer:undefined}; target='text'; }
-    else if(!current) { if(line.trim()) errors.push(`ไม่พบเลขข้อคำถาม: ${line.trim().slice(0,40)}`); }
-    else if(choice){ current.choices[answerIndex(choice[1])] = choice[2]; target='choice'; }
-    else if(answer){ current.answer=answerIndex(answer[1]); target=null; }
-    else if(line.trim() && target==='text') current.text += ' '+line.trim();
-    else if(line.trim() && target==='choice') current.choices[current.choices.length-1] = (current.choices[current.choices.length-1]||'')+' '+line.trim();
+    else if(choice && current){ current.choices[answerIndex(choice[1])] = choice[2]; target='choice'; }
+    else if(answer && current){ current.answer=answerIndex(answer[1]); target=null; }
+    else if(!current || target===null){ finish(); current={number:null,text:line.trim(),choices:[],answer:undefined}; target='text'; }
+    else if(target==='text') current.text += ' '+line.trim();
+    else if(target==='choice') current.choices[current.choices.length-1] = (current.choices[current.choices.length-1]||'')+' '+line.trim();
   });
   finish(); return {questions,errors};
 }
@@ -1526,7 +1527,7 @@ function buildChatGptMcPrompt(){
   const course = editingSet?.courseName || editingSet?.title || '[ชื่อวิชา]';
   const examType = editingSet?.examType || '[ประเภทข้อสอบ]';
   const description = editingSet?.desc ? `\nรายละเอียดรายวิชา: ${editingSet.desc}` : '';
-  return `ช่วยสร้างข้อสอบปรนัยสำหรับวิชา “${course}” ประเภท “${examType}” จำนวน 10 ข้อ\nหัวข้อเนื้อหา: [ระบุหัวข้อที่ต้องการออกข้อสอบ]${description}\n\nเงื่อนไข:\n- แต่ละข้อมีตัวเลือก 4 ตัวเลือก\n- ใช้ภาษาไทยที่ชัดเจน เหมาะกับผู้เรียน\n- มีคำตอบถูกเพียงข้อเดียว\n- กระจายระดับความยากง่าย\n- ห้ามมีคำอธิบายก่อนหรือหลังข้อสอบ\n- ส่งผลลัพธ์ตามรูปแบบนี้เท่านั้น:\n\n1. [คำถาม]\nก. [ตัวเลือก]\nข. [ตัวเลือก]\nค. [ตัวเลือก]\nง. [ตัวเลือก]\nเฉลย: ก`;
+  return `คุณคือผู้เชี่ยวชาญด้านการวัดและประเมินผลการศึกษา ทำหน้าที่ออกข้อสอบปรนัยคุณภาพสูงสำหรับวิชา “${course}” ข้อสอบประเภท “${examType}” จำนวน 10 ข้อ\nหัวข้อเนื้อหาที่ต้องออกข้อสอบ: [ระบุหัวข้อที่ต้องการออกข้อสอบ]${description}\n\nขั้นตอนการทำงาน:\n1. วิเคราะห์เนื้อหาหัวข้อที่ระบุ แยกประเด็นสำคัญที่ผู้เรียนควรเข้าใจก่อนออกโจทย์\n2. ออกแบบโจทย์แต่ละข้อให้วัดความเข้าใจจริง ไม่ใช่การท่องจำอย่างเดียว\n3. สร้างตัวลวง (distractor) ที่มีคุณภาพ โดยอิงจากความเข้าใจผิดที่พบบ่อยของผู้เรียนจริง ไม่ใช่ตัวเลือกที่ผิดแบบเห็นชัด\n4. ตรวจทานว่าแต่ละข้อมีคำตอบที่ถูกต้องที่สุดเพียงข้อเดียว ไม่มีตัวเลือกที่ถูกได้มากกว่าหนึ่งข้อหรือกำกวม\n\nข้อกำหนดของโจทย์และตัวเลือก:\n- โจทย์กระชับ ชัดเจน อ่านแล้วเข้าใจทันทีว่าถามอะไร ตรงประเด็น ไม่ใช้ภาษาคลุมเครือ\n- แต่ละข้อมีตัวเลือก 4 ตัวเลือก ความยาวและรูปแบบใกล้เคียงกัน ไม่มีตัวเลือกที่ยาว/สั้นผิดปกติจนเดาคำตอบได้\n- ตัวลวงทั้ง 3 ข้อต้องสมเหตุสมผลและมีที่มาจากความเข้าใจผิดที่พบได้จริง ห้ามใส่ตัวเลือกไร้สาระหรือผิดชัดเจนจนตัดออกได้ทันที\n- กระจายระดับความยาก (ง่าย/ปานกลาง/ยาก) และกระจายตำแหน่งข้อคำตอบที่ถูก (ก/ข/ค/ง) ให้สมดุลตลอดทั้งชุด\n- ใช้ภาษาไทยที่ถูกต้อง เป็นทางการ เหมาะกับผู้เรียน\n- ห้ามมีคำนำ คำอธิบาย หรือสรุปใดๆ ก่อนหรือหลังข้อสอบ\n\nรูปแบบผลลัพธ์ (สำคัญมาก):\n- ให้ตอบทั้งหมดในกล่องโค้ด (code block) เดียวเท่านั้น เพื่อให้กดปุ่มคัดลอกของกล่องโค้ดได้ครบถ้วน ไม่มีปัญหาเลขข้อหายตอนคัดลอก\n- ห้ามใช้ระบบ bullet หรือ numbered list ของ ChatGPT ให้พิมพ์เลขข้อเป็นตัวอักษรธรรมดาตามรูปแบบนี้เป๊ะๆ:\n\n1. [คำถาม]\nก. [ตัวเลือก]\nข. [ตัวเลือก]\nค. [ตัวเลือก]\nง. [ตัวเลือก]\nเฉลย: ก\n\n(ทำแบบนี้ต่อเนื่องจนครบ 10 ข้อ)`;
 }
 async function copyMcPrompt(){
   const text = document.getElementById('mcPromptText').value;
