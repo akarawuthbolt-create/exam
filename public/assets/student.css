@@ -2,11 +2,15 @@
   --blue:#2563EB; --blue-dark:#1D4ED8; --indigo:#4F46E5;
   --bg:#F7F9FC; --surface:#FFFFFF; --line:#E2E8F0; --ink:#0F172A; --sub:#64748B;
   --green:#16A34A; --amber:#D97706; --red:#DC2626; --grid:#EEF2FB;
+  --pair-1:#16A34A; --pair-2:#2563EB; --pair-3:#D97706; --pair-4:#7C3AED;
+  --pair-5:#0D9488; --pair-6:#DB2777; --pair-7:#EA580C; --pair-8:#4F46E5;
 }
 html[data-theme="dark"]{
   --blue:#3B82F6; --blue-dark:#60A5FA; --indigo:#818CF8;
   --bg:#0B1120; --surface:#141B2D; --line:#26314A; --ink:#E5EAF5; --sub:#94A3B8;
   --green:#4ADE80; --amber:#FBBF24; --red:#F87171; --grid:#1B2438;
+  --pair-1:#4ADE80; --pair-2:#60A5FA; --pair-3:#FBBF24; --pair-4:#A78BFA;
+  --pair-5:#2DD4BF; --pair-6:#F472B6; --pair-7:#FB923C; --pair-8:#818CF8;
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
@@ -183,6 +187,22 @@ html.restoring-session #startScreen{visibility:hidden;}html.restoring-session bo
 .match-item.flag-missing{border-color:var(--red);}
 .match-badge{font-family:'Prompt',sans-serif;font-weight:700;font-size:11px;background:var(--blue);color:#fff;border-radius:999px;width:22px;height:22px;flex:none;display:flex;align-items:center;justify-content:center;}
 .match-item.matched .match-badge{background:var(--green);}
+.match-item.matched.match-c1{border-color:var(--pair-1);}
+.match-item.matched.match-c1 .match-badge{background:var(--pair-1);}
+.match-item.matched.match-c2{border-color:var(--pair-2);}
+.match-item.matched.match-c2 .match-badge{background:var(--pair-2);}
+.match-item.matched.match-c3{border-color:var(--pair-3);}
+.match-item.matched.match-c3 .match-badge{background:var(--pair-3);}
+.match-item.matched.match-c4{border-color:var(--pair-4);}
+.match-item.matched.match-c4 .match-badge{background:var(--pair-4);}
+.match-item.matched.match-c5{border-color:var(--pair-5);}
+.match-item.matched.match-c5 .match-badge{background:var(--pair-5);}
+.match-item.matched.match-c6{border-color:var(--pair-6);}
+.match-item.matched.match-c6 .match-badge{background:var(--pair-6);}
+.match-item.matched.match-c7{border-color:var(--pair-7);}
+.match-item.matched.match-c7 .match-badge{background:var(--pair-7);}
+.match-item.matched.match-c8{border-color:var(--pair-8);}
+.match-item.matched.match-c8 .match-badge{background:var(--pair-8);}
 .match-item .noBadge{width:22px;height:22px;flex:none;border-radius:999px;border:1.5px dashed var(--line);}
 .match-hint{font-size:12.5px;color:var(--sub);margin:2px 0 14px;line-height:1.7;}
 
