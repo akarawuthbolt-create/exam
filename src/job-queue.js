@@ -42,7 +42,6 @@ function createJobQueue({ concurrency = 2, maxPending = 100, historyLimit = 50, 
       promise,
       new Promise((resolve, reject) => {
         timer = setTimeout(() => { controller.abort(); reject(new Error(`Job timed out after ${timeoutMs}ms`)); }, timeoutMs);
-        timer.unref?.();
       })
     ]).finally(() => clearTimeout(timer));
   }
@@ -81,7 +80,6 @@ function createJobQueue({ concurrency = 2, maxPending = 100, historyLimit = 50, 
           pending.push(job);
           dispatch();
         }, delay);
-        timer.unref?.();
         retryTimers.set(job.id, timer);
       } else {
         job.status = 'failed';

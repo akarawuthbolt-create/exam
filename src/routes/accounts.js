@@ -35,7 +35,8 @@ function registerFailure(store, key) {
 function registerAccountRoutes(app, dependencies) {
   const {
     ADMIN_KEY, readDB, writeDB, replaceDB, hashPassword, verifyPassword, requireAdmin,
-    requireTeacher, createTeacherSession, removeTeacherSessions, sessionStore, backupService, newId
+    requireTeacher, createTeacherSession, removeTeacherSessions, sessionStore, backupService, newId,
+    timingSafeStringEqual
   } = dependencies;
   const adminLoginFailures = new Map();
   const teacherLoginFailures = new Map();
@@ -48,7 +49,7 @@ function registerAccountRoutes(app, dependencies) {
   app.post('/api/admin/verify', (req, res) => {
     const key = clientKey(req);
     if (!canAttempt(adminLoginFailures, key)) return res.status(429).json({ ok: false, error: 'rate_limited', message: 'ลองรหัสผิดหลายครั้ง กรุณารอ 15 นาทีแล้วลองใหม่' });
-    if (req.get('x-admin-key') === ADMIN_KEY) { adminLoginFailures.delete(key); return res.json({ ok: true }); }
+    if (timingSafeStringEqual(req.get('x-admin-key'), ADMIN_KEY)) { adminLoginFailures.delete(key); return res.json({ ok: true }); }
     const locked = registerFailure(adminLoginFailures, key);
     return res.status(locked ? 429 : 401).json({ ok: false, error: locked ? 'rate_limited' : 'invalid_credentials', message: locked ? 'ลองรหัสผิดครบ 5 ครั้ง กรุณารอ 15 นาทีแล้วลองใหม่' : 'รหัสผู้ดูแลระบบไม่ถูกต้อง' });
   });

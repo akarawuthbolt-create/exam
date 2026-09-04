@@ -14,7 +14,7 @@ const express = require('express');
 const config = require('./src/config');
 const { PORT, ADMIN_KEY, EXAM_TYPES, PUBLIC_DIR, SUPABASE_URL, SUPABASE_SECRET_KEY, SUPABASE_STORAGE_BUCKET, GOOGLE_FORMS_CLIENT_ID, GOOGLE_FORMS_CLIENT_SECRET, GOOGLE_FORMS_REDIRECT_URI, GOOGLE_FORMS_TOKEN_ENCRYPTION_KEY } = config;
 const { readDB, readDBView, writeDB, mutateDB, mutateExamDraft, saveExamSubmission, replaceDB, closeDatabase, databaseReady, pingDatabase } = require('./src/database');
-const { hashPassword, verifyPassword, requireTeacher, requireAdmin, requireStudent, createTeacherSession, createStudentSession, removeTeacherSessions, teacherSessions, sessionStore } = require('./src/auth');
+const { hashPassword, verifyPassword, requireTeacher, requireAdmin, requireStudent, createTeacherSession, createStudentSession, removeTeacherSessions, teacherSessions, sessionStore, timingSafeStringEqual } = require('./src/auth');
 const { round2, gradeMC, gradeMatching, gradeWritten, getExamSchedule, hasExamAccess, isPastDeadline, isBeforeStart, sanitizeSetForStudent } = require('./src/grading');
 const { registerPages, registerFallback, registerErrorHandler } = require('./src/pages');
 const { registerRoutes } = require('./src/routes');
@@ -39,6 +39,9 @@ const { createScoreEmailService } = require('./src/score-email');
 const { createExamAutoArchive } = require('./src/exam-auto-archive');
 
 if (ADMIN_KEY === 'changeme123') {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Refusing to start: ADMIN_KEY is unset. Set ADMIN_KEY in your environment before deploying for real use.');
+  }
   console.warn('[WARNING] Using the default ADMIN_KEY. Set ADMIN_KEY in your .env file before deploying for real use.');
 }
 /* Seed one example exam set (full score = 20) + example students on first run */
@@ -140,7 +143,7 @@ registerPages(app, PUBLIC_DIR, express);
 
 const assetStorage = createAssetStorage({ url: SUPABASE_URL, serviceRoleKey: SUPABASE_SECRET_KEY, bucket: SUPABASE_STORAGE_BUCKET });
 console.log(`Supabase Storage: ${assetStorage.configured ? 'configured' : 'not configured'} (URL: ${SUPABASE_URL ? 'present' : 'missing'}, secret key: ${SUPABASE_SECRET_KEY ? 'present' : 'missing'})`);
-registerRoutes(app, { ready: app.ready, readinessTimeoutMs: config.DATABASE_READINESS_TIMEOUT_MS, pingDatabase, backupService, restoreDrill, enqueueRestoreDrill, systemMonitor, alertManager, jobQueue, sessionStore, scoreEmailService, enqueueScoreEmail, ADMIN_KEY, EXAM_TYPES, readDB, readDBView, writeDB, mutateDB, mutateExamDraft, saveExamSubmission, replaceDB, hashPassword, verifyPassword, requireAdmin, requireTeacher, requireStudent, createTeacherSession, createStudentSession, removeTeacherSessions, teacherSessions, newId, sanitizeSetForStudent, getExamSchedule, hasExamAccess, isPastDeadline, isBeforeStart, gradeMC, gradeMatching, gradeWritten, round2, applyAcademicPeriod, buildResultsWorkbook: buildResultsWorkbookModule, buildGradebookWorkbook, buildQuestionAnalysis, buildQuestionAnalysisWorkbook, buildQuestionAnalysisDocx, buildLearningPlanDocx, assetStorage, runtimeMetrics, submissionGate, googleFormsConfig: { clientId: GOOGLE_FORMS_CLIENT_ID, clientSecret: GOOGLE_FORMS_CLIENT_SECRET, redirectUri: GOOGLE_FORMS_REDIRECT_URI, tokenEncryptionKey: GOOGLE_FORMS_TOKEN_ENCRYPTION_KEY } });
+registerRoutes(app, { ready: app.ready, readinessTimeoutMs: config.DATABASE_READINESS_TIMEOUT_MS, pingDatabase, backupService, restoreDrill, enqueueRestoreDrill, systemMonitor, alertManager, jobQueue, sessionStore, scoreEmailService, enqueueScoreEmail, ADMIN_KEY, EXAM_TYPES, readDB, readDBView, writeDB, mutateDB, mutateExamDraft, saveExamSubmission, replaceDB, hashPassword, verifyPassword, requireAdmin, requireTeacher, requireStudent, createTeacherSession, createStudentSession, removeTeacherSessions, teacherSessions, newId, timingSafeStringEqual, sanitizeSetForStudent, getExamSchedule, hasExamAccess, isPastDeadline, isBeforeStart, gradeMC, gradeMatching, gradeWritten, round2, applyAcademicPeriod, buildResultsWorkbook: buildResultsWorkbookModule, buildGradebookWorkbook, buildQuestionAnalysis, buildQuestionAnalysisWorkbook, buildQuestionAnalysisDocx, buildLearningPlanDocx, assetStorage, runtimeMetrics, submissionGate, googleFormsConfig: { clientId: GOOGLE_FORMS_CLIENT_ID, clientSecret: GOOGLE_FORMS_CLIENT_SECRET, redirectUri: GOOGLE_FORMS_REDIRECT_URI, tokenEncryptionKey: GOOGLE_FORMS_TOKEN_ENCRYPTION_KEY } });
 
 registerFallback(app, PUBLIC_DIR);
 registerErrorHandler(app);
