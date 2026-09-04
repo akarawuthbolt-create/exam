@@ -75,6 +75,9 @@ html[data-theme="dark"] .mini-card,html[data-theme="dark"] .editor-box,html[data
 .schedule-summary-line{margin:0 0 4px;font-size:12.5px;color:var(--ink);opacity:.85;}
 .exam-schedule-card.expanded .schedule-summary-line{margin-bottom:12px;}
 .schedule-card-body{margin-top:8px;}
+.schedule-period-tag{font-weight:400;color:var(--sub);}
+.schedule-sync-row{display:flex;gap:8px;align-items:center;margin:0 0 12px;flex-wrap:wrap;}
+.schedule-sync-row select{flex:1;min-width:160px;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:12.5px;}
 .schedule-room-field{margin-bottom:12px!important;}.schedule-time-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;align-items:end;}.schedule-time-grid .field{min-width:0;margin:0;}.schedule-time-grid input{min-width:0;}
 .schedule-late-code-field{max-width:320px;margin:12px 0 0!important;}
 .field input[type=datetime-local].date-time-input{background:rgba(255,255,255,.9);border:1.5px solid #C7D2FE;border-radius:11px;padding:12px 42px 12px 13px;color:var(--ink);font-weight:600;letter-spacing:.01em;box-shadow:0 2px 7px -6px rgba(15,23,42,.45);cursor:pointer;transition:border-color .15s,box-shadow .15s;background-image:linear-gradient(135deg,transparent,transparent);}
