@@ -2,7 +2,7 @@ const { ExcelJS, workbookBuffer, worksheetMatrix } = require('./excel-workbook')
 const { validateTeacherPayload } = require('./validation');
 
 const TEMPLATE_HEADERS = ['ชื่อ', 'นามสกุล', 'Username', 'Password', 'สาขาวิชา', 'อีเมล'];
-const EXPORT_HEADERS = ['ลำดับ', 'ชื่อ', 'นามสกุล', 'Username', 'รหัสผ่าน', 'สาขาวิชา', 'อีเมล', 'วันที่สร้างบัญชี'];
+const EXPORT_HEADERS = ['ลำดับ', 'ชื่อ', 'นามสกุล', 'Username', 'รหัสผ่าน', 'สาขาวิชา', 'อีเมล', 'วันที่สร้างบัญชี', 'เข้าใช้งานล่าสุด'];
 const HEADER_ALIASES = {
   firstName: ['ชื่อ', 'firstname', 'first_name'],
   lastName: ['นามสกุล', 'lastname', 'last_name'],
@@ -58,6 +58,7 @@ async function buildTeacherExport(teachers = []) {
     .sort((a, b) => `${a.firstName || ''} ${a.lastName || ''}`.localeCompare(`${b.firstName || ''} ${b.lastName || ''}`, 'th'))
     .forEach((teacher, index) => {
       const createdAt = teacher.createdAt ? new Date(teacher.createdAt) : null;
+      const lastLoginAt = teacher.lastLoginAt ? new Date(teacher.lastLoginAt) : null;
       sheet.addRow([
         index + 1,
         teacher.firstName || '',
@@ -66,15 +67,16 @@ async function buildTeacherExport(teachers = []) {
         'ไม่แสดง (เข้ารหัส)',
         teacher.department || '',
         teacher.email || '',
-        createdAt && !Number.isNaN(createdAt.getTime()) ? createdAt : ''
+        createdAt && !Number.isNaN(createdAt.getTime()) ? createdAt : '',
+        lastLoginAt && !Number.isNaN(lastLoginAt.getTime()) ? lastLoginAt : 'ยังไม่เคยเข้าใช้งาน'
       ]);
     });
   sheet.columns = [
     { width: 9 }, { width: 20 }, { width: 22 }, { width: 22 },
-    { width: 24 }, { width: 30 }, { width: 34 }, { width: 20 }
+    { width: 24 }, { width: 30 }, { width: 34 }, { width: 20 }, { width: 20 }
   ];
   sheet.views = [{ state: 'frozen', ySplit: 1 }];
-  sheet.autoFilter = `A1:H${Math.max(sheet.rowCount, 1)}`;
+  sheet.autoFilter = `A1:I${Math.max(sheet.rowCount, 1)}`;
   sheet.getRow(1).eachCell(cell => {
     cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
@@ -83,6 +85,7 @@ async function buildTeacherExport(teachers = []) {
   sheet.getRow(1).height = 24;
   sheet.getColumn(1).alignment = { horizontal: 'center' };
   sheet.getColumn(8).numFmt = 'yyyy-mm-dd hh:mm';
+  sheet.getColumn(9).numFmt = 'yyyy-mm-dd hh:mm';
   return workbookBuffer(workbook);
 }
 

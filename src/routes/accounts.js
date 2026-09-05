@@ -81,7 +81,7 @@ function registerAccountRoutes(app, dependencies) {
 
   app.get('/api/teachers', requireAdmin, (req, res) => {
     const db = readDB();
-    res.json(db.teachers.map(t => ({ id: t.id, firstName: t.firstName, lastName: t.lastName, username: t.username, department: t.department || '', email: t.email || '', createdAt: t.createdAt })));
+    res.json(db.teachers.map(t => ({ id: t.id, firstName: t.firstName, lastName: t.lastName, username: t.username, department: t.department || '', email: t.email || '', createdAt: t.createdAt, lastLoginAt: t.lastLoginAt || null })));
   });
 
   app.post('/api/teachers', requireAdmin, async (req, res) => {
@@ -214,12 +214,15 @@ function registerAccountRoutes(app, dependencies) {
     if (!username || !password) return res.status(400).json({ error: 'invalid_payload', message: 'กรุณากรอก username และ password' });
     const key = clientKey(req);
     if (!canAttempt(teacherLoginFailures, key)) return res.status(429).json({ error: 'rate_limited', message: 'ลองรหัสผิดหลายครั้ง กรุณารอ 15 นาทีแล้วลองใหม่' });
-    const teacher = readDB().teachers.find(t => t.username === username.trim());
+    const db = readDB();
+    const teacher = db.teachers.find(t => t.username === username.trim());
     if (!teacher || !verifyPassword(password, teacher.passwordHash)) {
       const locked = registerFailure(teacherLoginFailures, key);
       return res.status(locked ? 429 : 401).json({ error: locked ? 'rate_limited' : 'invalid_credentials', message: locked ? 'ลองรหัสผิดครบ 5 ครั้ง กรุณารอ 15 นาทีแล้วลองใหม่' : 'username หรือ password ไม่ถูกต้อง' });
     }
     teacherLoginFailures.delete(key);
+    teacher.lastLoginAt = new Date().toISOString();
+    await writeDB(db);
     const token = await createTeacherSession(teacher.id);
     res.json({ token, teacherId: teacher.id, firstName: teacher.firstName, lastName: teacher.lastName, department: teacher.department || '', username: teacher.username, mustChangePassword: !!teacher.mustChangePassword });
   });

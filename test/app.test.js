@@ -254,6 +254,17 @@ test('teacher login requires both username and password', async () => {
   assert.equal(JSON.parse(response.body).error, 'invalid_payload');
 });
 
+test('successful teacher login records the latest access time for administrators', async () => {
+  const username = `teacher-login-${Date.now()}`;
+  const create = await request('/api/teachers', { method: 'POST', headers: { 'x-admin-key': ADMIN_KEY }, body: { firstName: 'ผู้', lastName: 'ทดสอบ', username, password: 'Teacher1234', department: 'ทดสอบ', email: 'login-test@example.com' } });
+  assert.equal(create.status, 201);
+  const login = await request('/api/teacher/login', { method: 'POST', body: { username, password: 'Teacher1234' } });
+  assert.equal(login.status, 200);
+  const teachers = await request('/api/teachers', { headers: { 'x-admin-key': ADMIN_KEY } });
+  const teacher = JSON.parse(teachers.body).find(item => item.username === username);
+  assert.match(teacher.lastLoginAt, /^\d{4}-\d{2}-\d{2}T/);
+});
+
 test('teacher password reset is admin-only and validates password strength', async () => {
   const unauthorized = await request('/api/teachers/teacher-missing/password', { method: 'PATCH', body: { password: 'new-password' } });
   assert.equal(unauthorized.status, 401);

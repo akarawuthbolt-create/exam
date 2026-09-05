@@ -491,6 +491,10 @@ async function startOperationsStream(){
 /* ======================================================================
    TEACHERS
    ====================================================================== */
+function teacherLastLoginLabel(value){
+  const date=new Date(value||'');
+  return Number.isNaN(date.getTime())?'ยังไม่เคยเข้าใช้งาน':date.toLocaleString('th-TH',{dateStyle:'medium',timeStyle:'short'});
+}
 async function refreshTeachers(){
   const wrap = document.getElementById('teachersWrap');
   wrap.innerHTML = '<div class="loading-note">กำลังโหลด...</div>';
@@ -501,7 +505,7 @@ async function refreshTeachers(){
   if(!teachers.length){ wrap.innerHTML = '<div class="empty-note">ยังไม่มีบัญชีอาจารย์ในระบบ</div>'; return; }
   wrap.innerHTML = teachers.map(t=>`
     <div class="teacher-row-card">
-      <div class="teacher-row-info"><b>${escapeHtml(t.firstName)} ${escapeHtml(t.lastName)}</b><div class="username">สาขาวิชา: ${escapeHtml(t.department||'ยังไม่ได้ระบุ')} · username: ${escapeHtml(t.username)} · ${escapeHtml(t.email||'ยังไม่มีอีเมล')}</div></div>
+      <div class="teacher-row-info"><b>${escapeHtml(t.firstName)} ${escapeHtml(t.lastName)}</b><div class="username">สาขาวิชา: ${escapeHtml(t.department||'ยังไม่ได้ระบุ')} · username: ${escapeHtml(t.username)} · ${escapeHtml(t.email||'ยังไม่มีอีเมล')}</div><div class="username">เข้าใช้งานล่าสุด: ${escapeHtml(teacherLastLoginLabel(t.lastLoginAt))}</div></div>
       <button class="btn btn-primary btn-sm" data-manageteacher="${t.id}">⚙️ จัดการ</button>
     </div>`).join('');
   wrap.querySelectorAll('[data-manageteacher]').forEach(button=>button.addEventListener('click',()=>openManageTeacher(button.dataset.manageteacher)));
